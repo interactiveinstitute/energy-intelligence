@@ -6,6 +6,11 @@ var ddoc = {
 };
 
 ddoc.views = {
+  /*
+   * Use the domains view to see aggregated data about timestamps per data
+   * source. The _stats reduce function for example gives the minimum and
+   * maximum timestamp.
+   */
   domains: {
     map: function(doc) {
       if (doc.type != 'measurement') return;
@@ -14,183 +19,183 @@ ddoc.views = {
     },
     reduce: '_stats'
   },
-  historical: {
+
+  by_source_and_time: {
     map: function(doc) {
       this.intervals = [0, 1, 30, 60, 300, 900, 1800, 3600, 10800, 21600, 43200, 86400, Infinity];
+      this.key = function(source, timestamp) {
+        var key = new Array(this.intervals.length - 2);
+
+        key[0] = source;
+        for (var i = 0, n = this.intervals.length; i < n - 2; i++)
+          key[i + 1] = Math.ceil((timestamp / 1000 % this.intervals[n - 1 - i]) / (this.intervals[n - 2 - i]));
+        key[i] = timestamp;
+
+        return key;
+      };
+      this.cosmstamp = function(timestamp) {
+        return new Date(timestamp * 1000).toJSON().slice(0, 23) + '000Z';
+      };
 
       if (doc.type != 'measurement') return;
       
       // Fix wrongly submitted data
       var timestamp = (doc.timestamp > 10*365*24*60*60*1000) ? doc.timestamp : doc.timestamp * 1000;
+
+      var key = this.key(doc.source, timestamp);
       
-      var key = new Array(this.intervals.length - 2);
-      key[0] = doc.source;
-      for (var i = 0, n = this.intervals.length; i < n - 2; i++)
-        key[i + 1] = Math.ceil(timestamp / (this.intervals[n - 2 - i] * 1000)) % this.intervals[n - 1 - i];
-      key[i] = timestamp;
-      
-      var value = {};
+      var value = { at: this.cosmstamp(timestamp / 1000), data: {} };
       for (var i in doc) if (['_id', '_rev', 'type', 'timestamp', 'user', 'source'].indexOf(i) == -1)
-        value[i] = isNaN(parseFloat(doc[i])) ? doc[i] : parseFloat(doc[i]);
+        value.data[i] = isNaN(parseFloat(doc[i])) ? doc[i] : parseFloat(doc[i]);
 
       emit(key, value);
     },
     reduce: function(keys, values, rereduce) {
       return values[values.length - 1];
     }
-  },
-  total: {
-    // Old attempt, probably not so useful
-    map: function(doc) {
-      if (doc.type == 'measurement' && doc.source == 'Totals') {
-        var date = new Date(doc.timestamp);
-        emit([
-          date.getUTCFullYear(),
-          date.getUTCMonth(),
-          date.getUTCDate(),
-          date.getUTCHours(),
-          date.getUTCMinutes(),
-          date.getUTCSeconds(),
-          date.getUTCMilliseconds()
-        ], {
-          time: doc.timestamp,
-          power: doc['ElectricPower']
-        });
-      }
-    },
-    reduce: function(keys, values, rereduce) {
-      var energy = 0;
-      var min = Infinity;
-      var max = 0;
-      var scale = 1 / 1000 / 60 / 60; // convert from Wms to Wh
-      if (rereduce) {
-        for (var i = 0; i < values.length; i++) {
-          if (values[i].max > max) max = values[i].max;
-          if (values[i].min < min) min = values[i].min;
-        }
-        for (var i = 0; i < values.length - 1; i++)
-          energy += values[i].energy + (values[i + 1].first.time - values[i].last.time) * values[i].last.power * scale;
-        return {
-          energy: energy,
-          first: values[0].first,
-          last: values[values.length - 1].last,
-          min: min,
-          max: max
-        };
-      } else {
-        for (var i = 0; i < values.length; i++) {
-          if (values[i].power > max) max = values[i].power;
-          if (values[i].power < min) min = values[i].power;
-        }
-        for (var i = 0; i < values.length - 1; i++) {
-          energy += Math.abs(values[i].time - values[i + 1].time) * values[i + 1].power * scale;
-        }
-        return {
-          energy: energy,
-          first: values[0],
-          last: values[i],
-          min: min,
-          max: max
-        };
-      }
-    }
   }
 };
 
-ddoc.rewrites = [];
-new ddoc.views.historical.map({}).intervals.forEach(function(interval, i, intervals) {
-  if (interval == Infinity) return;
-  var rewrite = {
-    from: '/historical/:source/' + interval + '/:start/:end',
-    to: '/_view/historical',
-    query: {
-      group_level: intervals.length - i + 1 + '',
-      startkey: [':source'],
-      endkey: [':source']
-    }
-  };
-  for (var j = 0; j < intervals.length - i; j++) {
-    rewrite.query.startkey.push(':start');
-    rewrite.query.endkey.push(':end');
-  }
-  ddoc.rewrites.push(rewrite);
-  
-  ddoc.rewrites.push(
-    {
-      from: '/historical/:source/' + interval,
-      to: '/_view/historical',
-      query: {
-        group_level: intervals.length - i + 1 + '',
-        startkey: [':source'],
-        endkey: [':source', {}]
-      }
-    }
-  );
-});
-
-// TODO use a list to do interpolation, i.e. give constant values to missing samples
 ddoc.lists = {
-  historical: function(head, req) {
+  interpolate: function(head, req) {
+    function timestamp(arr) {
+      return arr.map(function(number, i) {
+        return number * map.intervals[map.intervals.length - i - 2];
+      }).reduce(function(prev, curr) {
+        return prev + curr;
+      });
+    }
     
-  },
-  by_time: function(head, req) {
-    var row;
     start({
-      headers: { 'Content-Type': 'text/html' }
+      headers: { 'Content-Type': 'application/json' }
     });
-    var number = req.query.group_level || 1;
-    send('<style>body{font:13px sans-serif}td:first-child{width:200px}</style><input type=number value=' + number + ' onchange="change(this)"><script>');
-    send('function change(input) { location.href = "http://sp.sanderdijkhuis.nl:5985/sp/_design/energy_data/_list/by_time/total?group_level=" + input.value; }')
-    send('</script><table>');
-    while (row = getRow()) {
-      send('<tr><td>' + row.key.join('-') + '<td>' + row.value.max);
-    }
-    send('</table>');
-  },
-  aggregate: function(head, req) {
-    var row;
-    var result = [];
-    var apply = function(constructor, args) {
-      var args = [null].concat(args);
-      var factoryFunction = constructor.bind.apply(constructor, args);
-      return new factoryFunction();
+    
+    var result = {
+      datastreams: []
     };
-    start({
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '"*"'
-      }
-    });
-    while (row = getRow()) {
-      var obj = {
-        time: apply(Date, row.key),
-        value: row.value,
-        energy: row.value.energy
-      };
-      // not accurate: we ignore the beginning of the interval
-      var level = parseInt(req.query.group_level) || 0;
-      var lfrom = row.value.last.time;
-      var lstart = row.value.first.time;
-      row.key[Math.max(level - 1, 0)]++;
-      var lto = apply(Date, row.key).getTime();
-      obj.dbg = {rkey:row.key,lfrom:lfrom,lto:lto,pwr:row.value.last.power,lvl:level}
-      obj.energy += (lto - lfrom) * row.value.last.power * (1 / 1000 / 60 / 60);
-      obj.average = obj.energy / (lto - lstart) / (1 / 1000 / 60 / 60);
-      result.push(obj);
-    }
-    return JSON.stringify(result, null, 2);
-  },
-  rows: function(head, req) {
+    
+    var map = new (eval(this.views.by_source_and_time.map))({});
+    
+    var level = req.query.group_level;
+
+    var first = req.query.startkey.splice(1, level - 1);
+    var last = req.query.endkey.splice(1, level - 1);
+    var step = map.intervals[map.intervals.length - level];
+    
+    var at = timestamp(first);
+    var value = 0;
+    
+    var track = {};
+    
     var row;
-    var result = [];
-    start({
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
+    while (row = getRow()) {
+      var key = timestamp(row.key.splice(1));
+      var at = row.value.at;
+      
+      // Create new steams if needed.
+      for (var stream in row.value.data) {
+        if (!(stream in track)) {
+          var n = result.datastreams.push({
+            id: stream,
+            min_value: Infinity,
+            max_value: -Infinity,
+            datapoints: []
+          });
+          track[stream] = {
+            lastAt: timestamp(first),
+            lastKey: timestamp(first),
+            lastValue: null,
+            index: n - 1
+          };
+        }
       }
-    });
-    while (row = getRow()) result.push(row);
-    return JSON.stringify(result, null, 2);
+        
+      // Interpolate all streams up until now.
+      for (var stream in track) {
+        for (var between = track[stream].lastKey + step; between < key; between += step) {
+          result.datastreams[track[stream].index].datapoints.push({
+            at: track[stream].lastAt,
+            value: track[stream].lastValue
+          });
+        }
+        track[stream].lastKey = key;
+      }
+      
+      // Update all relevant datastreams with new values.
+      for (var stream in row.value.data) {
+        var datastream = result.datastreams[track[stream].index];
+        datastream.datapoints.push({
+          at: row.value.at,
+          value: '' + row.value.data[stream]
+        });
+        track[stream].lastAt = row.value.at;
+        track[stream].lastValue = row.value.data[stream];
+        if (+row.value.data[stream] > datastream.max_value)
+          datastream.max_value = +row.value.data[stream];
+        if (+row.value.data[stream] < datastream.min_value)
+          datastream.min_value = +row.value.data[stream];
+      }
+    }
+    
+    var end = timestamp(last);
+    for (var stream in track) {
+      for (var until = track[stream].lastKey; until < end; until += step) {
+        result.datastreams[track[stream].index].datapoints.push({
+          at: track[stream].lastAt,
+          value: track[stream].lastValue
+        });
+      }
+      result.datastreams[track[stream].index].current_value = track[stream].lastValue;
+      result.datastreams[track[stream].index].at = track[stream].lastAt;
+    }
+
+    send(JSON.stringify(result, null, 2));
+  }
+};
+
+ddoc.shows = {
+  historical: function(doc, req) {
+    // This show function builds the right query URL based on a Cosm-like URL.
+    var url = '/' + req.path.splice(0, 3).join('/') + '/_list/interpolate/by_source_and_time?';
+    var params = {};
+    
+    // Get intervals and the key function from the map function.
+    var map = new (eval(this.views.by_source_and_time.map))({});
+    
+    // Which group level does this belong to?
+    var interval = parseInt(req.query.interval) || 0;
+    var index = map.intervals.indexOf(interval);
+    if (index == -1) index = 0;
+    params.group_level = map.intervals.length - index;
+    
+    // Determine start and end timestamps.
+    var units = {
+      second: 1, seconds: 1,
+      minute: 60, minutes: 60,
+      hour: 60 * 60, hours: 60 * 60,
+      day: 60 * 60 * 24, days: 60 * 60 * 24,
+      week: 60 * 60 * 24 * 7, weeks: 60 * 60 * 24 * 7,
+      month: 60 * 60 * 24 * 31, months: 60 * 60 * 24 * 31,
+      year: 60 * 60 * 24 * 366, years: 60 * 60 * 24 * 366
+    };
+    var duration = /(\d+)([a-z]+)/.exec(req.query.duration);
+    var ms = parseInt(duration[1]) * units[duration[2]] * 1000;
+    var start = req.query.start ? +new Date(req.query.start) : +new Date - ms;
+    var end = start + ms;
+
+    // Use the map key function to determine the boundaries.
+    params.startkey = JSON.stringify(map.key(req.query.source, start));
+    params.endkey = JSON.stringify(map.key(req.query.source, end));
+    
+    // Finish the URL.
+    url += Object.keys(params).map(function(key) {
+      return key + '=' + encodeURIComponent(params[key]);
+    }).join('&');
+    
+    return {
+      code: 302, // Found
+      headers: { 'Location': url }
+    };
   }
 };
 
