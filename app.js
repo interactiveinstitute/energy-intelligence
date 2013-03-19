@@ -16,20 +16,18 @@ ddoc.views = {
   },
   historical: {
     map: function(doc) {
-      this.intervals = [0, 1, 30, 60, 300, 900, 1800, 3600, 10800, 21600, 43200, 86400];
+      this.intervals = [0, 1, 30, 60, 300, 900, 1800, 3600, 10800, 21600, 43200, 86400, Infinity];
 
       if (doc.type != 'measurement') return;
-
-      var intervals = this.intervals;
-      intervals.push(Infinity);
       
+      // Fix wrongly submitted data
       var timestamp = (doc.timestamp > 10*365*24*60*60*1000) ? doc.timestamp : doc.timestamp * 1000;
       
-      var key = new Array(intervals.length - 2);
+      var key = new Array(this.intervals.length - 2);
       key[0] = doc.source;
-      for (var i = 0, n = intervals.length; i < n - 2; i++)
-        key[i + 1] = '' + Math.ceil(timestamp / (intervals[n - 2 - i] * 1000)) * intervals[n - 2 - i];
-      key[i] = '' + timestamp;
+      for (var i = 0, n = this.intervals.length; i < n - 2; i++)
+        key[i + 1] = Math.ceil(timestamp / (this.intervals[n - 2 - i] * 1000)) % this.intervals[n - 1 - i];
+      key[i] = timestamp;
       
       var value = {};
       for (var i in doc) if (['_id', '_rev', 'type', 'timestamp', 'user', 'source'].indexOf(i) == -1)
@@ -101,6 +99,7 @@ ddoc.views = {
 
 ddoc.rewrites = [];
 new ddoc.views.historical.map({}).intervals.forEach(function(interval, i, intervals) {
+  if (interval == Infinity) return;
   var rewrite = {
     from: '/historical/:source/' + interval + '/:start/:end',
     to: '/_view/historical',
@@ -114,7 +113,6 @@ new ddoc.views.historical.map({}).intervals.forEach(function(interval, i, interv
     rewrite.query.startkey.push(':start');
     rewrite.query.endkey.push(':end');
   }
-  //rewrite.query.endkey.push({});
   ddoc.rewrites.push(rewrite);
   
   ddoc.rewrites.push(
