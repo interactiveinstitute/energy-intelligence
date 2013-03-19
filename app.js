@@ -6,28 +6,43 @@ var ddoc = {
 };
 
 ddoc.views = {
-  by_time: {
+  domains: {
     map: function(doc) {
-      if (doc.type == 'measurement') {
-        var data = {};
-        for (var key in doc) {
-          if (['_id',
-               '_rev',
-               'type',
-               'timestamp',
-               'user',
-               'source'].indexOf(key) == -1) {
-            data[key] = doc[key];
-          }
-        }
-        emit (new Date(doc.timestamp).getTime(), {
-          source: doc.source,
-          data: data
-        });
-      }
+      if (doc.type != 'measurement') return;
+      var timestamp = (doc.timestamp > 10 * 365 * 24 * 60 * 60 * 1000) ? doc.timestamp : doc.timestamp * 1000;
+      emit(doc.source, timestamp);
+    },
+    reduce: '_stats'
+  },
+  historical: {
+    map: function(doc) {
+      this.intervals = [0, 1, 30, 60, 300, 900, 1800, 3600, 10800, 21600, 43200, 86400];
+
+      if (doc.type != 'measurement') return;
+
+      var intervals = this.intervals;
+      intervals.push(Infinity);
+      
+      var timestamp = (doc.timestamp > 10*365*24*60*60*1000) ? doc.timestamp : doc.timestamp * 1000;
+      
+      var key = new Array(intervals.length - 2);
+      key[0] = doc.source;
+      for (var i = 0, n = intervals.length; i < n - 2; i++)
+        key[i + 1] = '' + Math.ceil(timestamp / (intervals[n - 2 - i] * 1000)) * intervals[n - 2 - i];
+      key[i] = '' + timestamp;
+      
+      var value = {};
+      for (var i in doc) if (['_id', '_rev', 'type', 'timestamp', 'user', 'source'].indexOf(i) == -1)
+        value[i] = isNaN(parseFloat(doc[i])) ? doc[i] : parseFloat(doc[i]);
+
+      emit(key, value);
+    },
+    reduce: function(keys, values, rereduce) {
+      return values[values.length - 1];
     }
   },
   total: {
+    // Old attempt, probably not so useful
     map: function(doc) {
       if (doc.type == 'measurement' && doc.source == 'Totals') {
         var date = new Date(doc.timestamp);
@@ -51,7 +66,6 @@ ddoc.views = {
       var max = 0;
       var scale = 1 / 1000 / 60 / 60; // convert from Wms to Wh
       if (rereduce) {
-        //log(JSON.stringify(values, null, 2));
         for (var i = 0; i < values.length; i++) {
           if (values[i].max > max) max = values[i].max;
           if (values[i].min < min) min = values[i].min;
@@ -71,7 +85,6 @@ ddoc.views = {
           if (values[i].power < min) min = values[i].power;
         }
         for (var i = 0; i < values.length - 1; i++) {
-          //log(new Date(values[i+1].time) + '-----' +  new Date(values[i].time));
           energy += Math.abs(values[i].time - values[i + 1].time) * values[i + 1].power * scale;
         }
         return {
@@ -86,7 +99,42 @@ ddoc.views = {
   }
 };
 
+ddoc.rewrites = [];
+new ddoc.views.historical.map({}).intervals.forEach(function(interval, i, intervals) {
+  var rewrite = {
+    from: '/historical/:source/' + interval + '/:start/:end',
+    to: '/_view/historical',
+    query: {
+      group_level: intervals.length - i + 1 + '',
+      startkey: [':source'],
+      endkey: [':source']
+    }
+  };
+  for (var j = 0; j < intervals.length - i; j++) {
+    rewrite.query.startkey.push(':start');
+    rewrite.query.endkey.push(':end');
+  }
+  //rewrite.query.endkey.push({});
+  ddoc.rewrites.push(rewrite);
+  
+  ddoc.rewrites.push(
+    {
+      from: '/historical/:source/' + interval,
+      to: '/_view/historical',
+      query: {
+        group_level: intervals.length - i + 1 + '',
+        startkey: [':source'],
+        endkey: [':source', {}]
+      }
+    }
+  );
+});
+
+// TODO use a list to do interpolation, i.e. give constant values to missing samples
 ddoc.lists = {
+  historical: function(head, req) {
+    
+  },
   by_time: function(head, req) {
     var row;
     start({
@@ -161,7 +209,5 @@ ddoc.updates = {
     return [doc, 'Thanks\n'];
   }
 };
-
-couchapp.loadAttachments(ddoc, path.join(__dirname, 'ui'));
 
 module.exports = ddoc;
