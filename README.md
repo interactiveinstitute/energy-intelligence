@@ -15,6 +15,8 @@ Now the design document should be in the database with `"_id": "_design/energy_d
 
 ## Usage
 
+### Posting data
+
 To store measurement data, do an HTTP POST request to
 
     _design/energy_data/_update/measurement
@@ -35,6 +37,8 @@ In fact, any amount of keys can be used except for the reserved ones:
 - `timestamp`: the amount of milliseconds since the Unix epoch;
 - `type`: automatically set to `measurement` by the update function;
 - `user`: automatically set to the authenticated user’s name.
+
+### Querying history
 
 To query the database, do HTTP GET requests to
 

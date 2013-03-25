@@ -213,4 +213,6 @@ ddoc.updates = {
   }
 };
 
+couchapp.loadAttachments(ddoc, path.join(__dirname, 'app'));
+
 module.exports = ddoc;

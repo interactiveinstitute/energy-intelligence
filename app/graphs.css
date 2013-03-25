@@ -1,0 +1,71 @@
+body {
+  //font: 12px Klavika, 'HelveticaNeue-CondensedBold', sans-serif;
+}
+
+/*
+.chart rect {
+  stroke: white;
+  stroke-width: 0;
+  fill: steelblue;
+  -webkit-transition: fill .1s;
+}
+.chart rect.highlight {
+  opacity: .8;
+}
+.chart .popup {
+  -webkit-transition: -webkit-transform .05s;
+}
+.chart .popup circle {
+  fill: yellow;
+}
+.chart .popup text {
+  fill: black;
+}
+.chart line.x, .chart line.y {
+  stroke: #ccc;
+}
+.chart line.axis {
+  stroke: #000;
+}
+.chart .pane {
+  fill: transparent;
+}
+*/
+
+body {
+  /*background: #000;*/
+}
+
+p {
+  width: 960px;
+  text-align: center;
+}
+
+svg {
+  font: 10px 'Helvetica Neue', sans-serif;
+}
+
+path {
+  /*fill: steelblue;*/
+  fill: white;
+  stroke: #476db4;
+}
+
+text {
+  /*fill: white;*/
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  /*stroke: #fff;*/
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  stroke: red;
+  fill: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}

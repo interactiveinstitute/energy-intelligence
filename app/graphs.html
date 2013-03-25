@@ -1,0 +1,43 @@
+<!doctype html>
+
+<title>Couchm graphs</title>
+
+<meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="graphs.css">
+<script src="d3.v3.min.js"></script>
+<script src="graphs.js"></script>
+
+<p>
+  <input class="duration_number" type="number" value="2">
+  <select class="duration_unit">
+    <option>seconds</option>
+    <option>minutes</option>
+    <option>hours</option>
+    <option selected>days</option>
+    <option>weeks</option>
+    <option>months</option>
+    <option>years</option>
+  </select>
+  starting at
+  <input class="start_date" type="date" value="2013-03-18">
+  <input class="start_time" type="time" value="08:00">
+  with interval
+  <select class="interval">
+    <option>0</option>
+    <option>1</option>
+    <option>30</option>
+    <option selected>60</option>
+    <option>300</option>
+    <option>900</option>
+    <option>1800</option>
+    <option>3600</option>
+    <option>10800</option>
+    <option>21600</option>
+    <option>43200</option>
+    <option>86400</option>
+  </select>
+</p>
+
+<script>start()</script>
