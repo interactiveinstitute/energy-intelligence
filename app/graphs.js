@@ -26,7 +26,7 @@ var focus;
 var context;
 
 // Dimensions
-var cwidth = 960;
+var cwidth = 1920;
 var cheight = 500;
 var margin = { top: 10, right: 10, bottom: 100, left: 40 };
 var margin2 = { top: 430, right: 10, bottom: 20, left: 40 };

@@ -1,5 +1,7 @@
 body {
   //font: 12px Klavika, 'HelveticaNeue-CondensedBold', sans-serif;
+  background: #000;
+  color: #fff;
 }
 
 /*
@@ -47,19 +49,19 @@ svg {
 
 path {
   /*fill: steelblue;*/
-  fill: white;
-  stroke: #476db4;
+  fill: #2d548e;
+  stroke: #3fa9f5;
+  stroke-width: 2px;
 }
 
 text {
-  /*fill: white;*/
+  fill: white;
 }
 
 .axis path,
 .axis line {
   fill: none;
-  /*stroke: #fff;*/
-  stroke: #000;
+  stroke: #fff;
   shape-rendering: crispEdges;
 }
 
