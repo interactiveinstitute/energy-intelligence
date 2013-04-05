@@ -56,15 +56,18 @@ var duration = 750;
 var now = new Date(Date.now() - 60 * 60 * 1000 - duration);
 //var start = now;
 var count = 0;
+
+// Use original time stamps or resampled?
+var resampled = false;
   
 var area = d3.svg.area()
   //.interpolate('step-after') //step-after
-  .x(function(d) { return x(d.at) })
+  .x(function(d) { return x(resampled ? d.resampledAt : d.at) })
   .y0(height)
   .y1(function(d) { return y(d.value) });
 var area2 = d3.svg.area()
   //.interpolate('step-after')
-  .x(function(d) { return x2(d.at) })
+  .x(function(d) { return x2(resampled ? d.resampledAt : d.at) })
   .y0(height2)
   .y1(function(d) { return y2(Math.min(d.value, 2000)) });
 
@@ -75,13 +78,15 @@ function set() {
   focus.select('.x.axis').call(xAxis);
 }
 
-function fetch(url) {
+function fetch(url, params) {
   d3.json(url, function(error, ndata) {
     data = ndata.datastreams[0].datapoints;
 
-    data.forEach(function(d) {
+    data.forEach(function(d, i) {
       d.at = new Date(d.at) || 0;
+      d.resampledAt = new Date(+new Date(params.start) + i * params.interval * 1000);
       d.value = parseFloat(d.value) || 0;
+            console.log(d.at, d.resampledAt, d.value);
     });
     
     //x.domain(d3.extent(data.map(function(d) { return d.time })));
@@ -106,7 +111,7 @@ function settings() {
   var duration = duration_number + duration_unit;
   var start_date = d3.select('.start_date').node().value;
   var start_time = d3.select('.start_time').node().value;
-  var start_datetime = start_date + 'T' + start_time + ':00+01:00';
+  var start_datetime = start_date + 'T' + start_time + ':00+02:00';
   var interval = d3.select('.interval').node().value;
   
   var start = new Date(start_datetime);
@@ -135,8 +140,9 @@ function settings() {
   x2.domain(x.domain());
 
   context.select('.x.axis').call(xAxis2);
+  console.log(params);
   
-  fetch(url(config, '/_design/energy_data/_show/historical', params));
+  fetch(url(config, '/_design/energy_data/_show/historical', params), params);
 }
 
 function tick() {

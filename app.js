@@ -19,6 +19,12 @@ ddoc.views = {
     },
     reduce: '_stats'
   },
+  
+  wrong_timestamp: {
+    map: function(doc) {
+      if (doc.timestamp < 10*365*24*60*60*1000) emit(null, {_rev:doc._rev,_id:doc._id,_deleted:true});
+    }
+  },
 
   by_source_and_time: {
     map: function(doc) {
@@ -28,7 +34,10 @@ ddoc.views = {
 
         key[0] = source;
         for (var i = 0, n = this.intervals.length; i < n - 2; i++)
-          key[i + 1] = Math.ceil((timestamp / 1000 % this.intervals[n - 1 - i]) / (this.intervals[n - 2 - i]));
+          key[i + 1] = Math.ceil(
+            (timestamp / 1000 % this.intervals[n - 1 - i]) /
+            (this.intervals[n - 2 - i])
+          );
         key[i] = timestamp;
 
         return key;
@@ -40,11 +49,11 @@ ddoc.views = {
       if (doc.type != 'measurement') return;
       
       // Fix wrongly submitted data
-      var timestamp = (doc.timestamp > 10*365*24*60*60*1000) ? doc.timestamp : doc.timestamp * 1000;
+      //var timestamp = (doc.timestamp > 10*365*24*60*60*1000) ? doc.timestamp : doc.timestamp * 1000;
 
-      var key = this.key(doc.source, timestamp);
+      var key = this.key(doc.source, doc.timestamp);
       
-      var value = { at: this.cosmstamp(timestamp / 1000), data: {} };
+      var value = { at: this.cosmstamp(doc.timestamp / 1000), data: {} };
       for (var i in doc) if (['_id', '_rev', 'type', 'timestamp', 'user', 'source'].indexOf(i) == -1)
         value.data[i] = isNaN(parseFloat(doc[i])) ? doc[i] : parseFloat(doc[i]);
 
@@ -60,9 +69,17 @@ ddoc.lists = {
   interpolate: function(head, req) {
     function timestamp(arr) {
       return arr.map(function(number, i) {
-        return number * map.intervals[map.intervals.length - i - 2];
+        return (number - 1) * map.intervals[map.intervals.length - i - 2];
       }).reduce(function(prev, curr) {
         return prev + curr;
+      });
+    }
+    // for boundaries
+    function timestamp2(arr) {
+      return arr.map(function(number, i) {
+        return (number) * map.intervals[map.intervals.length - i - 2];
+      }).reduce(function(prev, curr) {
+        return prev - curr;
       });
     }
     
@@ -78,6 +95,8 @@ ddoc.lists = {
     
     var level = req.query.group_level;
 
+    var cp1 = JSON.stringify(req.query.startkey);
+    var cp2 = JSON.stringify(req.query.startkey);
     var first = req.query.startkey.splice(1, level - 1);
     var last = req.query.endkey.splice(1, level - 1);
     var step = map.intervals[map.intervals.length - level];
@@ -89,21 +108,36 @@ ddoc.lists = {
     
     var row;
     while (row = getRow()) {
+      var origkey = JSON.parse(JSON.stringify(row.key));
       var key = timestamp(row.key.splice(1));
       var at = row.value.at;
       
       // Create new steams if needed.
       for (var stream in row.value.data) {
         if (!(stream in track)) {
+          var SPLICED = JSON.parse(cp2).splice(1, level - 2);
           var n = result.datastreams.push({
             id: stream,
             min_value: Infinity,
             max_value: -Infinity,
-            datapoints: []
+            datapoints: [],
+            start: {
+              date: new Date(timestamp(SPLICED) * 1000).toJSON(),
+              querystartkey: JSON.parse(cp1),
+              spliced: SPLICED
+            },
+            end: {
+              date: new Date(timestamp(last) * 1000).toJSON()
+            },
+            blub: {
+              between: timestamp(first),
+              step: step,
+              key: key
+            }
           });
           track[stream] = {
-            lastAt: timestamp(first),
-            lastKey: timestamp(first),
+            lastAt: new Date(timestamp(first) * 1000).toJSON(),
+            lastKey: timestamp(first) - step,
             lastValue: null,
             index: n - 1
           };
@@ -115,8 +149,14 @@ ddoc.lists = {
         for (var between = track[stream].lastKey + step; between < key; between += step) {
           result.datastreams[track[stream].index].datapoints.push({
             at: track[stream].lastAt,
-            value: track[stream].lastValue
+            value: track[stream].lastValue,
+            bla: true,
+            from: track[stream].lastKey,
+            to: key,
+            step: step,
+            between: between
           });
+          //if (result.datastreams[track[stream].index].datapoints.length > 200) return JSON.stringify(result, null, 2);
         }
         track[stream].lastKey = key;
       }
@@ -126,7 +166,10 @@ ddoc.lists = {
         var datastream = result.datastreams[track[stream].index];
         datastream.datapoints.push({
           at: row.value.at,
-          value: '' + row.value.data[stream]
+          value: '' + row.value.data[stream],
+          bleh: false,
+          key: origkey,
+          keystamp: key
         });
         track[stream].lastAt = row.value.at;
         track[stream].lastValue = row.value.data[stream];
@@ -142,7 +185,8 @@ ddoc.lists = {
       for (var until = track[stream].lastKey; until < end; until += step) {
         result.datastreams[track[stream].index].datapoints.push({
           at: track[stream].lastAt,
-          value: track[stream].lastValue
+          value: track[stream].lastValue,
+          until: until
         });
       }
       result.datastreams[track[stream].index].current_value = track[stream].lastValue;
@@ -181,7 +225,8 @@ ddoc.shows = {
     var duration = /(\d+)([a-z]+)/.exec(req.query.duration);
     var ms = parseInt(duration[1]) * units[duration[2]] * 1000;
     var start = req.query.start ? +new Date(req.query.start) : +new Date - ms;
-    var end = start + ms;
+    start -= 1000;
+    var end = start + 2000 + ms;
 
     // Use the map key function to determine the boundaries.
     params.startkey = JSON.stringify(map.key(req.query.source, start));
@@ -192,6 +237,34 @@ ddoc.shows = {
       return key + '=' + encodeURIComponent(params[key]);
     }).join('&');
     
+    function timestamp(arr) {
+      return arr.map(function(number, i) {
+        return (number - 1) * map.intervals[map.intervals.length - i - 2];
+      }).reduce(function(prev, curr) {
+        return prev + curr;
+      });
+    }
+    function timestamp2(arr) {
+      return arr.map(function(number, i) {
+        return (number) * map.intervals[map.intervals.length - i - 2];
+      }).reduce(function(prev, curr) {
+        return prev - curr;
+      });
+    }
+    
+    /*
+    return JSON.stringify({
+      url: url,
+      start: new Date(start).toJSON(),
+      startkey: JSON.parse(params.startkey),
+      startbla: timestamp(JSON.parse(params.startkey).splice(1, params.group_level)) * 1000,
+      startts: new Date(timestamp(JSON.parse(params.startkey).splice(1, params.group_level)) * 1000).toJSON(),
+      startts2: new Date(timestamp2(JSON.parse(params.startkey).splice(1, params.group_level)) * 1000).toJSON(),
+      end: new Date(end).toJSON(),
+      endkey: JSON.parse(params.endkey),
+      endts: new Date(timestamp(JSON.parse(params.endkey).splice(1, params.group_level)) * 1000).toJSON()
+    }, null, 2);
+    */
     return {
       code: 302, // Found
       headers: { 'Location': url }
