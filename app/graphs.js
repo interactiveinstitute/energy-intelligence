@@ -1,5 +1,22 @@
+function json(url, callback) {
+  // We’re using this instead of d3.json because the latter doesn’t seem to work well in IE10?
+  var req = new XMLHttpRequest();
+  req.open('GET', url, true);
+  req.onreadystatechange = function() {
+    if (req.readyState == 4 && req.status == 200)
+      callback(JSON.parse(req.responseText));
+  };
+  req.send();
+}
+
 function start() {
-  d3.json('config.json', init);
+  json('config.json', function(config) {
+    json('_rewrite/feeds_and_datastreams', function(info) {
+      json('_view/domains?group=true', function(domains) {
+        init(config, info, domains);
+      });
+    });
+  });
 }
 
 function url(config, base, args) {
@@ -26,7 +43,7 @@ var focus;
 var context;
 
 // Dimensions
-var cwidth = 1920;
+var cwidth = 960;
 var cheight = 500;
 var margin = { top: 10, right: 10, bottom: 100, left: 40 };
 var margin2 = { top: 430, right: 10, bottom: 20, left: 40 };
@@ -58,7 +75,9 @@ var now = new Date(Date.now() - 60 * 60 * 1000 - duration);
 var count = 0;
 
 // Use original time stamps or resampled?
-var resampled = false;
+var resampled = true;
+
+var domains;
   
 var area = d3.svg.area()
   //.interpolate('step-after') //step-after
@@ -69,7 +88,7 @@ var area2 = d3.svg.area()
   //.interpolate('step-after')
   .x(function(d) { return x2(resampled ? d.resampledAt : d.at) })
   .y0(height2)
-  .y1(function(d) { return y2(Math.min(d.value, 2000)) });
+  .y1(function(d) { return y2(d.value) });
 
 // Set focus view
 function set() {
@@ -79,20 +98,22 @@ function set() {
 }
 
 function fetch(url, params) {
-  d3.json(url, function(error, ndata) {
-    data = ndata.datastreams[0].datapoints;
+  json(url, function(ndata) {
+    data = ndata.datapoints;
 
     data.forEach(function(d, i) {
       d.at = new Date(d.at) || 0;
-      d.resampledAt = new Date(+new Date(params.start) + i * params.interval * 1000);
-      d.value = parseFloat(d.value) || 0;
-            console.log(d.at, d.resampledAt, d.value);
+      d.resampledAt = new Date(+new Date(params.start) + (i - 1) * params.interval * 1000);
+      if (d.value === true) d.value = 1;
+      else if (d.value === false) d.value = 0;
+      else if (!isNaN(parseFloat(d.value))) d.value = parseFloat(d.value);
+      else d.value = 0;
     });
     
     //x.domain(d3.extent(data.map(function(d) { return d.time })));
     //y.domain([0, d3.max(data.map(function(d) { return d.value }))]);
     //y2.domain(y.domain());
-    y.domain([0, 2000]);
+    y.domain([0, d3.max(data.map(function(d) { return d.value }))]);
     y2.domain(y.domain());
     
     focus.select('path').datum(data);
@@ -102,10 +123,14 @@ function fetch(url, params) {
     context.select('.x.brush').call(brush);
     
     set();
+    
+    d3.select('.loading').classed('visible', false);
   });
 }
 
 function settings() {
+  var feed = d3.select('.feed').node().value;
+  var datastream = d3.select('.datastream').node().value;
   var duration_number = d3.select('.duration_number').node().value;
   var duration_unit = d3.select('.duration_unit').node().value;
   var duration = duration_number + duration_unit;
@@ -113,11 +138,18 @@ function settings() {
   var start_time = d3.select('.start_time').node().value;
   var start_datetime = start_date + 'T' + start_time + ':00+02:00';
   var interval = d3.select('.interval').node().value;
+  resampled = !!d3.select('.resample').node().checked;
+  
+  d3.select('.o_feed').text(feed);
+  d3.select('.o_number').text(domains[feed].count);
+  d3.select('.o_first').text(new Date(domains[feed].min));
+  d3.select('.o_last').text(new Date(domains[feed].max));
   
   var start = new Date(start_datetime);
   
   var params = {
-    source: 'Totals',
+    feed: feed,
+    datastream: datastream,
     interval: interval,
     duration: duration,
     start: start_datetime
@@ -140,7 +172,8 @@ function settings() {
   x2.domain(x.domain());
 
   context.select('.x.axis').call(xAxis2);
-  console.log(params);
+  
+  d3.select('.loading').classed('visible', true);
   
   fetch(url(config, '/_design/energy_data/_show/historical', params), params);
 }
@@ -181,8 +214,13 @@ function tick() {
     .attr('transform', 'translate(' + x2(now - dt) + ')');
 }
 
-function init(error, nconfig) {
+function init(nconfig, feeds_and_datastreams, ndomains) {
   config = nconfig;
+  
+  domains = {};
+  ndomains.rows.forEach(function(row) {
+    domains[row.key] = row.value;
+  });
 
   chart = d3.select('body').append('svg')
     .attr('class', 'chart')
@@ -230,14 +268,26 @@ function init(error, nconfig) {
     .selectAll('rect')
       .attr('y', -6)
       .attr('height', height2 + 7);
+  
+  feeds_and_datastreams.feeds.forEach(function(feed) {
+    var option = d3.select('.feed').append('option').text(feed);
+    if (feed == 'room261') option.attr('selected', true);
+  });
+  feeds_and_datastreams.datastreams.forEach(function(stream) {
+    var option = d3.select('.datastream').append('option').text(stream);
+    if (stream == 'ElectricPower') option.attr('selected', true);
+  });
 
   settings();
 
+  d3.select('.feed').on('change', settings);
+  d3.select('.datastream').on('change', settings);
   d3.select('.duration_number').on('change', settings);
   d3.select('.duration_unit').on('change', settings);
   d3.select('.start_date').on('change', settings);
   d3.select('.start_time').on('change', settings);
   d3.select('.interval').on('change', settings);
+  d3.select('.resample').on('change', settings);
   
   //tick();
 }
