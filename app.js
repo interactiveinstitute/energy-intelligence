@@ -85,6 +85,7 @@ ddoc.views = {
       // Fix wrongly submitted data
       var timestamp = (doc.timestamp > 10*365*24*60*60*1000) ? doc.timestamp : doc.timestamp * 1000;
       timestamp = parseInt(timestamp);
+      if (timestamp > 50 * 365 * 24 * 60 * 60 * 1000) return;
 
       var key = shared.unix_to_couchm_ts(timestamp, doc.source);
       
@@ -99,7 +100,18 @@ ddoc.views = {
       // Note: we currently ignore earlier measurements that may contain more values.
       // In case values will be submitted using multiple types of measurement docs,
       // we can merge them here.
-      return values[values.length - 1];
+
+      var latest = 0;
+      var winner = null;
+      for (var i = 0; i < values.length; i++) {
+        var ts = +new Date(values[i][0]);
+        if (ts > latest) {
+          latest = ts;
+          winner = values[i];
+        }
+      }
+      return winner;
+      //return values[values.length - 1];
     }
   }
 };
@@ -122,6 +134,12 @@ ddoc.lists = {
     }
     
     result.datastreams = map.fields.slice(1);
+
+    result.at_idx = 0;
+    result.datastream_idx = {};
+    for (var i = 1; i < map.fields.length; i++) {
+      result.datastream_idx[map.fields[i]] = i;
+    }
     
     send(JSON.stringify(result, null, 2));
   },
@@ -264,6 +282,17 @@ ddoc.lists = {
 };
 
 ddoc.shows = {
+  unix_to_couchm_ts: function(doc, req) {
+    var map = eval(this.views.by_source_and_time.map)();
+    var timestamp = parseInt(req.query.timestamp);
+    var feed = req.query.feed;
+    var result= map.unix_to_couchm_ts(timestamp, feed);
+    
+    return {
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(result)
+    };
+  },
   historical: function(doc, req) {
     // This show function builds the right query URL based on a Cosm-like URL.
     var url = '/' + req.path.splice(0, 3).join('/') + '/_list/interpolate_datastream/by_source_and_time?';
@@ -326,15 +355,24 @@ ddoc.shows = {
 };
 
 ddoc.filters = {
+  measurements: function(doc, req) {
+    if (doc.type != 'measurement') return false;
+    if (req.query.feed && req.query.feed != doc.source) return false;
+    if (req.query.datastream && Object.keys(doc).indexOf(req.query.datastream) == -1) return false;
+    return true;
+  }
 };
 
 ddoc.updates = {
   measurement: function(doc, req) {
+    log('RECV ' + req.body);
     doc = JSON.parse(req.body);
+    log('INTP ' + JSON.stringify(doc));
     doc._id = req.uuid;
     doc.type = 'measurement';
     if (!doc.timestamp) doc.timestamp = new Date().getTime();
     doc.user = req.userCtx.name;
+    log('FINL ' + JSON.stringify(doc));
     return [doc, 'Thanks\n'];
   }
 };
