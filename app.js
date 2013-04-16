@@ -111,7 +111,6 @@ ddoc.views = {
         }
       }
       return winner;
-      //return values[values.length - 1];
     }
   }
 };
@@ -157,23 +156,10 @@ ddoc.lists = {
     send('{\n  "id": ' + JSON.stringify(stream) + ',\n  "datapoints": [\n');
     
     var level = req.query.group_level;
-    //send(JSON.stringify(req.query.startkey) + '\n');
 
     var first = req.query.startkey.slice(0, level);
-    //return send(map.couchm_to_unix_ts(first));
     var last = req.query.endkey.slice(0, level);
     var step = map.intervals[map.intervals.length - level] * 1000;
-    
-    
-    /*
-    result.start = new Date(map.couchm_to_unix_ts(first)).toJSON();
-    result.end = new Date(map.couchm_to_unix_ts(last)).toJSON();
-    send(JSON.stringify(result, null, 2));
-    return;
-    */
-    
-    //var at = map.couchm_to_unix_ts(first);
-    //var value = 0;
     
     var meta = {
       min_value: Infinity,
@@ -199,37 +185,7 @@ ddoc.lists = {
     while (row = getRow()) {
       var origkey = JSON.parse(JSON.stringify(row.key));
       var key = map.couchm_to_unix_ts(row.key);
-      
-      //var at = row.value.at;
-      
-      /*
-      // Create new steams if needed.
-      for (var stream in row.value.data) {
-        if (!(stream in track)) {
-          var n = result.datastreams.push({
-            id: stream,
-            min_value: Infinity,
-            max_value: -Infinity,
-            datapoints: [],
-            end: {
-              date: new Date(map.couchm_to_unix_ts(last)).toJSON()
-            },
-            blub: {
-              between: map.couchm_to_unix_ts(first),
-              step: step,
-              key: key
-            }
-          });
-          track[stream] = {
-            lastAt: new Date(map.couchm_to_unix_ts(first)).toJSON(),
-            lastKey: map.couchm_to_unix_ts(first) - step,
-            lastValue: null,
-            index: n - 1
-          };
-        }
-      }
-      */
-        
+
       // Interpolate all streams up until now.
       //for (var stream in track) {
         for (var between = lastKey + step; between < key; between += step) {
@@ -238,46 +194,32 @@ ddoc.lists = {
         lastKey = key;
         //}
       
-      // Update all relevant datastreams with new values.
-      //for (var stream in row.value.data) {
-        //var datastream = result.datastreams[track[stream].index];
-        
+      // Update the datastream with new values.
+      if (row.value.length > stream_idx && row.value[stream_idx] !== null) {
+        meta.at = row.value[at_idx];
+        var value = row.value[stream_idx];
+        if (value === true || value === false) meta.current_value = value;
+        else meta.current_value = '' + row.value[stream_idx];
+        sendValue(['value', new Date(key)]);
 
-        
-        
-        if (row.value.length > stream_idx && row.value[stream_idx] !== null) {
-          meta.at = row.value[at_idx];
-          var value = row.value[stream_idx];
-          if (value === true || value === false) meta.current_value = value;
-          else meta.current_value = '' + row.value[stream_idx];
-          sendValue(['value', new Date(key)]);
-
-          if (+meta.current_value > +meta.max_value)
-            meta.max_value = meta.current_value;
-          if (+meta.current_value < +meta.min_value)
-            meta.min_value = meta.current_value;
-        }
-      //}
+        if (+meta.current_value > +meta.max_value)
+          meta.max_value = meta.current_value;
+        if (+meta.current_value < +meta.min_value)
+          meta.min_value = meta.current_value;
+      }
     }
     
     var end = map.couchm_to_unix_ts(last);
-    //for (var stream in track) {
-      for (var until = lastKey; until < end; until += step) {
-        sendValue(['finish', new Date(until)]);
-      }
-      //result.datastreams[track[stream].index].current_value = track[stream].lastValue;
-      //result.datastreams[track[stream].index].at = track[stream].lastAt;
-      //}
+    for (var until = lastKey; until < end; until += step) {
+      sendValue(['finish', new Date(until)]);
+    }
     send('\n  ]');
     for (var key in meta)
       send(',\n  ' + JSON.stringify(key) + ': ' + JSON.stringify(meta[key]));
     meta.endkey = last;
     meta.endstamp = end;
     meta.origend = req.query.endkey;
-    //send(JSON.stringify(meta));
     send('\n}\n');
-
-    //send(JSON.stringify(result, null, 2));
   }
 };
 
@@ -333,20 +275,7 @@ ddoc.shows = {
     url += Object.keys(params).map(function(key) {
       return key + '=' + encodeURIComponent(params[key]);
     }).join('&');
-    
-    /*
-    return JSON.stringify({
-      url: url,
-      start: new Date(start).toJSON(),
-      startkey: JSON.parse(params.startkey),
-      //startbla: timestamp(JSON.parse(params.startkey).splice(1, params.group_level)) * 1000,
-      //startts: new Date(timestamp(JSON.parse(params.startkey).splice(1, params.group_level)) * 1000).toJSON(),
-      //startts2: new Date(timestamp2(JSON.parse(params.startkey).splice(1, params.group_level)) * 1000).toJSON(),
-      end: new Date(end).toJSON(),
-      endkey: JSON.parse(params.endkey),
-      //endts: new Date(timestamp(JSON.parse(params.endkey).splice(1, params.group_level)) * 1000).toJSON()
-    }, null, 2);
-    */
+
     return {
       code: 302, // Found
       headers: { 'Location': url }
@@ -365,14 +294,11 @@ ddoc.filters = {
 
 ddoc.updates = {
   measurement: function(doc, req) {
-    log('RECV ' + req.body);
     doc = JSON.parse(req.body);
-    log('INTP ' + JSON.stringify(doc));
     doc._id = req.uuid;
     doc.type = 'measurement';
     if (!doc.timestamp) doc.timestamp = new Date().getTime();
     doc.user = req.userCtx.name;
-    log('FINL ' + JSON.stringify(doc));
     return [doc, 'Thanks\n'];
   }
 };
