@@ -1,6 +1,7 @@
 function json(url, callback) {
   // We’re using this instead of d3.json because the latter doesn’t seem to work well in IE10?
   var req = new XMLHttpRequest();
+  req.withCredentials = true;
   req.open('GET', url, true);
   req.onreadystatechange = function() {
     if (req.readyState == 4 && req.status == 200)
@@ -11,8 +12,8 @@ function json(url, callback) {
 
 function start() {
   json('config.json', function(config) {
-    json('_rewrite/feeds_and_datastreams', function(info) {
-      json('_view/domains?group=true', function(domains) {
+    json(config.couch + '/_design/energy_data/_rewrite/feeds_and_datastreams', function(info) {
+      json(config.couch + '/_design/energy_data/_view/domains?group=true', function(domains) {
         init(config, info, domains);
       });
     });
