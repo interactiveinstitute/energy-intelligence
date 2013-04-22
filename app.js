@@ -27,9 +27,13 @@ var ddoc = {
 //
 // and turns them into usable docs. It’s the only function in Couchm that actually stores data.
 //
-// In terms of Cosm concepts, the `source` field identifies the feed, and each field that is not called `source`, `timestamp`, `user` or `time` is considered to be a datastream value.
+// In terms of Cosm concepts, the `source` field identifies the feed, and each field that is not called `source`, `timestamp`, `user` or `time` is considered to be a datastream value. All numbers are converted to strings so that we’re not bothered too much by CouchDB’s [decimal value handling](http://couchdb.readthedocs.org/en/latest/json-structure.html#number-handling).
 ddoc.updates.measurement = function(doc, req) {
   doc = JSON.parse(req.body);
+  for (var field in doc) {
+    if (typeof doc[field] == 'number')
+      doc[field] = '' + doc[field];
+  }
   doc._id = req.uuid;
   doc.type = 'measurement';
   if (!doc.timestamp) doc.timestamp = new Date().getTime();

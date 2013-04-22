@@ -54,12 +54,16 @@
 <p>This accepts POST requests to <code>_design/energy_data/_update/measurement</code> containing JSON documents like</p>
 <pre><code>{ &quot;source&quot;: &quot;Room 1&quot;, &quot;ElectricPower&quot;: 42.0, &quot;timestamp&quot;: 1366117340982 }</code></pre>
 <p>and turns them into usable docs. It’s the only function in Couchm that actually stores data.</p>
-<p>In terms of Cosm concepts, the <code>source</code> field identifies the feed, and each field that is not called <code>source</code>, <code>timestamp</code>, <code>user</code> or <code>time</code> is considered to be a datastream value.</p>
+<p>In terms of Cosm concepts, the <code>source</code> field identifies the feed, and each field that is not called <code>source</code>, <code>timestamp</code>, <code>user</code> or <code>time</code> is considered to be a datastream value. All numbers are converted to strings so that we’re not bothered too much by CouchDB’s <a href="http://couchdb.readthedocs.org/en/latest/json-structure.html#number-handling">decimal value handling</a>.</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>ddoc.updates.measurement = <span class="keyword">function</span>(doc, req) {
   doc = JSON.parse(req.body);
+  <span class="keyword">for</span> (<span class="keyword">var</span> field <span class="keyword">in</span> doc) {
+    <span class="keyword">if</span> (<span class="keyword">typeof</span> doc[field] == <span class="string">'number'</span>)
+      doc[field] = <span class="string">''</span> + doc[field];
+  }
   doc._id = req.uuid;
   doc.type = <span class="string">'measurement'</span>;
   <span class="keyword">if</span> (!doc.timestamp) doc.timestamp = <span class="keyword">new</span> Date().getTime();
