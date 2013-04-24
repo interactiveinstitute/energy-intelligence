@@ -1,0 +1,44 @@
+body {
+  background: #111;
+  margin: 0;
+}
+
+.time .x.axis line.major {
+  stroke: transparent;
+}
+.time .x.axis line.minor {
+  stroke: #232323;
+}
+.time .axis .line {
+  shape-rendering: crispEdges;
+}
+.time .axis text {
+  fill: #ddd;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: sans-serif;
+  text-anchor: start !important;
+}
+.time .x.axis .domain {
+  display: none;
+}
+.time .area {
+  fill: rgba(63, 169, 245, .8);
+}
+.time .line {
+  fill: transparent;
+  stroke: #3fa9f5;
+  stroke-width: 3px;
+}
+.time .y.axis .tick:first-child, .time .yText.axis .tick:first-child {
+  display: none;
+}
+.time .y.axis line {
+  stroke: #6a7072;
+}
+.time .y.axis text {
+  display: none;
+}
+.time .y.axis .domain, .time .yText.axis .domain {
+  display: none;
+}
