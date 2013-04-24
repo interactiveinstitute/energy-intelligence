@@ -31,7 +31,7 @@ var ddoc = {
 ddoc.updates.measurement = function(doc, req) {
   doc = JSON.parse(req.body);
   for (var field in doc) {
-    if (typeof doc[field] == 'number')
+    if (field != 'timestamp' && typeof doc[field] == 'number')
       doc[field] = '' + doc[field];
   }
   doc._id = req.uuid;
@@ -281,7 +281,8 @@ ddoc.lists.interpolate_datastream = function(head, req) {
 ddoc.views.domains = {
   map: function(doc) {
     if (doc.type == 'measurement') {
-      var timestamp = (doc.timestamp > 10 * 365 * 24 * 60 * 60 * 1000) ? doc.timestamp : doc.timestamp * 1000;
+      var timestamp = parseInt(doc.timestamp);
+      timestamp = (timestamp > 10 * 365 * 24 * 60 * 60 * 1000) ? timestamp : timestamp * 1000;
       if (timestamp < 50 * 365 * 24 * 60 * 60 * 1000) {
         emit(doc.source, timestamp);
       }
