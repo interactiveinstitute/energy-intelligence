@@ -347,6 +347,8 @@ ddoc.lists.feeds_and_datastreams = function(head, req) {
     result.datastream_idx[map.fields[i]] = i;
   }
   
+  result.intervals = map.intervals.slice(1, -1);
+  
   send(JSON.stringify(result, null, 2));
 };
 ddoc.rewrites.push({

@@ -1,11 +1,48 @@
-function Chart(width, height) {
+function Chart(db, width, height) {
+  this.db = db;
   this.width = width;
   this.height = height;
+  this.display = [{
+    feed: 'allRooms',
+    datastream: 'ElectricPower'
+  }];
+  this.ready = false;
+  this.onReady = [];
   
-  this.construct();
+  this.getJSON(db + '/_design/energy_data/_rewrite/feeds_and_datastreams', function(info) {
+    this.getJSON(db + '/_design/energy_data/_view/domains?group=true', function(domains) {
+      this.intervals = info.intervals;
+      this.domains = {};
+      domains.rows.forEach(function(row) {
+        this.domains[row.key] = [row.value.min, row.value.max];
+      }, this);
+      this.construct();
+      this.ready = true;
+    
+      var callback;
+      while (callback = this.onReady.pop())
+        callback(this);
+    }.bind(this));
+  }.bind(this));
 }
 
 Chart.SAMPLE_SIZE = 4; // px
+Chart.EXTRA_UNITS_ABOVE = 50;
+
+Chart.prototype.then = function ChartThen(callback) {
+  if (this.ready) callback(this);
+  else this.onReady.push(callback);
+};
+
+Chart.prototype.getJSON = function ChartGetJSON(url, callback) {
+  var request = new XMLHttpRequest;
+  request.open('GET', url, true);
+  request.withCredentials = true;
+  request.onload = function(event) {
+    callback(JSON.parse(event.target.response));
+  };
+  request.send();
+};
 
 Chart.prototype.construct = function ChartConstruct() {
   var padding = {
@@ -13,34 +50,36 @@ Chart.prototype.construct = function ChartConstruct() {
   };
 
   var x = this.x = d3.time.scale()
-    .domain([0, new Date])
-    .range([0, this.width]);
+      .domain(this.domains[this.display[0].feed])
+      .range([0, this.width]);
   var y = this.y = d3.scale.linear()
-    .domain([0, 200])
-    .range([this.height - padding.bottom, 0]);
+      .domain([0, 200])
+      .range([this.height - padding.bottom, 0]);
 
   this.xAxis = d3.svg.axis()
-    .scale(x)
-    .orient('bottom')
-    .ticks(8)
-    .tickSubdivide(true)
-    .tickPadding(6)
-    .tickSize(this.height);
+      .scale(x)
+      .orient('bottom')
+      .ticks(8)
+      .tickSubdivide(true)
+      .tickPadding(6)
+      .tickSize(this.height);
   this.yAxis = d3.svg.axis()
-    .scale(y)
-    .orient('left')
-    .ticks(5)
-    .tickPadding(6)
-    .tickSize(-this.width)
-    .tickFormat(function(d) { return d + ' W'; });
+      .scale(y)
+      .orient('left')
+      .ticks(5)
+      .tickPadding(6)
+      .tickSize(-this.width)
+      .tickFormat(function(d) { return d + ' W'; });
 
   this.area = d3.svg.area()
-    .x(function(d) { return x(d.at); }) // TODO resampled
-    .y0(this.height - padding.bottom)
-    .y1(function(d) { return y(d.value) / 2; });
+      .interpolate('step-after')
+      .x(function(d) { return x(d.resampledAt); }) // TODO resampled
+      .y0(this.height - padding.bottom)
+      .y1(function(d) { return y(d.value); });
   this.line = d3.svg.line()
-    .x(function(d) { return x(d.at); })
-    .y(function(d) { return y(d.value) / 2; });
+      .interpolate('step-after')
+      .x(function(d) { return x(d.resampledAt); })
+      .y(function(d) { return y(d.value); });
 
   this.tickDistance = 0;
   
@@ -48,6 +87,8 @@ Chart.prototype.construct = function ChartConstruct() {
       .x(x)
       .scaleExtent([1, Infinity])
       .on('zoom', this.transform.bind(this));
+
+  d3.json
 }
 
 Chart.prototype.init = function ChartInit(container) {
@@ -58,6 +99,10 @@ Chart.prototype.init = function ChartInit(container) {
       .call(this.zoom)
     .append('g')
       .attr('transform', 'translate(0, 0)')
+  
+  this.chart.append('rect')
+      .attr('width', this.width)
+      .attr('height', this.height);
 
   this.chart.append('g')
       .attr('class', 'x axis');  
@@ -89,7 +134,8 @@ Chart.prototype.init = function ChartInit(container) {
       .attr('class', 'line')
       .datum([])
       .attr('d', this.line);
-    
+  
+  // TODO hide gradient during pan & zoom to make it smoother
   var gradient = this.chart.append('defs').append('linearGradient')
       .attr('id', 'leftGradient')
       .attr('x1', '0%')
@@ -115,6 +161,7 @@ Chart.prototype.init = function ChartInit(container) {
   this.transform();
 
   d3.select(window).on('mouseup', this.loadData.bind(this));
+  d3.select(window).on('touchend', this.loadData.bind(this));
   var timeout;
   this.chart.on('mousewheel', function(event) {
     if (timeout) clearTimeout(timeout);
@@ -134,10 +181,14 @@ Chart.prototype.transform = function ChartTransform() {
   var ndistance = 0;
   if (lines[0] && lines[0].length > 1) {
     for (var i = 0; i < lines[0].length - 1; i++) {
-      ndistance = (lines[0][i + 1].transform.baseVal.getItem(0).matrix.e - lines[0][i].transform.baseVal.getItem(0).matrix.e) / 2;
-      if (ndistance > 0) {
-        this.tickDistance = ndistance;
-        break;
+      var transform1 = lines[0][i + 1].transform.baseVal;
+      var transform2 = lines[0][i].transform.baseVal;
+      if (transform1.numberOfItems && transform2.numberOfItems) {
+        ndistance = (transform1.getItem(0).matrix.e - transform2.getItem(0).matrix.e) / 2;
+        if (ndistance > 0) {
+          this.tickDistance = ndistance;
+          break;
+        }
       }
     }
   }
@@ -156,59 +207,37 @@ Chart.prototype.loadData = function ChartLoadData() {
   var start = this.x.domain()[0];
   var duration = +this.x.domain()[1] - +this.x.domain()[0];
   var n = this.width / Chart.SAMPLE_SIZE;
-  var interval = duration / n;
+  for (var i = 0; i < this.intervals.length; i++) {
+    if (this.intervals[i] > duration * Chart.SAMPLE_SIZE / this.width / 1000) break;
+  }
+  var interval = this.intervals[i - 1] || 1;
+  var n = Math.ceil(duration * 3 / interval / 1000);
   
-  // FIXME
-  // 1. clamp 'interval' to one of the values in couchm (have feeds_and_datastreams tell about them)
-  // 2. use code below to create the right url
+  var params = {
+    feed: this.display[0].feed,
+    datastream: this.display[0].datastream,
+    interval: interval,
+    duration: parseInt(duration * 3 / 1000) + 'seconds',
+    start: new Date(+start - duration).toJSON()
+  };
+  var url = this.db + '/_design/energy_data/_show/historical?' + Object.keys(params).map(function(key) {
+    return key + '=' + encodeURIComponent(params[key]);
+  }).join('&');
   
-  /*
-var params = {
-  feed: feed,
-  datastream: datastream,
-  interval: interval,
-  duration: duration, <<< just /1000 and use 'seconds'
-  start: start_datetime
-};
-var units = {
-  second: 1, seconds: 1,
-  minute: 60, minutes: 60,
-  hour: 60 * 60, hours: 60 * 60,
-  day: 60 * 60 * 24, days: 60 * 60 * 24,
-  week: 60 * 60 * 24 * 7, weeks: 60 * 60 * 24 * 7,
-  month: 60 * 60 * 24 * 31, months: 60 * 60 * 24 * 31,
-  year: 60 * 60 * 24 * 366, years: 60 * 60 * 24 * 366
-};
-//var parsed = /(\d+)([a-z]+)/.exec(duration);
-//var ms = parseInt(parsed[1]) * units[parsed[2]] * 1000;
-  
-  
-  '/_design/energy_data/_show/historical'
-  
+  this.getJSON(url, function(result) {
+    var resample = +new Date(params.start);
+    var data = result.datapoints.map(function(d, i) {
+      return {
+        at: new Date(d.at),
+        resampledAt: new Date(resample + i * interval * 1000),
+        value: parseFloat(d.value || 0)
+      };
+    });
 
-  var arr = [];
-  for (var key in args)
-    arr.push(key + '=' + encodeURIComponent(args[key]));
-  url += '?' + arr.join('&');
-  */
-  
-  
-  // also, use domains to set the initial view, so that we don’t have to load unavailable data for 30+ years
-  
-  //d3.json(url, function(error, data) {
-    var fakeData = [];
-    fakeData[0] = {
-      at: +start - duration,
-      value: 20 + Math.random() * 50
-    };
-    for (var i = 1; i < n * 3; i++) {
-      fakeData.push({
-        at: new Date(+fakeData[i - 1].at + interval),
-        value: Math.max(0, fakeData[i - 1].value + Math.random() * 40 - 20)
-      });
-    }
+//    var oldDomain = this.y.domain()[1];
+    var newDomain = d3.max(data.map(function(d) { return d.value })) + Chart.EXTRA_UNITS_ABOVE;
     
-    this.y.domain([0, d3.max(fakeData.map(function(d) { return d.value })) + 50]);
+    this.y.domain([0, newDomain]);
     var axis = this.chart.select('.y.axis')
         .transition()
         .duration(1000)
@@ -222,13 +251,14 @@ var units = {
         .attr('y', -10);
 
     this.chart.select('.area')
-        .datum(fakeData)
+        .datum(data)
         .attr('d', this.area)
         .attr('transform', 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)');
 
     this.chart.select('.line')
-        .datum(fakeData)
+        .datum(data)
         .attr('d', this.line)
         .attr('transform', 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)')
         .attr('filter', 'url(#lineShadow)');
-}
+  }.bind(this));
+};

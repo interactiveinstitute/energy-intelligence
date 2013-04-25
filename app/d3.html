@@ -8,8 +8,10 @@
 <link rel="stylesheet" href="d3.css">
 <script src="d3.v3.js"></script>
 <script src="d3main.js"></script>
-<script>var chart = new Chart(innerWidth, innerHeight)</script>
+<script>
+  var chart = new Chart('http://spscreen:yucuf6u9rA7upraH8p9uCHeTAd9AfePu@aktivahuset.tii.se:8001/sp', innerWidth, innerHeight)
+</script>
 
 <body>
 
-<script>chart.init('body')</script>
+<script>chart.then(function(chart) { chart.init('body'); });</script>
