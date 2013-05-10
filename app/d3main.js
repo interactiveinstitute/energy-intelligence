@@ -46,7 +46,7 @@ Chart.prototype.getJSON = function ChartGetJSON(url, callback) {
 
 Chart.prototype.construct = function ChartConstruct() {
   var padding = {
-    bottom: 25
+    bottom: 48
   };
 
   var x = this.x = d3.time.scale()
@@ -59,7 +59,7 @@ Chart.prototype.construct = function ChartConstruct() {
   this.xAxis = d3.svg.axis()
       .scale(x)
       .orient('bottom')
-      .ticks(8)
+      .ticks(5)
       .tickSubdivide(true)
       .tickPadding(6)
       .tickSize(this.height);
@@ -72,12 +72,12 @@ Chart.prototype.construct = function ChartConstruct() {
       .tickFormat(function(d) { return d + ' W'; });
 
   this.area = d3.svg.area()
-      .interpolate('step-after')
+      //.interpolate('step-after')
       .x(function(d) { return x(d.resampledAt); }) // TODO resampled
       .y0(this.height - padding.bottom)
       .y1(function(d) { return y(d.value); });
   this.line = d3.svg.line()
-      .interpolate('step-after')
+      //.interpolate('step-after')
       .x(function(d) { return x(d.resampledAt); })
       .y(function(d) { return y(d.value); });
 
@@ -174,8 +174,8 @@ Chart.prototype.transform = function ChartTransform() {
   var axis = this.chart.select('.x.axis')
       .call(this.xAxis);
   axis.selectAll('text')
-      .attr('x', 5)
-      .attr('y', this.height - 15);
+      .attr('x', 16)
+      .attr('y', this.height - 32);
   
   var lines = axis.selectAll('line');
   var ndistance = 0;
@@ -200,7 +200,7 @@ Chart.prototype.transform = function ChartTransform() {
       .attr('transform', 'translate(' + this.zoom.translate()[0] + ', 0) scale(' + this.zoom.scale() + ', 1)');
   
   this.chart.select('.line')
-      .attr('filter', '');
+      .attr('filter', 'none');
 }
 
 Chart.prototype.loadData = function ChartLoadData() {
@@ -234,7 +234,7 @@ Chart.prototype.loadData = function ChartLoadData() {
       };
     });
 
-//    var oldDomain = this.y.domain()[1];
+    var oldDomain = this.y.domain()[1];
     var newDomain = d3.max(data.map(function(d) { return d.value })) + Chart.EXTRA_UNITS_ABOVE;
     
     this.y.domain([0, newDomain]);
@@ -248,7 +248,7 @@ Chart.prototype.loadData = function ChartLoadData() {
         .call(this.yAxis)
       .selectAll('text')
         .attr('x', 5)
-        .attr('y', -10);
+        .attr('y', -16);
 
     this.chart.select('.area')
         .datum(data)

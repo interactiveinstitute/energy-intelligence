@@ -1,10 +1,18 @@
 body {
-  background: #111;
+  background: #000 url(app-mockup.png);
   margin: 0;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  -ms-touch-action: none;
 }
 
 .time {
   display: block;
+  position: absolute;
+  top: 200px;
+  width: 1920px;
+  overflow: hidden;
 }
 .time .x.axis line.major {
   stroke: transparent;
@@ -17,7 +25,7 @@ body {
 }
 .time .axis text {
   fill: #ddd;
-  font-size: 12px;
+  font-size: 28px;
   font-weight: bold;
   font-family: sans-serif;
   text-anchor: start !important;
@@ -31,6 +39,7 @@ body {
 .time .line {
   fill: transparent;
   stroke: #3fa9f5;
+  //stroke: #91d1fe;
   stroke-width: 3px;
 }
 .time .y.axis .tick:first-child, .time .yText.axis .tick:first-child {
