@@ -39,7 +39,6 @@ body {
 .time .line {
   fill: transparent;
   stroke: #3fa9f5;
-  //stroke: #91d1fe;
   stroke-width: 3px;
 }
 .time .y.axis .tick:first-child, .time .yText.axis .tick:first-child {

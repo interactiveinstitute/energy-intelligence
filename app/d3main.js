@@ -160,15 +160,58 @@ Chart.prototype.init = function ChartInit(container) {
 
   this.transform();
 
-  d3.select(window).on('mouseup', this.loadData.bind(this));
-  d3.select(window).on('touchend', this.loadData.bind(this));
-  this.chart.on('touchend', this.loadData.bind(this));
+  //d3.select(window).on('mouseup', this.loadData.bind(this));
   var timeout;
+  var touchend = function touchend(event) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(this.loadData.bind(this), 500);
+  }.bind(this);
+  d3.select(window).on('touchend', touchend);
+  this.chart.on('touchend', touchend);
+  /*
   this.chart.on('mousewheel', function(event) {
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(this.loadData.bind(this), 500);
   }.bind(this));
+  */
   this.loadData();
+  
+  //this.listen();
+};
+
+// Set up touch events
+Chart.prototype.listen = function ChartListen() {
+  // Pinch to zoom
+  var pinch = {};
+  this.chart.on('touchstart', function() {
+    var touches = d3.event.touches;
+    if (touches.length == 2) {
+      pinch = {
+        x: [touches[0].clientX, touches[1].clientX],
+        scale: this.zoom.scale(),
+        translate: this.zoom.translate()[0]
+      };
+      console.log('start pinch', pinch);
+      d3.event.preventDefault();
+    }
+  }.bind(this));
+  this.chart.on('touchmove', function() {
+    var touches = d3.event.touches;
+    if (touches.length == 2) {
+      var distance = (touches[0].clientX - touches[1].clientX);
+      console.log(distance);
+
+      var scale = distance / (pinch.x[0] - pinch.x[1]);
+      
+      if (scale > 0) {
+        this.zoom.scale(pinch.scale * scale);      
+        var translate = (-(pinch.x[0] + pinch.x[1]) + (touches[0].clientX + touches[1].clientX)) / 2 / scale;
+        this.zoom.translate([pinch.translate + translate, 0]);
+        this.transform();
+      }
+      d3.event.preventDefault();
+    }
+  }.bind(this));
 };
 
 Chart.prototype.transform = function ChartTransform() {
@@ -178,20 +221,29 @@ Chart.prototype.transform = function ChartTransform() {
       .attr('x', 16)
       .attr('y', this.height - 32);
   
+  // Set x axis line width
   var lines = axis.selectAll('line');
-  var ndistance = 0;
   if (lines[0] && lines[0].length > 1) {
-    for (var i = 0; i < lines[0].length - 1; i++) {
-      var transform1 = lines[0][i + 1].transform.baseVal;
-      var transform2 = lines[0][i].transform.baseVal;
-      if (transform1.numberOfItems && transform2.numberOfItems) {
-        ndistance = (transform1.getItem(0).matrix.e - transform2.getItem(0).matrix.e) / 2;
-        if (ndistance > 0) {
-          this.tickDistance = ndistance;
-          break;
+    var left = Infinity;
+    for (var i = 0; i < lines[0].length; i++) {
+      var transform = lines[0][i].transform.baseVal;
+      if (transform.numberOfItems) {
+        var position = transform.getItem(0).matrix.e;
+        if (position >= 0 && position < left) left = position;
+      }
+    }
+    var next = Infinity;
+    if (left > -1) {
+      for (var i = 0; i < lines[0].length; i++) {
+        var transform = lines[0][i].transform.baseVal;
+        if (transform.numberOfItems) {
+          var position = transform.getItem(0).matrix.e;
+          if (position > left && position < next) next = position;
         }
       }
     }
+    if (left != Infinity && next != Infinity)
+      this.tickDistance = (next - left) / 2;
   }
   lines.style('stroke-width', this.tickDistance)
       .attr('x1', this.tickDistance / 2)
@@ -207,9 +259,7 @@ Chart.prototype.transform = function ChartTransform() {
 Chart.prototype.loadData = function ChartLoadData() {
   var start = this.x.domain()[0];
   var duration = +this.x.domain()[1] - +this.x.domain()[0];
-  
-  console.log('loading', start, duration);
-  
+    
   var n = this.width / Chart.SAMPLE_SIZE;
   for (var i = 0; i < this.intervals.length; i++) {
     if (this.intervals[i] > duration * Chart.SAMPLE_SIZE / this.width / 1000) break;
@@ -263,6 +313,6 @@ Chart.prototype.loadData = function ChartLoadData() {
         .datum(data)
         .attr('d', this.line)
         .attr('transform', 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)')
-        .attr('filter', 'url(#lineShadow)');
+//        .attr('filter', 'url(#lineShadow)');
   }.bind(this));
 };
