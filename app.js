@@ -222,10 +222,10 @@ ddoc.lists.interpolate_datastream = function(head, req) {
   var lastKey = map.couchm_to_unix_ts(first) - step;
   
   var first = true;
-  var sendValue = function(dbg) {
+  var sendValue = function(dbg, key) {
     var obj = {
-      at: meta.at,
-      value: meta.current_value
+      at: key,
+      value: meta.current_value || '0'
     };
     if (dbg) obj.debug = dbg;
     send((first ? '' : ',\n') + '    ' + JSON.stringify(obj));
@@ -239,7 +239,7 @@ ddoc.lists.interpolate_datastream = function(head, req) {
 
     // Interpolate all streams up until now.
     for (var between = lastKey + step; between < key; between += step) {
-      sendValue(['interpolate', new Date(between)]);
+      sendValue(['interpolate', new Date(between), meta.at], new Date(between));
     }
     lastKey = key;
     
@@ -249,7 +249,7 @@ ddoc.lists.interpolate_datastream = function(head, req) {
       var value = row.value[stream_idx];
       if (value === true || value === false) meta.current_value = value;
       else meta.current_value = '' + row.value[stream_idx];
-      sendValue(['value', new Date(key)]);
+      sendValue(['value', new Date(key), meta.at], new Date(key));
 
       if (+meta.current_value > +meta.max_value)
         meta.max_value = meta.current_value;
@@ -260,7 +260,7 @@ ddoc.lists.interpolate_datastream = function(head, req) {
   
   var end = map.couchm_to_unix_ts(last);
   for (var until = lastKey; until < end; until += step) {
-    sendValue(['finish', new Date(until)]);
+    sendValue(['finish', new Date(until), meta.at], new Date(until));
   }
   send('\n  ]');
   for (var key in meta)
