@@ -162,6 +162,7 @@ Chart.prototype.init = function ChartInit(container) {
 
   d3.select(window).on('mouseup', this.loadData.bind(this));
   d3.select(window).on('touchend', this.loadData.bind(this));
+  this.chart.on('touchend', this.loadData.bind(this));
   var timeout;
   this.chart.on('mousewheel', function(event) {
     if (timeout) clearTimeout(timeout);
@@ -206,6 +207,9 @@ Chart.prototype.transform = function ChartTransform() {
 Chart.prototype.loadData = function ChartLoadData() {
   var start = this.x.domain()[0];
   var duration = +this.x.domain()[1] - +this.x.domain()[0];
+  
+  console.log('loading', start, duration);
+  
   var n = this.width / Chart.SAMPLE_SIZE;
   for (var i = 0; i < this.intervals.length; i++) {
     if (this.intervals[i] > duration * Chart.SAMPLE_SIZE / this.width / 1000) break;

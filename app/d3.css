@@ -1,9 +1,10 @@
+html {
+  overflow: hidden;
+}
+
 body {
   background: #000 url(app-mockup.png);
   margin: 0;
-  width: 1920px;
-  height: 1080px;
-  overflow: hidden;
   -ms-touch-action: none;
 }
 
@@ -11,7 +12,6 @@ body {
   display: block;
   position: absolute;
   top: 200px;
-  width: 1920px;
   overflow: hidden;
 }
 .time .x.axis line.major {
