@@ -348,32 +348,39 @@ Chart.prototype.loadData = function ChartLoadData() {
 
     var oldDomain = this.y.domain()[1];
     var newDomain = d3.max(data.map(function(d) { return d.value })) + Chart.EXTRA_UNITS_ABOVE;
-    
-    // TODO animate graph height using these values
-    console.log(oldDomain, newDomain);
-    
+    var tempScale = newDomain / oldDomain;
+
     this.y.domain([0, newDomain]);
     var axis = this.chart.select('.y.axis')
-        .transition()
+      .transition()
         .duration(1000)
         .call(this.yAxis);
     axis = this.chart.select('.yText.axis')
-        .transition()
+      .transition()
         .duration(1000)
         .call(this.yAxis)
       .selectAll('text')
         .attr('x', 5)
         .attr('y', -16);
 
+    var from = 'matrix(1, 0, 0, ' + tempScale + ', 0, ' + (this.height - 48) * (1 - tempScale) + ') scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)';
+    var to = 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)';
+
     this.chart.select('.area')
         .datum(data)
         .attr('d', this.area)
-        .attr('transform', 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)');
+        .attr('transform', from)
+      .transition()
+        .duration(1000)
+        .attr('transform', to);
 
     this.chart.select('.line')
         .datum(data)
         .attr('d', this.line)
-        .attr('transform', 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)')
+        .attr('transform', from)
 //        .attr('filter', 'url(#lineShadow)');
+      .transition()
+        .duration(1000)
+        .attr('transform', to);
   }.bind(this));
 };
