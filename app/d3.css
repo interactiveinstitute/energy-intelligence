@@ -56,19 +56,18 @@ body {
 
 .zoomer {
   position: absolute;
-  bottom: 50px;
-  right: 50px;
-  background: #000;
-  border: 1px solid #fff;
-  width: 360px;
-  height: 44px;
-  border-radius: 22px;
+  bottom: 56px;
+  right: 56px;
+  /*background: -webkit-linear-gradient(top, #000 50%, #333 100%);*/
+  background: url(zoomer.png);
+  width: 361px;
+  height: 45px;
   box-shadow: 0 0 40px 40px #000;
 }
 .zoomer .handle {
   width: 44px;
   height: 44px;
   border-radius: 22px;
-  background: #ccc;
+  background: url(zoomer-handle.png);
   position: absolute;
 }
