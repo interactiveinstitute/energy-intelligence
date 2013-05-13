@@ -85,7 +85,7 @@ Chart.prototype.construct = function ChartConstruct() {
   
   this.zoom = d3.behavior.zoom()
       .x(x)
-      .scaleExtent([1, Infinity])
+      .scaleExtent([1, 1000]) // TODO prefer to define this related to time
       .on('zoom', this.transform.bind(this));
 
   d3.json
@@ -158,8 +158,6 @@ Chart.prototype.init = function ChartInit(container) {
   this.chart.append('g')
       .attr('class', 'yText axis');
 
-  this.transform();
-
   //d3.select(window).on('mouseup', this.loadData.bind(this));
   var timeout;
   var touchend = function touchend(event) {
@@ -174,8 +172,62 @@ Chart.prototype.init = function ChartInit(container) {
     timeout = setTimeout(this.loadData.bind(this), 500);
   }.bind(this));
   */
+  
+  var zooming = -1;
+  this.zoomer = d3.select(container).append('div')
+      .attr('class', 'zoomer');
+  this.zoomer.append('div')
+      .attr('class', 'handle')
+      .on('touchstart', function() {
+        zooming = d3.touches(this)[0][0];
+      })
+      .on('touchend', function() {
+        zooming = -1;
+      });
+  d3.select(container)
+      .on('touchmove', function() {
+        if (zooming == -1) return;
+        var handle = this.zoomer.select('.handle').node();
+        var position = (d3.touches(this.zoomer.node())[0][0] - zooming) / (this.zoomer.node().clientWidth - handle.clientWidth);
+        if (position < 0) position = 0;
+        if (position > 1) position = 1;
+        var extent = this.zoom.scaleExtent();
+        var scale = extent[0] + position * (extent[1] - extent[0]);
+        //this.zoom.translate([origX / scale, 0]);
+        //this.zoom.translate([0, 0]);
+        //this.zoom.translate([origX, 0]);
+        //this.zoom.setFocusPoint([960, 0]);
+        
+        //var x = 100;
+        //var translate = 960 + scale * (x - origX);
+        var screenOrigin = 960;
+        var translate = screenOrigin - (screenOrigin - this.zoom.translate()[0]) * scale / this.zoom.scale();
+        this.zoom.translate([translate, 0]);
+        this.zoom.scale(scale);
+        //this.zoom.translate([960 - scale * (x + origX), 0]);
+        //this.zoom.translate([origX, 0]);
+        this.transform();
+        //var position = d3.touches(this)[0][0] - zooming;
+        //console.log('zooming', position, d3.touches(this)[0][0], zooming);
+      }.bind(this));//.bind(this.zoomer.select('.handle').node()));
+      // let position change after zoom events, to keep 1-1
+      /*
+  this.zoom.on('zoom', function() {
+    var width = this.zoomer.node().clientWidth;
+    console.log(width)
+//    this.zoomer.select('.handle')
+  }.bind(this));
+      */
+  
+      this.transform();
+  
   this.loadData();
   
+  /*
+  this.chart.on('touchmove', function() {
+    console.log(d3.touches());
+  });
+  */
   //this.listen();
 };
 
@@ -254,6 +306,12 @@ Chart.prototype.transform = function ChartTransform() {
   
   this.chart.select('.line')
       .attr('filter', 'none');
+  
+  var handle = this.zoomer.select('.handle').node();
+  var scale = this.zoom.scale();
+  var extent = this.zoom.scaleExtent();
+  var width = this.zoomer.node().clientWidth - handle.clientWidth;
+  handle.style.left = (scale - extent[0]) / (extent[1] - extent[0]) * width + 'px';
 }
 
 Chart.prototype.loadData = function ChartLoadData() {
@@ -290,6 +348,9 @@ Chart.prototype.loadData = function ChartLoadData() {
 
     var oldDomain = this.y.domain()[1];
     var newDomain = d3.max(data.map(function(d) { return d.value })) + Chart.EXTRA_UNITS_ABOVE;
+    
+    // TODO animate graph height using these values
+    console.log(oldDomain, newDomain);
     
     this.y.domain([0, newDomain]);
     var axis = this.chart.select('.y.axis')

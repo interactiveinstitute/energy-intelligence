@@ -1099,7 +1099,7 @@ d3 = function() {
   };
   var d3_selectionRoot = d3.select(d3_selectRoot);
   d3.behavior.zoom = function() {
-    var translate = [ 0, 0 ], translate0, scale = 1, scale0, scaleExtent = d3_behavior_zoomInfinity, event = d3_eventDispatch(zoom, "zoom"), x0, x1, y0, y1, startloc, touchtime;
+    var translate = [ 0, 0 ], translate0, scale = 1, scale0, scaleExtent = d3_behavior_zoomInfinity, event = d3_eventDispatch(zoom, "zoom"), x0, x1, y0, y1, touchtime;
     function zoom() {
       this.on("mousedown.zoom", mousedown).on("mousemove.zoom", mousemove).on(d3_behavior_zoomWheel + ".zoom", mousewheel).on("dblclick.zoom", dblclick).on("touchstart.zoom", touchstart).on("touchmove.zoom", touchmove).on("touchend.zoom", touchstart);
     }
@@ -1182,6 +1182,11 @@ d3 = function() {
         if (moved && d3.event.target === eventTarget) d3_eventSuppress(w, "click.zoom");
       }
     }
+    zoom.setFocusPoint = function(p) {
+      if (!translate0) translate0 = location(p);
+      translateTo(p, translate0);
+      console.log("setting focus", p, translate);
+    };
     function mousewheel() {
       if (!translate0) translate0 = location(d3.mouse(this));
       scaleTo(Math.pow(2, d3_behavior_zoomDelta() * .002) * scale);
@@ -1213,9 +1218,6 @@ d3 = function() {
           dispatch(event.of(this, arguments));
         }
         touchtime = now;
-      } else if (touches.length > 1) {
-        var loc0 = location(touches[0]), loc1 = location(touches[1]);
-        startloc = [ loc0[0] - loc1[0], loc0[1] - loc1[1] ];
       }
     }
     function touchmove() {
@@ -1224,11 +1226,7 @@ d3 = function() {
         var p1, l1 = translate0[p1.identifier];
         p0 = [ (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2 ];
         l0 = [ (l0[0] + l1[0]) / 2, (l0[1] + l1[1]) / 2 ];
-        if (d3.event.scale == undefined) {
-          var loc0 = location(touches[0]), loc1 = location(touches[1]), endloc = [ loc0[0] - loc1[0], loc0[1] - loc1[1] ];
-          d3.event.scale = Math.sqrt(endloc[0] * endloc[0] + endloc[1] * endloc[1]) / Math.sqrt(startloc[0] * startloc[0] + startloc[1] * startloc[1]);
-        }
-        scaleTo(d3.event.scale * scale0);
+        if (d3.event.scale) scaleTo(d3.event.scale * scale0);
       }
       translateTo(p0, l0);
       touchtime = null;
