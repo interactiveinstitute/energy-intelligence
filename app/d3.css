@@ -71,3 +71,12 @@ body {
   background: url(zoomer-handle.png);
   position: absolute;
 }
+
+button {
+  position: absolute;
+  bottom: 56px;
+  left: 600px;
+  width: 88px;
+  height: 44px;
+  font-weight: bold;
+}

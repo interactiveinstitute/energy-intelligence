@@ -1,11 +1,13 @@
+function TotalPower() {
+  this.feed = 'allRooms';
+  this.datastream = 'ElectricPower';
+};
+
 function Chart(db, width, height) {
   this.db = db;
   this.width = width;
   this.height = height;
-  this.display = [{
-    feed: 'allRooms',
-    datastream: 'ElectricPower'
-  }];
+  this.display = [new TotalPower];
   this.ready = false;
   this.onReady = [];
   
@@ -158,7 +160,6 @@ Chart.prototype.init = function ChartInit(container) {
   this.chart.append('g')
       .attr('class', 'yText axis');
 
-  //d3.select(window).on('mouseup', this.loadData.bind(this));
   var timeout;
   var touchend = function touchend(event) {
     if (timeout) clearTimeout(timeout);
@@ -166,12 +167,6 @@ Chart.prototype.init = function ChartInit(container) {
   }.bind(this);
   d3.select(window).on('touchend', touchend);
   this.chart.on('touchend', touchend);
-  /*
-  this.chart.on('mousewheel', function(event) {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(this.loadData.bind(this), 500);
-  }.bind(this));
-  */
   
   var zooming = -1;
   this.zoomer = d3.select(container).append('div')
@@ -192,78 +187,22 @@ Chart.prototype.init = function ChartInit(container) {
         if (position < 0) position = 0;
         if (position > 1) position = 1;
         var extent = this.zoom.scaleExtent();
-        var scale = extent[0] + position * (extent[1] - extent[0]);
-        //this.zoom.translate([origX / scale, 0]);
-        //this.zoom.translate([0, 0]);
-        //this.zoom.translate([origX, 0]);
-        //this.zoom.setFocusPoint([960, 0]);
+        var scale = extent[0] + Math.pow(position, 4) * (extent[1] - extent[0]);
         
-        //var x = 100;
-        //var translate = 960 + scale * (x - origX);
         var screenOrigin = 960;
         var translate = screenOrigin - (screenOrigin - this.zoom.translate()[0]) * scale / this.zoom.scale();
         this.zoom.translate([translate, 0]);
         this.zoom.scale(scale);
-        //this.zoom.translate([960 - scale * (x + origX), 0]);
-        //this.zoom.translate([origX, 0]);
         this.transform();
-        //var position = d3.touches(this)[0][0] - zooming;
-        //console.log('zooming', position, d3.touches(this)[0][0], zooming);
-      }.bind(this));//.bind(this.zoomer.select('.handle').node()));
-      // let position change after zoom events, to keep 1-1
-      /*
-  this.zoom.on('zoom', function() {
-    var width = this.zoomer.node().clientWidth;
-    console.log(width)
-//    this.zoomer.select('.handle')
-  }.bind(this));
-      */
-  
+      }.bind(this));
       this.transform();
   
   this.loadData();
   
-  /*
-  this.chart.on('touchmove', function() {
-    console.log(d3.touches());
-  });
-  */
-  //this.listen();
-};
-
-// Set up touch events
-Chart.prototype.listen = function ChartListen() {
-  // Pinch to zoom
-  var pinch = {};
-  this.chart.on('touchstart', function() {
-    var touches = d3.event.touches;
-    if (touches.length == 2) {
-      pinch = {
-        x: [touches[0].clientX, touches[1].clientX],
-        scale: this.zoom.scale(),
-        translate: this.zoom.translate()[0]
-      };
-      console.log('start pinch', pinch);
-      d3.event.preventDefault();
-    }
-  }.bind(this));
-  this.chart.on('touchmove', function() {
-    var touches = d3.event.touches;
-    if (touches.length == 2) {
-      var distance = (touches[0].clientX - touches[1].clientX);
-      console.log(distance);
-
-      var scale = distance / (pinch.x[0] - pinch.x[1]);
-      
-      if (scale > 0) {
-        this.zoom.scale(pinch.scale * scale);      
-        var translate = (-(pinch.x[0] + pinch.x[1]) + (touches[0].clientX + touches[1].clientX)) / 2 / scale;
-        this.zoom.translate([pinch.translate + translate, 0]);
-        this.transform();
-      }
-      d3.event.preventDefault();
-    }
-  }.bind(this));
+  this.switcher = d3.select(container).append('button')
+      .text('switch')
+      .on('click', function() {
+      });
 };
 
 Chart.prototype.transform = function ChartTransform() {
@@ -311,7 +250,7 @@ Chart.prototype.transform = function ChartTransform() {
   var scale = this.zoom.scale();
   var extent = this.zoom.scaleExtent();
   var width = this.zoomer.node().clientWidth - handle.clientWidth;
-  handle.style.left = (scale - extent[0]) / (extent[1] - extent[0]) * width + 'px';
+  handle.style.left = Math.pow((scale - extent[0]) / (extent[1] - extent[0]), 1/4) * width + 'px';
 }
 
 Chart.prototype.loadData = function ChartLoadData() {
