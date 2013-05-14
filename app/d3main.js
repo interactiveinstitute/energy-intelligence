@@ -1,13 +1,75 @@
-function TotalPower() {
+function TotalPower(chart) {
+  this.chart = chart;
+  
   this.feed = 'allRooms';
   this.datastream = 'ElectricPower';
+  
+  this.area = d3.svg.area()
+      //.interpolate('step-after')
+      .x(function(d) { return this.chart.x(d.resampledAt); }.bind(this))
+      .y0(this.chart.height - Chart.PADDING_BOTTOM)
+      .y1(function(d) { return this.chart.y(d.value); }.bind(this));
+  this.line = d3.svg.line()
+      //.interpolate('step-after')
+      .x(function(d) { return this.chart.x(d.resampledAt); }.bind(this))
+      .y(function(d) { return this.chart.y(d.value); }.bind(this));
+};
+TotalPower.prototype.init = function() {
+  this.chart.chart.append('g')
+      .attr('class', 'container')
+    .append('path')
+      .attr('class', 'area')
+      .datum([])
+      .attr('d', this.area);
+      
+  var filter = this.chart.chart.append('filter')
+      .attr('id', 'lineShadow')
+      .attr('height', '130%');
+  filter.append('feGaussianBlur')
+      .attr('in', 'SourceAlpha')
+      .attr('stdDeviation', 10);
+  filter.append('feOffset')
+      .attr('dx', 0)
+      .attr('dy', 5)
+      .attr('result', 'offsetblur');
+  var merge = filter.append('feMerge');
+  merge.append('feMergeNode');
+  merge.append('feMergeNode')
+      .attr('in', 'SourceGraphic');
+  this.chart.chart.select('.container').append('path')
+      .attr('class', 'line')
+      .datum([])
+      .attr('d', this.line);
+};
+TotalPower.prototype.setDataAndTransform = function(data, from, to) {
+  this.chart.chart.select('.area')
+      .datum(data)
+      .attr('d', this.area)
+      .attr('transform', from)
+    .transition()
+      .duration(1000)
+      .attr('transform', to);
+
+  this.chart.chart.select('.line')
+      .datum(data)
+      .attr('d', this.line)
+      .attr('transform', from)
+//        .attr('filter', 'url(#lineShadow)');
+    .transition()
+      .duration(1000)
+      .attr('transform', to);
+};
+
+function TotalEnergy() {
+  this.feed = 'allRooms';
+  this.datastream = 'ElectricEnergy';
 };
 
 function Chart(db, width, height) {
   this.db = db;
   this.width = width;
   this.height = height;
-  this.display = [new TotalPower];
+  this.display = [new TotalPower(this)];
   this.ready = false;
   this.onReady = [];
   
@@ -30,6 +92,7 @@ function Chart(db, width, height) {
 
 Chart.SAMPLE_SIZE = 4; // px
 Chart.EXTRA_UNITS_ABOVE = 50;
+Chart.PADDING_BOTTOM = 48;
 
 Chart.prototype.then = function ChartThen(callback) {
   if (this.ready) callback(this);
@@ -47,51 +110,35 @@ Chart.prototype.getJSON = function ChartGetJSON(url, callback) {
 };
 
 Chart.prototype.construct = function ChartConstruct() {
-  var padding = {
-    bottom: 48
-  };
-
-  var x = this.x = d3.time.scale()
+  this.x = d3.time.scale()
       .domain(this.domains[this.display[0].feed])
       .range([0, this.width]);
-  var y = this.y = d3.scale.linear()
+  this.y = d3.scale.linear()
       .domain([0, 200])
-      .range([this.height - padding.bottom, 0]);
+      .range([this.height - Chart.PADDING_BOTTOM, 0]);
 
   this.xAxis = d3.svg.axis()
-      .scale(x)
+      .scale(this.x)
       .orient('bottom')
       .ticks(5)
       .tickSubdivide(true)
       .tickPadding(6)
       .tickSize(this.height);
   this.yAxis = d3.svg.axis()
-      .scale(y)
+      .scale(this.y)
       .orient('left')
       .ticks(5)
       .tickPadding(6)
       .tickSize(-this.width)
       .tickFormat(function(d) { return d + ' W'; });
 
-  this.area = d3.svg.area()
-      //.interpolate('step-after')
-      .x(function(d) { return x(d.resampledAt); }) // TODO resampled
-      .y0(this.height - padding.bottom)
-      .y1(function(d) { return y(d.value); });
-  this.line = d3.svg.line()
-      //.interpolate('step-after')
-      .x(function(d) { return x(d.resampledAt); })
-      .y(function(d) { return y(d.value); });
-
   this.tickDistance = 0;
   
   this.zoom = d3.behavior.zoom()
-      .x(x)
+      .x(this.x)
       .scaleExtent([1, 1000]) // TODO prefer to define this related to time
       .on('zoom', this.transform.bind(this));
-
-  d3.json
-}
+};
 
 Chart.prototype.init = function ChartInit(container) {
   this.chart = d3.select(container).append('svg')
@@ -111,31 +158,7 @@ Chart.prototype.init = function ChartInit(container) {
   this.chart.append('g')
       .attr('class', 'y axis');
 
-  this.chart.append('g')
-      .attr('class', 'container')
-    .append('path')
-      .attr('class', 'area')
-      .datum([])
-      .attr('d', this.area);
-
-  var filter = this.chart.append('filter')
-      .attr('id', 'lineShadow')
-      .attr('height', '130%');
-  filter.append('feGaussianBlur')
-      .attr('in', 'SourceAlpha')
-      .attr('stdDeviation', 10);
-  filter.append('feOffset')
-      .attr('dx', 0)
-      .attr('dy', 5)
-      .attr('result', 'offsetblur');
-  var merge = filter.append('feMerge');
-  merge.append('feMergeNode');
-  merge.append('feMergeNode')
-      .attr('in', 'SourceGraphic');
-  this.chart.select('.container').append('path')
-      .attr('class', 'line')
-      .datum([])
-      .attr('d', this.line);
+  this.display[0].init();
   
   // TODO hide gradient during pan & zoom to make it smoother
   var gradient = this.chart.append('defs').append('linearGradient')
@@ -304,22 +327,7 @@ Chart.prototype.loadData = function ChartLoadData() {
 
     var from = 'matrix(1, 0, 0, ' + tempScale + ', 0, ' + (this.height - 48) * (1 - tempScale) + ') scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)';
     var to = 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)';
-
-    this.chart.select('.area')
-        .datum(data)
-        .attr('d', this.area)
-        .attr('transform', from)
-      .transition()
-        .duration(1000)
-        .attr('transform', to);
-
-    this.chart.select('.line')
-        .datum(data)
-        .attr('d', this.line)
-        .attr('transform', from)
-//        .attr('filter', 'url(#lineShadow)');
-      .transition()
-        .duration(1000)
-        .attr('transform', to);
+    
+    this.display[0].setDataAndTransform(data, from, to);
   }.bind(this));
 };
