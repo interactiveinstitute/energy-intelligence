@@ -1,9 +1,6 @@
 function TotalPower(chart) {
   this.chart = chart;
   
-  this.feed = 'allRooms';
-  this.datastream = 'ElectricPower';
-  
   this.area = d3.svg.area()
       //.interpolate('step-after')
       .x(function(d) { return this.chart.x(d.resampledAt); }.bind(this))
@@ -14,9 +11,14 @@ function TotalPower(chart) {
       .x(function(d) { return this.chart.x(d.resampledAt); }.bind(this))
       .y(function(d) { return this.chart.y(d.value); }.bind(this));
 };
+TotalPower.prototype.type = 'TotalPower';
+TotalPower.prototype.unit = 'W';
+TotalPower.prototype.feed = 'allRooms';
+TotalPower.prototype.datastream = 'ElectricPower';
 TotalPower.prototype.init = function() {
-  this.chart.chart.append('g')
-      .attr('class', 'container')
+  this.chart.container.selectAll('*').remove();
+
+  this.chart.container
     .append('path')
       .attr('class', 'area')
       .datum([])
@@ -41,6 +43,16 @@ TotalPower.prototype.init = function() {
       .datum([])
       .attr('d', this.line);
 };
+TotalPower.prototype.getDataFromRequest = function(params, result) {
+  var resample = +new Date(params.start);
+  return result.datapoints.map(function(d, i) {
+    return {
+      at: new Date(d.at),
+      resampledAt: new Date(resample + i * params.interval * 1000),
+      value: parseFloat(d.value || 0)
+    };
+  });
+};
 TotalPower.prototype.setDataAndTransform = function(data, from, to) {
   this.chart.chart.select('.area')
       .datum(data)
@@ -59,10 +71,91 @@ TotalPower.prototype.setDataAndTransform = function(data, from, to) {
       .duration(1000)
       .attr('transform', to);
 };
+TotalPower.prototype.getParameters = function() {
+  var start = this.chart.x.domain()[0];
+  var duration = +this.chart.x.domain()[1] - +this.chart.x.domain()[0];
+    
+  var n = this.chart.width / Chart.SAMPLE_SIZE;
+  for (var i = 0; i < this.chart.intervals.length; i++) {
+    if (this.chart.intervals[i] > duration * Chart.SAMPLE_SIZE / this.chart.width / 1000) break;
+  }
+  var interval = this.chart.intervals[i - 1] || 1;
+  var n = Math.ceil(duration * 3 / interval / 1000);
+  
+  return {
+    interval: interval,
+    duration: parseInt(duration * 3 / 1000) + 'seconds',
+    start: new Date(+start - duration).toJSON()
+  };
+};
 
-function TotalEnergy() {
-  this.feed = 'allRooms';
-  this.datastream = 'ElectricEnergy';
+function TotalEnergy(chart) {
+  this.chart = chart;
+};
+TotalEnergy.prototype.type = 'TotalEnergy';
+TotalEnergy.prototype.unit = 'Wh';
+TotalEnergy.prototype.feed = 'allRooms';
+TotalEnergy.prototype.datastream = 'ElectricEnergy';
+TotalEnergy.prototype.init = function() {
+  this.chart.container.selectAll('*').remove();
+  
+  this.group = this.chart.container;
+};
+TotalEnergy.prototype.getDataFromRequest = function(params, result) {
+  var resample = +new Date(params.start);
+  
+  var pointsPerBar = 20;
+  var data = [];
+  var n = 0;
+  console.log('length', result.datapoints.length);
+  while ((n + 1) * pointsPerBar < result.datapoints.length) {
+    var endIndex = Math.min(n * pointsPerBar + pointsPerBar - 1, result.datapoints.length);
+    var end = parseFloat(result.datapoints[endIndex].value || 0);
+    var start = parseFloat(result.datapoints[n * pointsPerBar].value || 0);
+    if (end > start && start > 0)
+      var value = (end - start) * 1000;
+    else
+      var value = 0;
+    data[n++] = {
+      start: new Date(result.datapoints[n * pointsPerBar].at),
+      value: value
+    };
+  }
+  console.log(data);
+  return data;
+};
+TotalEnergy.prototype.setDataAndTransform = function(data, from, to) {
+  this.group
+      .attr('transform', to);
+  
+  var bar = this.group.selectAll('.bar')
+      .data(data)
+    .enter().append('g')
+      .attr('class', 'bar')
+      .attr('transform', function(d) { return 'translate(' + this.chart.x(d.start) + ',0)'; }.bind(this));
+  bar.append('rect')
+      .attr('x', Chart.BAR_SPACING / 2)
+      .attr('y', function(d) { return this.chart.y(d.value); }.bind(this))
+      .attr('width', this.chart.x(data[1].start) - +this.chart.x(data[0].start) - Chart.BAR_SPACING / 2)
+      .attr('height', function(d) { return this.chart.height - Chart.PADDING_BOTTOM - this.chart.y(d.value); }.bind(this));
+};
+TotalEnergy.prototype.getParameters = function() {
+  var start = this.chart.x.domain()[0];
+  var duration = +this.chart.x.domain()[1] - +this.chart.x.domain()[0];
+  
+  // TODO use tick width instead of sample size. This will work as well but slower.
+  var n = this.chart.width / Chart.SAMPLE_SIZE;
+  for (var i = 0; i < this.chart.intervals.length; i++) {
+    if (this.chart.intervals[i] > duration * Chart.SAMPLE_SIZE / this.chart.width / 1000) break;
+  }
+  var interval = this.chart.intervals[i - 1] || 1;
+  var n = Math.ceil(duration * 3 / interval / 1000);
+  
+  return {
+    interval: interval,
+    duration: parseInt(duration * 3 / 1000) + 'seconds',
+    start: new Date(+start - duration).toJSON()
+  };
 };
 
 function Chart(db, width, height) {
@@ -93,6 +186,7 @@ function Chart(db, width, height) {
 Chart.SAMPLE_SIZE = 4; // px
 Chart.EXTRA_UNITS_ABOVE = 50;
 Chart.PADDING_BOTTOM = 48;
+Chart.BAR_SPACING = 4;
 
 Chart.prototype.then = function ChartThen(callback) {
   if (this.ready) callback(this);
@@ -130,7 +224,7 @@ Chart.prototype.construct = function ChartConstruct() {
       .ticks(5)
       .tickPadding(6)
       .tickSize(-this.width)
-      .tickFormat(function(d) { return d + ' W'; });
+      .tickFormat(function(d) { return d + ' ' + this.display[0].unit; }.bind(this));
 
   this.tickDistance = 0;
   
@@ -157,6 +251,9 @@ Chart.prototype.init = function ChartInit(container) {
       .attr('class', 'x axis');  
   this.chart.append('g')
       .attr('class', 'y axis');
+
+  this.container = this.chart.append('g')
+      .attr('class', 'container');
 
   this.display[0].init();
   
@@ -222,10 +319,19 @@ Chart.prototype.init = function ChartInit(container) {
   
   this.loadData();
   
-  this.switcher = d3.select(container).append('button')
-      .text('switch')
-      .on('click', function() {
-      });
+  this.wattHourButton = d3.select(container).append('div')
+      .attr('class', 'watt-hour-button')
+      .on('touchstart', function() {
+        if (this.display[0].type == 'TotalPower') {
+          this.display[0] = new TotalEnergy(this);
+          d3.event.target.classList.add('active');
+        } else {
+          this.display[0] = new TotalPower(this);
+          d3.event.target.classList.remove('active');
+        }
+        this.display[0].init();
+        this.loadData();
+      }.bind(this));
 };
 
 Chart.prototype.transform = function ChartTransform() {
@@ -277,36 +383,15 @@ Chart.prototype.transform = function ChartTransform() {
 }
 
 Chart.prototype.loadData = function ChartLoadData() {
-  var start = this.x.domain()[0];
-  var duration = +this.x.domain()[1] - +this.x.domain()[0];
-    
-  var n = this.width / Chart.SAMPLE_SIZE;
-  for (var i = 0; i < this.intervals.length; i++) {
-    if (this.intervals[i] > duration * Chart.SAMPLE_SIZE / this.width / 1000) break;
-  }
-  var interval = this.intervals[i - 1] || 1;
-  var n = Math.ceil(duration * 3 / interval / 1000);
-  
-  var params = {
-    feed: this.display[0].feed,
-    datastream: this.display[0].datastream,
-    interval: interval,
-    duration: parseInt(duration * 3 / 1000) + 'seconds',
-    start: new Date(+start - duration).toJSON()
-  };
+  var params = this.display[0].getParameters();
+  params.feed = this.display[0].feed;
+  params.datastream = this.display[0].datastream;
   var url = this.db + '/_design/energy_data/_show/historical?' + Object.keys(params).map(function(key) {
     return key + '=' + encodeURIComponent(params[key]);
   }).join('&');
   
   this.getJSON(url, function(result) {
-    var resample = +new Date(params.start);
-    var data = result.datapoints.map(function(d, i) {
-      return {
-        at: new Date(d.at),
-        resampledAt: new Date(resample + i * interval * 1000),
-        value: parseFloat(d.value || 0)
-      };
-    });
+    var data = this.display[0].getDataFromRequest(params, result);
 
     var oldDomain = this.y.domain()[1];
     var newDomain = d3.max(data.map(function(d) { return d.value })) + Chart.EXTRA_UNITS_ABOVE;

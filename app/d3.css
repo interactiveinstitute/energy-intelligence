@@ -54,6 +54,10 @@ body {
   display: none;
 }
 
+.time .bar rect {
+  fill: rgba(63, 169, 245, .8);
+}
+
 .zoomer {
   position: absolute;
   bottom: 56px;
@@ -62,7 +66,7 @@ body {
   background: url(zoomer.png);
   width: 361px;
   height: 45px;
-  box-shadow: 0 0 40px 40px #000;
+  /*box-shadow: 0 0 40px 40px #000;*/
 }
 .zoomer .handle {
   width: 44px;
@@ -72,11 +76,19 @@ body {
   position: absolute;
 }
 
-button {
+.watt-hour-button {
+  background: url(button-wh.png);
   position: absolute;
-  bottom: 56px;
+  bottom: 0;
   left: 600px;
-  width: 88px;
-  height: 44px;
+  width: 144px;
+  height: 120px;
   font-weight: bold;
+  -webkit-filter: grayscale(100%);
+  opacity: .5;
+  -webkit-transition: -webkit-filter .5s, opacity .5s;
+}
+.watt-hour-button.active {
+  -webkit-filter: none;
+  opacity: 1;
 }
