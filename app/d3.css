@@ -5,6 +5,7 @@ html {
 body {
   background: #000 url(app-mockup.png);
   margin: 0;
+  cursor: none;
   -ms-touch-action: none;
 }
 
@@ -91,4 +92,9 @@ body {
 .watt-hour-button.active {
   -webkit-filter: none;
   opacity: 1;
+}
+
+.popup circle {
+  stroke: #aee0ff;
+  stroke-width: 2;
 }

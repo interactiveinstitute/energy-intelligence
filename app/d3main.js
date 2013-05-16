@@ -332,6 +332,84 @@ Chart.prototype.init = function ChartInit(container) {
         this.display[0].init();
         this.loadData();
       }.bind(this));
+      
+  // Popups
+  (function() {
+    var CANCEL_DISTANCE = 10;
+    var opening = false;
+    var position = null;
+    var timeout;
+    var popup;
+    var cancel = function() {
+      opening = false;
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      console.log('canceled');
+    };
+    var open = function() {
+      opening = false;
+      
+      var time = +this.x.invert(position[0]);
+      
+      var data = this.chart.select('.area').datum();
+      var dt = Infinity;
+      for (var i = 0; i < data.length; i++) {
+        var delta = Math.abs(+data[i].resampledAt - time);
+        if (delta < dt) dt = delta;
+        else break;
+      }
+      
+      var datum = data[i];
+      
+      popup = this.chart
+        .append('g')
+          .attr('class', 'popup');
+      popup.append('circle')
+          .attr('cx', this.x(datum.resampledAt))
+          .attr('cy', this.y(datum.value))
+          .attr('r', 48)
+          .on('touchstart', function() {
+            close();
+            d3.event.stopPropagation();
+          });
+          
+      console.log('open', datum);
+    }.bind(this);
+    var close = function() {
+      if (popup) {
+        popup.remove();
+        popup = null;
+      }
+    }.bind(this);
+    var me = this;
+    this.chart
+        .on('touchstart', function() {
+          if (me.display[0].type != 'TotalPower') return;
+          
+          if (d3.touches(this).length == 1) {
+            opening = true;
+            position = d3.touches(this)[0];
+            
+            timeout = setTimeout(open, 1000);
+            
+            close();
+          } else {
+            opening = false;
+          }
+        })
+        .on('touchmove', function() {
+          if (!opening) return;
+          
+          var touch = d3.touches(this)[0];
+          var distance = Math.sqrt(Math.pow(touch[1] - position[1], 2) + Math.pow(touch[0] - position[0], 2));
+          if (distance > CANCEL_DISTANCE) cancel();
+        })
+        .on('touchend', function() {
+          if (opening) cancel();
+        });
+  }.bind(this))();
 };
 
 Chart.prototype.transform = function ChartTransform() {
