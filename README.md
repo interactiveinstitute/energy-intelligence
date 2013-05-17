@@ -9,11 +9,13 @@ Couchm aims to imitate part of the [Historical feed queries v2 API](https://cosm
 First, set up a CouchDB database. Then follow these steps to set up the CouchDB design document defined in `app.js`.
 
 1. Install [node.js](http://nodejs.org/).
-2. Run `./node_modules/couchapp/bin.js push app.js http://`_user_`:`_password_`@`_server_`:`_port_`/`_database_.
+2. Run: ./node_modules/couchapp/bin.js push app.js http://`_user_`:`_password_`@`_server_`:`_port_`/`_database_
 
 Now the design document should be in the database with `"_id": "_design/energy_data"`.
 
 ## Usage
+
+Note: this is not completely accurate anymore. E.g. the historical API only works with specific datastreams now.
 
 ### Posting data
 
