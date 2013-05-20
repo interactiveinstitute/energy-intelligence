@@ -301,6 +301,10 @@ ddoc.filters.measurements = function(doc, req) {
   return true;
 };
 
+ddoc.filters.to_feed = function(doc, req) {
+  return doc._id.indexOf('_design/') == 0 || doc.source == req.query.feed;
+};
+
 // ### Unix to Couchm timestamp conversion
 //
 // To get a Couchm timestamp that you can use for custom queries, do a GET request like
