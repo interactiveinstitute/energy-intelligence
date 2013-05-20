@@ -247,7 +247,7 @@ ddoc.lists.interpolate_datastream = function(head, req) {
     if (row.value.length > stream_idx && row.value[stream_idx] !== null) {
       meta.at = row.value[at_idx];
       var value = row.value[stream_idx];
-      if (value === true || value === false) meta.current_value = value;
+      if (value === true || value === false) meta.current_value = '' + +value;
       else meta.current_value = '' + row.value[stream_idx];
       sendValue(['value', new Date(key), meta.at], new Date(key));
 
