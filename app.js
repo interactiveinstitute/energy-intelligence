@@ -363,6 +363,12 @@ ddoc.rewrites.push({
   }
 });
 
+ddoc.validate_doc_update = function(newDoc, oldDoc, userCtx, secObj) {
+  if (userCtx.roles.indexOf('writer') == -1) {
+    throw({ forbidden: 'The "writer" role is required to make changes.' });
+  }
+};
+
 couchapp.loadAttachments(ddoc, path.join(__dirname, 'app'));
 
 module.exports = ddoc;
