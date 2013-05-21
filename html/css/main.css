@@ -3,10 +3,11 @@ html {
 }
 
 body {
-  background: #000 url(app-mockup.png);
+  background: #000 url(../img/app-mockup.png);
   margin: 0;
-  cursor: none;
+  /*cursor: none;*/
   -ms-touch-action: none;
+  -webkit-user-select: none;
 }
 
 .time {
@@ -64,7 +65,7 @@ body {
   bottom: 56px;
   right: 56px;
   /*background: -webkit-linear-gradient(top, #000 50%, #333 100%);*/
-  background: url(zoomer.png);
+  background: url(../img/zoomer.png);
   width: 361px;
   height: 45px;
   /*box-shadow: 0 0 40px 40px #000;*/
@@ -73,12 +74,12 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 22px;
-  background: url(zoomer-handle.png);
+  background: url(../img/zoomer-handle.png);
   position: absolute;
 }
 
 .watt-hour-button {
-  background: url(button-wh.png);
+  background: url(../img/button-wh.png);
   position: absolute;
   bottom: 0;
   left: 600px;

@@ -1,15 +1,15 @@
 <!doctype html>
 
-<title>d3 experiments</title>
+<title>Energy Screen</title>
 
 <meta charset="utf-8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<link rel="stylesheet" href="d3.css">
-<script src="d3.v3.js"></script>
-<script src="d3main.js"></script>
+<link rel="stylesheet" href="css/main.css">
+<script src="lib/d3.js"></script>
+<script src="js/main.js"></script>
 <script>
-  var chart = new Chart('http://aktivahuset.tii.se:8001/sp', innerWidth, 714);
+  var chart = new Chart('http://aktivahuset.tii.se:8001/sp', innerWidth, innerHeight - 366);
 </script>
 
 <body>
