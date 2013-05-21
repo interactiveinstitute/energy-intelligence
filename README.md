@@ -16,3 +16,11 @@ Usage
 -----
 
 Access `html/index.html` through the web server using Google Chrome.
+
+
+Remote access
+-------------
+
+Run `./remote.js` (requires Node). To reload all clients, run
+
+    curl http://localhost:8002/reload

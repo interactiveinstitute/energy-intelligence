@@ -7,8 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <link rel="stylesheet" href="css/main.css">
 <script src="lib/d3.js"></script>
+<script src="js/remote.js"></script>
 <script src="js/main.js"></script>
 <script>
+  var remote = new Remote('http://localhost:8002/');
   var chart = new Chart('http://aktivahuset.tii.se:8001/sp', innerWidth, innerHeight - 366);
 </script>
 
