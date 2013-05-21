@@ -36,6 +36,6 @@ http.createServer(function(request, response) {
   } else {
     response.end();
   }
-}).listen(config.remote_port, '127.0.0.1');
+}).listen(config.remote_port, '0.0.0.0');
 
 console.log('Running on port', config.remote_port);
