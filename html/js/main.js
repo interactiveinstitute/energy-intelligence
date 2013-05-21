@@ -309,7 +309,7 @@ Chart.prototype.init = function ChartInit(container) {
         var extent = this.zoom.scaleExtent();
         var scale = extent[0] + Math.pow(position, 4) * (extent[1] - extent[0]);
         
-        var screenOrigin = 960;
+        var screenOrigin = this.width / 2;
         var translate = screenOrigin - (screenOrigin - this.zoom.translate()[0]) * scale / this.zoom.scale();
         this.zoom.translate([translate, 0]);
         this.zoom.scale(scale);
