@@ -19,3 +19,10 @@
 <body>
 
 <script>chart.then(function(chart) { chart.init('body'); });</script>
+
+<script>
+  chart.testBubbles(
+    { at: new Date(2013, 3, 21, 6, 30), watt: 1000, note: 'test 1' },
+    { at: new Date(2013, 4, 10, 17, 0), watt: 1000, note: 'second test' }
+  );
+</script>

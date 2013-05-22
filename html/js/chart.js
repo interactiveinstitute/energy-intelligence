@@ -17,7 +17,7 @@ function Chart(db, width, height) {
       this.ready = true;
     
       var callback;
-      while (callback = this.onReady.pop())
+      while (callback = this.onReady.shift())
         callback(this);
     }.bind(this));
   }.bind(this));
@@ -79,10 +79,6 @@ Chart.prototype.init = function ChartInit(container) {
       .attr('class', 'time')
       .attr('width', this.width)
       .attr('height', this.height)
-      .on('mousewheel', function() {
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
-      })
       .call(this.zoom)
     .append('g')
       .attr('transform', 'translate(0, 0)')
@@ -143,14 +139,25 @@ Chart.prototype.init = function ChartInit(container) {
       .attr('class', 'yText axis');
 
   var timeout;
-  var touchend = function touchend(event) {
+  var touchend = function touchend() {
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(this.loadData.bind(this), 500);
   }.bind(this);
   d3.select(window).on('touchend', touchend);
-  this.chart.on('touchend', touchend);
+  this.chart.select('rect').on('touchend', touchend);
   
-  var zooming = -1;
+  this.chart.append('rect')
+    .attr('class', 'surface')
+    .attr('width', this.width)
+    .attr('height', this.height)
+    .attr('fill', 'transparent')
+    .on('touchend', touchend)
+    .on('mousewheel', function() {
+      d3.event.stopPropagation();
+      d3.event.preventDefault();
+    });
+
+ var zooming = -1;
   this.zoomer = d3.select(container).append('div')
       .attr('class', 'zoomer');
   this.zoomer.append('div')
@@ -298,6 +305,10 @@ Chart.prototype.transform = function ChartTransform() {
   var extent = this.zoom.scaleExtent();
   var width = this.zoomer.node().clientWidth - handle.clientWidth;
   handle.style.left = Math.pow((scale - extent[0]) / (extent[1] - extent[0]), 1/4) * width + 'px';
+
+  this.positionBubbles();
+
+  // TODO reposition highlight bubble, may need to put that in this.popup
 }
 
 Chart.prototype.loadData = function ChartLoadData() {
@@ -332,5 +343,25 @@ Chart.prototype.loadData = function ChartLoadData() {
     var to = 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)';
     
     this.display[0].setDataAndTransform(data, from, to);
+
+    this.positionBubbles();
   }.bind(this));
+};
+
+Chart.prototype.positionBubbles = function() {
+  if (this._testBubbles) {
+    this._testBubbles.forEach(function(bubble) {
+      bubble.position();
+    });
+  }
+};
+
+Chart.prototype.testBubbles = function() {
+  var bubbles = Array.prototype.slice.call(arguments);
+  this.then(function(chart) {
+    chart._testBubbles = bubbles.map(function(kwargs) {
+      kwargs.chart = this;
+      return new Bubble(kwargs);
+    }.bind(chart));
+  });
 };
