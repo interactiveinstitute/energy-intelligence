@@ -79,10 +79,14 @@ Chart.prototype.init = function ChartInit(container) {
       .attr('class', 'time')
       .attr('width', this.width)
       .attr('height', this.height)
+      .on('mousewheel', function() {
+        d3.event.stopPropagation();
+        d3.event.preventDefault();
+      })
       .call(this.zoom)
     .append('g')
       .attr('transform', 'translate(0, 0)')
-  
+
   this.chart.append('rect')
       .attr('width', this.width)
       .attr('height', this.height);
@@ -96,9 +100,27 @@ Chart.prototype.init = function ChartInit(container) {
       .attr('class', 'container');
 
   this.display[0].init();
-  
+
+  var defs = this.chart.append('defs');
+
+  var shadow = defs.append('filter')
+      .attr('id', 'popup-shadow');
+  shadow.append('feOffset')
+      .attr('result', 'offOut')
+      .attr('in', 'SourceAlpha')
+      .attr('dx', 0)
+      .attr('dy', 0);
+  shadow.append('feGaussianBlur')
+      .attr('result', 'blurOut')
+      .attr('in', 'offOut')
+      .attr('stdDeviation', 4);
+  shadow.append('feBlend')
+      .attr('in', 'SourceGraphic')
+      .attr('in2', 'blurOut')
+      .attr('mode', 'normal');
+
   // TODO hide gradient during pan & zoom to make it smoother
-  var gradient = this.chart.append('defs').append('linearGradient')
+  var gradient = defs.append('linearGradient')
       .attr('id', 'leftGradient')
       .attr('x1', '0%')
       .attr('x2', '100%')
@@ -186,7 +208,6 @@ Chart.prototype.init = function ChartInit(container) {
         clearTimeout(timeout);
         timeout = null;
       }
-      console.log('canceled');
     };
     var open = function() {
       opening = false;
@@ -205,16 +226,48 @@ Chart.prototype.init = function ChartInit(container) {
       
       popup = this.chart
         .append('g')
-          .attr('class', 'popup');
-      popup.append('circle')
-          .attr('cx', this.x(datum.resampledAt))
-          .attr('cy', this.y(datum.value))
-          .attr('r', 48)
+          .attr('class', 'popup')
+          .attr('transform', 'translate(' + this.x(datum.resampledAt) + ',' + this.y(datum.value) + ')')
+          .attr('filter', 'url(#popup-shadow)')
           .on('touchstart', function() {
             close();
             d3.event.stopPropagation();
           });
-          
+      popup.append('rect')
+          .attr('x', 63)
+          .attr('y', -20)
+          .attr('width', 128)
+          .attr('height', 40)
+          .attr('rx', 20)
+          .attr('ry', 20);
+      popup.append('path')
+          .attr('d', 'M 16 -8 A 48 48 340 1 1 16 8 L 0 0 L 16 -8');
+      popup.append('text')
+          .attr('class', 'value')
+          .text(datum.value + ' W')
+          .attr('text-anchor', 'middle')
+          .attr('alignment-baseline', 'central')
+          .attr('dx', 63)
+          .attr('dy', 0);
+      var time = datum.resampledAt.getHours() + ':';
+      if (datum.resampledAt.getMinutes() < 10) time += '0';
+      time += datum.resampledAt.getMinutes();
+      popup.append('text')
+          .attr('class', 'time')
+          .text(time)
+          .attr('text-anchor', 'start')
+          .attr('alignment-baseline', 'central')
+          .attr('dx', 120)
+          .attr('dy', 0);
+
+
+      /*
+      popup = this.chart.append('use')
+          .attr('xlink:href', '#popup')
+          .attr('stroke-width', 10)
+          .attr('stroke', 'green');
+          */
+ 
       console.log('open', datum);
     }.bind(this);
     var close = function() {
@@ -289,9 +342,6 @@ Chart.prototype.transform = function ChartTransform() {
   
   this.chart.select('.container')
       .attr('transform', 'translate(' + this.zoom.translate()[0] + ', 0) scale(' + this.zoom.scale() + ', 1)');
-  
-  this.chart.select('.line')
-      .attr('filter', 'none');
   
   var handle = this.zoomer.select('.handle').node();
   var scale = this.zoom.scale();

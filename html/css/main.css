@@ -95,7 +95,39 @@ body {
   opacity: 1;
 }
 
-.popup circle {
+.popup path {
   stroke: #aee0ff;
   stroke-width: 2;
+  fill: #000;
+  -webkit-animation: popup-start-path .2s ease-in-out;
+}
+.popup rect {
+  fill: #aee0ff;
+  -webkit-animation: popup-start-label .2s ease-in-out .2s;
+  -webkit-animation-fill-mode: backwards;
+}
+.popup .value {
+  font-family: 'HelveticaNeueLT Std Cn', 'HelveticaNeue-CondensedBold', sans-serif;
+  font-size: 28px;
+  font-weight: bold;
+  fill: #aee0ff;
+  -webkit-animation: popup-start-text .5s ease-in-out .2s;
+  -webkit-animation-fill-mode: backwards;
+}
+.popup .time {
+  font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  -webkit-animation: popup-start-text .5s ease-in-out .4s;
+  -webkit-animation-fill-mode: backwards;
+}
+
+@-webkit-keyframes popup-start-path {
+  0% { -webkit-transform: scale(.1); }
+}
+@-webkit-keyframes popup-start-text {
+  0% { opacity: 0; }
+}
+@-webkit-keyframes popup-start-label {
+  0% { -webkit-transform: scale(.1) translate(-57px, 0); }
 }

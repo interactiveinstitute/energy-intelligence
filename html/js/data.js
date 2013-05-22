@@ -24,20 +24,6 @@ TotalPower.prototype.init = function() {
       .datum([])
       .attr('d', this.area);
       
-  var filter = this.chart.chart.append('filter')
-      .attr('id', 'lineShadow')
-      .attr('height', '130%');
-  filter.append('feGaussianBlur')
-      .attr('in', 'SourceAlpha')
-      .attr('stdDeviation', 10);
-  filter.append('feOffset')
-      .attr('dx', 0)
-      .attr('dy', 5)
-      .attr('result', 'offsetblur');
-  var merge = filter.append('feMerge');
-  merge.append('feMergeNode');
-  merge.append('feMergeNode')
-      .attr('in', 'SourceGraphic');
   this.chart.chart.select('.container').append('path')
       .attr('class', 'line')
       .datum([])
@@ -66,7 +52,6 @@ TotalPower.prototype.setDataAndTransform = function(data, from, to) {
       .datum(data)
       .attr('d', this.line)
       .attr('transform', from)
-//        .attr('filter', 'url(#lineShadow)');
     .transition()
       .duration(1000)
       .attr('transform', to);
