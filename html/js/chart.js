@@ -194,115 +194,65 @@ Chart.prototype.init = function ChartInit(container) {
         this.display[0].init();
         this.loadData();
       }.bind(this));
-      
+
+  this.setupPopups();
+};
+
+Chart.prototype.setupPopups = function() {
   // Popups
-  (function() {
-    var CANCEL_DISTANCE = 10;
-    var opening = false;
-    var position = null;
-    var timeout;
-    var popup;
-    var cancel = function() {
-      opening = false;
-      if (timeout) {
-        clearTimeout(timeout);
-        timeout = null;
-      }
-    };
-    var open = function() {
-      opening = false;
-      
-      var time = +this.x.invert(position[0]);
-      
-      var data = this.chart.select('.area').datum();
-      var dt = Infinity;
-      for (var i = 0; i < data.length; i++) {
-        var delta = Math.abs(+data[i].resampledAt - time);
-        if (delta < dt) dt = delta;
-        else break;
-      }
-      
-      var datum = data[i];
-      
-      popup = this.chart
-        .append('g')
-          .attr('class', 'popup')
-          .attr('transform', 'translate(' + this.x(datum.resampledAt) + ',' + this.y(datum.value) + ')')
-          .attr('filter', 'url(#popup-shadow)')
-          .on('touchstart', function() {
-            close();
-            d3.event.stopPropagation();
-          });
-      popup.append('rect')
-          .attr('x', 63)
-          .attr('y', -20)
-          .attr('width', 128)
-          .attr('height', 40)
-          .attr('rx', 20)
-          .attr('ry', 20);
-      popup.append('path')
-          .attr('d', 'M 16 -8 A 48 48 340 1 1 16 8 L 0 0 L 16 -8');
-      popup.append('text')
-          .attr('class', 'value')
-          .text(datum.value + ' W')
-          .attr('text-anchor', 'middle')
-          .attr('alignment-baseline', 'central')
-          .attr('dx', 63)
-          .attr('dy', 0);
-      var time = datum.resampledAt.getHours() + ':';
-      if (datum.resampledAt.getMinutes() < 10) time += '0';
-      time += datum.resampledAt.getMinutes();
-      popup.append('text')
-          .attr('class', 'time')
-          .text(time)
-          .attr('text-anchor', 'start')
-          .attr('alignment-baseline', 'central')
-          .attr('dx', 120)
-          .attr('dy', 0);
+  var CANCEL_DISTANCE = 10;
+  var opening = false;
+  var position = null;
+  var timeout;
+  var popup;
+  var cancel = function() {
+    opening = false;
+    if (timeout) timeout = clearTimeout(timeout);
+  };
+  var open = function() {
+    opening = false;
+    
+    var time = +this.x.invert(position[0]);
+    
+    var data = this.chart.select('.area').datum();
+    var dt = Infinity;
+    for (var i = 0; i < data.length; i++) {
+      var delta = Math.abs(+data[i].resampledAt - time);
+      if (delta < dt) dt = delta;
+      else break;
+    }
+    
+    var datum = data[i];
 
-
-      /*
-      popup = this.chart.append('use')
-          .attr('xlink:href', '#popup')
-          .attr('stroke-width', 10)
-          .attr('stroke', 'green');
-          */
- 
-      console.log('open', datum);
-    }.bind(this);
-    var close = function() {
-      if (popup) {
-        popup.remove();
-        popup = null;
-      }
-    }.bind(this);
-    var me = this;
-    this.chart
-        .on('touchstart', function() {
-          if (me.display[0].type != 'TotalPower') return;
+    popup = new Bubble({
+      chart: this,
+      at: datum.resampledAt,
+      watt: datum.value
+    });
+    popup.on('close', function() { popup = null; });
+  }.bind(this);
+  var me = this;
+  this.chart
+      .on('touchstart', function() {
+        if (me.display[0].type != 'TotalPower') return;
+        
+        if (d3.touches(this).length == 1) {
+          opening = true;
+          position = d3.touches(this)[0];
           
-          if (d3.touches(this).length == 1) {
-            opening = true;
-            position = d3.touches(this)[0];
-            
-            timeout = setTimeout(open, 1000);
-            
-            close();
-          } else {
-            opening = false;
-          }
-        })
-        .on('touchmove', function() {
-          if (!opening) return;
+          timeout = setTimeout(open, 1000);
           
-          var touch = d3.touches(this)[0];
-          var distance = Math.sqrt(Math.pow(touch[1] - position[1], 2) + Math.pow(touch[0] - position[0], 2));
-          if (distance > CANCEL_DISTANCE) cancel();
-        })
-        .on('touchend', function() {
-          if (opening) cancel();
-        });
-  }.bind(this))();
+          if (popup) popup.close();
+        } else opening = false;
+      })
+      .on('touchmove', function() {
+        if (!opening) return;
+        
+        var touch = d3.touches(this)[0];
+        var distance = Math.sqrt(Math.pow(touch[1] - position[1], 2) + Math.pow(touch[0] - position[0], 2));
+        if (distance > CANCEL_DISTANCE) cancel();
+      })
+      .on('touchend', function() { if (opening) cancel(); });
 };
 
 Chart.prototype.transform = function ChartTransform() {
