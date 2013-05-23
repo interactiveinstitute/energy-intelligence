@@ -24,3 +24,9 @@ Remote access
 Run `./remote.js` (requires Node). To reload all clients, run
 
     curl http://localhost:8002/reload
+
+
+Overall structure
+-----------------
+
+![See structure.png](structure.png?raw=true)
