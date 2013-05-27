@@ -138,13 +138,17 @@ Chart.prototype.init = function ChartInit(container) {
   this.chart.append('g')
       .attr('class', 'yText axis');
 
+  BubbleBath.db = this.db;
+  BubbleBath.container = this.chart.append('g')
+      .attr('class', 'bubblebath');
+
   var timeout;
   var touchend = function touchend() {
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(this.loadData.bind(this), 500);
   }.bind(this);
   d3.select(window).on('touchend', touchend);
-  this.chart.select('rect').on('touchend', touchend);
+  //this.chart.select('rect').on('touchend', touchend);
   
   this.chart.append('rect')
     .attr('class', 'surface')
@@ -344,19 +348,23 @@ Chart.prototype.loadData = function ChartLoadData() {
     
     this.display[0].setDataAndTransform(data, from, to);
 
-    this.positionBubbles();
+    this.positionBubbles(); // TODO replace by BubbleBath fn
+    BubbleBath.load([this.display[0].feed], this.x.domain()[0], this.x.domain()[1]);
   }.bind(this));
 };
 
 Chart.prototype.positionBubbles = function() {
+  /*
   if (this._testBubbles) {
     this._testBubbles.forEach(function(bubble) {
       bubble.position();
     });
-  }
+  }*/
+  BubbleBath.position()
 };
 
 Chart.prototype.testBubbles = function() {
+  /*
   var bubbles = Array.prototype.slice.call(arguments);
   this.then(function(chart) {
     chart._testBubbles = bubbles.map(function(kwargs) {
@@ -364,4 +372,5 @@ Chart.prototype.testBubbles = function() {
       return new Bubble(kwargs);
     }.bind(chart));
   });
+  */
 };

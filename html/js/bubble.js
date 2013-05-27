@@ -25,7 +25,7 @@ Bubble.prototype.publish = function(obj, methods) {
 };
 
 Bubble.prototype.createDom = function() {
-  this._el = this.chart.chart
+  this._el = this.container
     .append('g')
       .attr('class', 'popup')
       .attr('filter', 'url(#popup-shadow)')
@@ -43,7 +43,7 @@ Bubble.prototype.createDom = function() {
       .attr('d', 'M 16 -8 A 48 48 340 1 1 16 8 L 0 0 L 16 -8');
   this._el.append('text')
       .attr('class', 'value')
-      .text(this.watt + ' W')
+      .text(this.value + ' ' + this.value_type)
       .attr('text-anchor', 'middle')
       .attr('alignment-baseline', 'central')
       .attr('dx', 63)
@@ -66,7 +66,7 @@ Bubble.prototype.close = function() {
 
 Bubble.prototype.position = function() {
   var x = this.chart.x(this.at);
-  var y = this.chart.y(this.watt);
+  var y = this.chart.y(this.value);
 
   this._el
       .attr('transform', 'translate(' + x + ',' + y + ')');
