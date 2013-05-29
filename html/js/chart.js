@@ -138,26 +138,27 @@ Chart.prototype.init = function ChartInit(container) {
   this.chart.append('g')
       .attr('class', 'yText axis');
 
-  var timeout;
-  var touchend = function touchend() {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(this.loadData.bind(this), 500);
-  }.bind(this);
-  d3.select(window).on('touchend', touchend);
-  //this.chart.select('rect').on('touchend', touchend);
+  (function() {
+    var timeout;
+    var config = [];
+    d3.select(window)
+      .on('touchstart', function() {
+        config = [this.zoom.translate()[0], this.zoom.scale()];
+      }.bind(this), true)
+      .on('touchend', function() {
+        if (timeout) clearTimeout(timeout);
+        if (config[0] != this.zoom.translate()[0] ||
+            config[1] != this.zoom.scale())
+          timeout = setTimeout(this.loadData.bind(this), 500);
+      }.bind(this), true)
+      .on('mousewheel', function() {
+        d3.event.stopPropagation();
+        d3.event.preventDefault();
+      }, true);
+  }.bind(this))();
   
-  this.chart.append('rect')
-    .attr('class', 'surface')
-    .attr('width', this.width)
-    .attr('height', this.height)
-    .attr('fill', 'transparent')
-    .on('touchend', touchend)
-    .on('mousewheel', function() {
-      d3.event.stopPropagation();
-      d3.event.preventDefault();
-    });
-
   BubbleBath.db = this.db;
+  BubbleBath.chart = this;
   BubbleBath.container = this.chart.append('g')
       .attr('class', 'bubblebath');
 
@@ -205,67 +206,6 @@ Chart.prototype.init = function ChartInit(container) {
         this.display[0].init();
         this.loadData();
       }.bind(this));
-
-  this.setupPopups();
-};
-
-Chart.prototype.setupPopups = function() {
-  // Popups
-  var CANCEL_DISTANCE = 10;
-  var opening = false;
-  var position = null;
-  var timeout;
-  var popup;
-  var cancel = function() {
-    opening = false;
-    if (timeout) timeout = clearTimeout(timeout);
-  };
-  var open = function() {
-    opening = false;
-    
-    var time = +this.x.invert(position[0]);
-    
-    var data = this.chart.select('.area').datum();
-    var dt = Infinity;
-    for (var i = 0; i < data.length; i++) {
-      var delta = Math.abs(+data[i].resampledAt - time);
-      if (delta < dt) dt = delta;
-      else break;
-    }
-    
-    var datum = data[i];
-
-    // TODO handle this in bubblebath.js
-    popup = new Bubble({
-      chart: this,
-      at: datum.resampledAt,
-      watt: datum.value,
-      container: d3.select('.bubblebath')
-    });
-    popup.on('close', function() { popup = null; });
-  }.bind(this);
-  var me = this;
-  this.chart
-      .on('touchstart', function() {
-        if (me.display[0].type != 'TotalPower') return;
-        
-        if (d3.touches(this).length == 1) {
-          opening = true;
-          position = d3.touches(this)[0];
-          
-          timeout = setTimeout(open, 1000);
-          
-          if (popup) popup.close();
-        } else opening = false;
-      })
-      .on('touchmove', function() {
-        if (!opening) return;
-        
-        var touch = d3.touches(this)[0];
-        var distance = Math.sqrt(Math.pow(touch[1] - position[1], 2) + Math.pow(touch[0] - position[0], 2));
-        if (distance > CANCEL_DISTANCE) cancel();
-      })
-      .on('touchend', function() { if (opening) cancel(); });
 };
 
 Chart.prototype.transform = function ChartTransform() {
@@ -312,9 +252,7 @@ Chart.prototype.transform = function ChartTransform() {
   var width = this.zoomer.node().clientWidth - handle.clientWidth;
   handle.style.left = Math.pow((scale - extent[0]) / (extent[1] - extent[0]), 1/4) * width + 'px';
 
-  this.positionBubbles();
-
-  // TODO reposition highlight bubble, may need to put that in this.popup
+  BubbleBath.position();
 }
 
 Chart.prototype.loadData = function ChartLoadData() {
@@ -350,29 +288,7 @@ Chart.prototype.loadData = function ChartLoadData() {
     
     this.display[0].setDataAndTransform(data, from, to);
 
-    this.positionBubbles(); // TODO replace by BubbleBath fn
+    BubbleBath.position();
     BubbleBath.load([this.display[0].feed], this.x.domain()[0], this.x.domain()[1]);
   }.bind(this));
-};
-
-Chart.prototype.positionBubbles = function() {
-  /*
-  if (this._testBubbles) {
-    this._testBubbles.forEach(function(bubble) {
-      bubble.position();
-    });
-  }*/
-  BubbleBath.position();
-};
-
-Chart.prototype.testBubbles = function() {
-  /*
-  var bubbles = Array.prototype.slice.call(arguments);
-  this.then(function(chart) {
-    chart._testBubbles = bubbles.map(function(kwargs) {
-      kwargs.chart = this;
-      return new Bubble(kwargs);
-    }.bind(chart));
-  });
-  */
 };
