@@ -138,10 +138,6 @@ Chart.prototype.init = function ChartInit(container) {
   this.chart.append('g')
       .attr('class', 'yText axis');
 
-  BubbleBath.db = this.db;
-  BubbleBath.container = this.chart.append('g')
-      .attr('class', 'bubblebath');
-
   var timeout;
   var touchend = function touchend() {
     if (timeout) clearTimeout(timeout);
@@ -160,6 +156,10 @@ Chart.prototype.init = function ChartInit(container) {
       d3.event.stopPropagation();
       d3.event.preventDefault();
     });
+
+  BubbleBath.db = this.db;
+  BubbleBath.container = this.chart.append('g')
+      .attr('class', 'bubblebath');
 
  var zooming = -1;
   this.zoomer = d3.select(container).append('div')
@@ -235,10 +235,12 @@ Chart.prototype.setupPopups = function() {
     
     var datum = data[i];
 
+    // TODO handle this in bubblebath.js
     popup = new Bubble({
       chart: this,
       at: datum.resampledAt,
-      watt: datum.value
+      watt: datum.value,
+      container: d3.select('.bubblebath')
     });
     popup.on('close', function() { popup = null; });
   }.bind(this);
@@ -360,7 +362,7 @@ Chart.prototype.positionBubbles = function() {
       bubble.position();
     });
   }*/
-  BubbleBath.position()
+  BubbleBath.position();
 };
 
 Chart.prototype.testBubbles = function() {

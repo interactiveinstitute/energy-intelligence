@@ -95,6 +95,9 @@ body {
   opacity: 1;
 }
 
+.popup {
+  -webkit-transition: opacity .2s;
+}
 .popup path {
   stroke: #aee0ff;
   stroke-width: 2;
@@ -130,4 +133,8 @@ body {
 }
 @-webkit-keyframes popup-start-label {
   0% { -webkit-transform: scale(.1) translate(-57px, 0); }
+}
+
+/* Cards */
+.cardboard {
 }

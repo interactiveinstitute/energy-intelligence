@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <link rel="stylesheet" href="css/main.css">
 <script src="lib/d3.js"></script>
+<script src="js/utils.js"></script>
 <script src="js/remote.js"></script>
 <script src="js/data.js"></script>
 <script src="js/bubble.js"></script>
@@ -20,10 +21,3 @@
 <body>
 
 <script>chart.then(function(chart) { chart.init('body'); });</script>
-
-<script>
-  chart.testBubbles(
-    { at: new Date(2013, 3, 21, 6, 30), watt: 1000, note: 'test 1' },
-    { at: new Date(2013, 4, 10, 17, 0), watt: 1000, note: 'second test' }
-  );
-</script>

@@ -29,6 +29,7 @@ var BubbleBath = function() {
           row.value.chart = chart
           row.value.container = container
           row.value.at = new Date(row.value.timestamp)
+          row.value.closesOnTouch = false
           var bubble = new Bubble(row.value)
           bubble.position()
           bubbles.push(bubble)
