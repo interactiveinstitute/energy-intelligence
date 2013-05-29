@@ -57,8 +57,21 @@ var BubbleBath = function() {
             .each(function() {
               bubble(this).position().on('close', function() {
                 container.selectAll('.highlight').remove()
+                container.selectAll('.bubble')
+                    .each(function() { bubble(this).toggleSeeThrough(false) })
               })
             })
+          .insert('rect', '.popup')
+            .attr('width', chart.width)
+            .attr('height', chart.height)
+            .attr('fill', 'url(#popup-gradient)')
+            .on('touchend', function() { if (opening) cancel() })
+        chart.chart.select('#popup-gradient')
+            .attr('cx', chart.x(datum.resampledAt))
+            .attr('cy', chart.y(datum.value))
+
+        container.selectAll('.bubble')
+            .each(function() { bubble(this).toggleSeeThrough(true) })
       }
       chart.chart
           .on('touchstart', function() {
@@ -83,7 +96,7 @@ var BubbleBath = function() {
                                      + Math.pow(touch[0] - position[0], 2))
             if (distance > CANCEL_DISTANCE) cancel()
           })
-          .on('touchend', function() { if (opening) cancel() })
+          .on('touchend', function() { if (opening) cancel() }, true);
     },
     load: function(feeds, start, end) {
       json('/_design/events/_view/bubbles_by_feed_and_time', {

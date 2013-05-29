@@ -99,6 +99,19 @@ Chart.prototype.init = function ChartInit(container) {
 
   var defs = this.chart.append('defs');
 
+  var popupGradient = defs.append('radialGradient')
+      .attr('id', 'popup-gradient')
+      .attr('gradientUnits', 'userSpaceOnUse')
+      .attr('r', 200);
+  popupGradient.append('stop')
+      .attr('stop-color', 'black')
+      .attr('stop-opacity', '0')
+      .attr('offset', '50%');
+  popupGradient.append('stop')
+      .attr('stop-color', 'black')
+      .attr('stop-opacity', '.5')
+      .attr('offset', '100%');
+
   var shadow = defs.append('filter')
       .attr('id', 'popup-shadow');
   shadow.append('feOffset')
