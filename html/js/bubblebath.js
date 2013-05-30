@@ -62,6 +62,7 @@ var BubbleBath = function() {
               })
             })
           .insert('rect', '.popup')
+            .attr('class', 'backdrop')
             .attr('width', chart.width)
             .attr('height', chart.height)
             .attr('fill', 'url(#popup-gradient)')

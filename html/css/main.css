@@ -147,6 +147,13 @@ body {
 .bubblebath.withHighlights .bubble {
   opacity: 1;
 }
+.bubblebath .backdrop {
+  -webkit-animation: fade-in .5s;
+}
+
+@-webkit-keyframes fade-in {
+  0% { opacity: 0; }
+}
 
 /* Cards */
 .cardboard {
