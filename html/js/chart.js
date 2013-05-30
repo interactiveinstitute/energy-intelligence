@@ -75,6 +75,8 @@ Chart.prototype.construct = function ChartConstruct() {
 };
 
 Chart.prototype.init = function ChartInit(container) {
+  this.page = container;
+
   this.chart = d3.select(container).append('svg')
       .attr('class', 'time')
       .attr('width', this.width)
@@ -173,7 +175,8 @@ Chart.prototype.init = function ChartInit(container) {
   BubbleBath.db = this.db;
   BubbleBath.chart = this;
   BubbleBath.container = this.chart.append('g')
-      .attr('class', 'bubblebath');
+      .attr('class', 'bubblebath')
+      .classed('withHighlights', false);
 
  var zooming = -1;
   this.zoomer = d3.select(container).append('div')
@@ -206,19 +209,30 @@ Chart.prototype.init = function ChartInit(container) {
   
   this.loadData();
   
-  this.wattHourButton = d3.select(container).append('div')
-      .attr('class', 'watt-hour-button')
+  this.button('watt-hours', function(showWattHours) {
+    this.display[0] = new (showWattHours ? TotalEnergy : TotalPower)(this);
+    this.display[0].init();
+    this.loadData();
+  }, false);
+  this.button('highlights', function(showHighlights) {
+    d3.select('.bubblebath')
+        .classed('withHighlights', showHighlights);
+    // TODO: not enough, can't get popup bubble now
+  }, false);
+};
+
+Chart.prototype.button = function(cls, handler, state) {
+  var that = this;
+  return d3.select(this.page).append('div')
+      .classed(cls, true)
+      .classed('button', true)
+      .classed('active', state)
       .on('touchstart', function() {
-        if (this.display[0].type == 'TotalPower') {
-          this.display[0] = new TotalEnergy(this);
-          d3.event.target.classList.add('active');
-        } else {
-          this.display[0] = new TotalPower(this);
-          d3.event.target.classList.remove('active');
-        }
-        this.display[0].init();
-        this.loadData();
-      }.bind(this));
+        var el = d3.select(this);
+        var state = !el.classed('active');
+        el.classed('active', state);
+        handler.bind(that)(state, this);
+      });
 };
 
 Chart.prototype.transform = function ChartTransform() {

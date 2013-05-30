@@ -78,21 +78,26 @@ body {
   position: absolute;
 }
 
-.watt-hour-button {
-  background: url(../img/button-wh.png);
+.button {
   position: absolute;
   bottom: 0;
-  left: 600px;
   width: 144px;
   height: 120px;
-  font-weight: bold;
   -webkit-filter: grayscale(100%);
   opacity: .5;
   -webkit-transition: -webkit-filter .5s, opacity .5s;
 }
-.watt-hour-button.active {
+.button.active {
   -webkit-filter: none;
   opacity: 1;
+}
+.button.watt-hours {
+  background: url(../img/button-wh.png);
+  left: 600px;
+}
+.button.highlights {
+  background: url(../img/button-highlights.png);
+  left: 744px;
 }
 
 .popup {
@@ -133,6 +138,14 @@ body {
 }
 @-webkit-keyframes popup-start-label {
   0% { -webkit-transform: scale(.1) translate(-57px, 0); }
+}
+
+.bubblebath .bubble {
+  opacity: 0;
+  -webkit-transition: opacity .3s;
+}
+.bubblebath.withHighlights .bubble {
+  opacity: 1;
 }
 
 /* Cards */
