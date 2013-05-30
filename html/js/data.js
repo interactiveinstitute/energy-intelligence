@@ -28,6 +28,17 @@ TotalPower.prototype.init = function() {
       .attr('class', 'line')
       .datum([])
       .attr('d', this.line);
+
+  this.chart.chart
+    .append('rect')
+      .attr('class', 'nowLine')
+      .attr('fill', 'url(#now-line-gradient)')
+      .attr('width', Chart.NOW_BAR_WIDTH);
+  this.chart.chart
+    .append('circle')
+      .attr('class', 'nowDot')
+      .attr('fill', 'url(#now-dot-gradient)')
+      .attr('r', Chart.NOW_BAR_WIDTH);
 };
 TotalPower.prototype.getDataFromRequest = function(params, result) {
   var resample = +new Date(params.start);
@@ -38,6 +49,18 @@ TotalPower.prototype.getDataFromRequest = function(params, result) {
       value: parseFloat(d.value || 0)
     };
   });
+};
+TotalPower.prototype.transformExtras = function() {
+  var current = 500;
+  this.chart.chart.select('.nowLine')
+      .attr('x', this.chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2)
+      .attr('y', this.chart.y(current) - Chart.PADDING_BOTTOM)
+      .attr('height', this.chart.height - this.chart.y(current));
+
+  this.chart.chart.select('.nowDot')
+      .attr('cx', this.chart.x(new Date))
+      .attr('cy', this.chart.y(current) - Chart.PADDING_BOTTOM);
+
 };
 TotalPower.prototype.setDataAndTransform = function(data, from, to) {
   this.chart.chart.select('.area')

@@ -27,6 +27,7 @@ Chart.SAMPLE_SIZE = 4; // px
 Chart.EXTRA_UNITS_ABOVE = 50;
 Chart.PADDING_BOTTOM = 48;
 Chart.BAR_SPACING = 4;
+Chart.NOW_BAR_WIDTH = 8;
 
 Chart.prototype.then = function ChartThen(callback) {
   if (this.ready) callback(this);
@@ -129,6 +130,35 @@ Chart.prototype.init = function ChartInit(container) {
       .attr('in', 'SourceGraphic')
       .attr('in2', 'blurOut')
       .attr('mode', 'normal');
+
+  var gradient = defs.append('linearGradient')
+      .attr('id', 'now-line-gradient')
+      .attr('x1', '0%')
+      .attr('x2', '100%')
+      .attr('y1', '0%')
+      .attr('y2', '0%');
+  gradient.append('stop')
+      .attr('stop-color', 'white')
+      .attr('stop-opacity', 0)
+      .attr('offset', '0%');
+  gradient.append('stop')
+      .attr('stop-color', 'white')
+      .attr('stop-opacity', 1)
+      .attr('offset', '50%');
+  gradient.append('stop')
+      .attr('stop-color', 'white')
+      .attr('stop-opacity', 0)
+      .attr('offset', '100%');
+  var gradient = defs.append('radialGradient')
+      .attr('id', 'now-dot-gradient');
+  gradient.append('stop')
+      .attr('stop-color', 'white')
+      .attr('stop-opacity', 1)
+      .attr('offset', '25%');
+  gradient.append('stop')
+      .attr('stop-color', 'white')
+      .attr('stop-opacity', 0)
+      .attr('offset', '100%');
 
   // TODO hide gradient during pan & zoom to make it smoother
   var gradient = defs.append('linearGradient')
@@ -280,6 +310,9 @@ Chart.prototype.transform = function ChartTransform() {
   handle.style.left = Math.pow((scale - extent[0]) / (extent[1] - extent[0]), 1/4) * width + 'px';
 
   BubbleBath.position();
+
+  if (this.display[0].transformExtras) 
+    this.display[0].transformExtras();
 }
 
 Chart.prototype.loadData = function ChartLoadData() {
@@ -314,6 +347,9 @@ Chart.prototype.loadData = function ChartLoadData() {
     var to = 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)';
     
     this.display[0].setDataAndTransform(data, from, to);
+
+    if (this.display[0].transformExtras) 
+      this.display[0].transformExtras();
 
     BubbleBath.position();
     BubbleBath.load([this.display[0].feed], this.x.domain()[0], this.x.domain()[1]);
