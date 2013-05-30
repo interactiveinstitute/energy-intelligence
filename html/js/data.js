@@ -63,8 +63,7 @@ TotalPower.prototype.getParameters = function() {
   var actualStart = +start - duration;
   var actualEnd = Math.min(+start + 2 * duration, +new Date);
   var actualDuration = Math.max(+actualStart, actualEnd) - +actualStart;
-  console.log(new Date(actualStart), new Date(actualEnd), actualDuration);
-    
+
   var n = this.chart.width / Chart.SAMPLE_SIZE;
   for (var i = 0; i < this.chart.intervals.length; i++) {
     if (this.chart.intervals[i] > duration * Chart.SAMPLE_SIZE / this.chart.width / 1000) break;
