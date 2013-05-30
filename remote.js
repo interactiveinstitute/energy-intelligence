@@ -17,22 +17,22 @@ http.createServer(function(request, response) {
       'Connection': 'keep-alive',
       'Access-Control-Allow-Origin': '*'
     });
+    var ip = request.connection.remoteAddress;
     var listener = function(command, data) {
       response.write([
         'event: ', command,
         '\ndata: ', JSON.stringify(data), '\n\n'
       ].join(''));
     };
-    emitter.on('command', listener);
-    response.on('close', function() {
+    var close = function() {
       response.end();
-      console.log('closed', request.connection.remoteAddress);
       emitter.removeListener('command', listener);
-    });
-    response.setTimeout(config.remote_timeout, function() {
-      console.log('timeout', request.connection.remoteAddress);
-    });
-    console.log('connected', request.connection.remoteAddress);
+      console.log('closed', ip);
+    };
+    emitter.on('command', listener);
+    response.on('close', close);
+    response.setTimeout(config.remote_timeout, close);
+    console.log('connected', ip);
   } else if (request.method == 'GET' && commands.indexOf(request.url.slice(1)) != -1) {
     var command = request.url.slice(1);
     emitter.emit('command', command);
