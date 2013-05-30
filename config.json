@@ -1,3 +1,4 @@
 {
-  "remote_port": 8002
+  "remote_port": 8002,
+  "remote_timeout": 30000
 }

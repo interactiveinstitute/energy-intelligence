@@ -24,8 +24,13 @@ http.createServer(function(request, response) {
       ].join(''));
     };
     emitter.on('command', listener);
-    emitter.on('close', function() {
+    response.on('close', function() {
+      response.end();
+      console.log('closed', request.connection.remoteAddress);
       emitter.removeListener('command', listener);
+    });
+    response.setTimeout(config.remote_timeout, function() {
+      console.log('timeout', request.connection.remoteAddress);
     });
     console.log('connected', request.connection.remoteAddress);
   } else if (request.method == 'GET' && commands.indexOf(request.url.slice(1)) != -1) {
