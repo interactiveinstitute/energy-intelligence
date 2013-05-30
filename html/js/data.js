@@ -59,6 +59,11 @@ TotalPower.prototype.setDataAndTransform = function(data, from, to) {
 TotalPower.prototype.getParameters = function() {
   var start = this.chart.x.domain()[0];
   var duration = +this.chart.x.domain()[1] - +this.chart.x.domain()[0];
+
+  var actualStart = +start - duration;
+  var actualEnd = Math.min(+start + 2 * duration, +new Date);
+  var actualDuration = Math.max(+actualStart, actualEnd) - +actualStart;
+  console.log(new Date(actualStart), new Date(actualEnd), actualDuration);
     
   var n = this.chart.width / Chart.SAMPLE_SIZE;
   for (var i = 0; i < this.chart.intervals.length; i++) {
@@ -69,8 +74,8 @@ TotalPower.prototype.getParameters = function() {
   
   return {
     interval: interval,
-    duration: parseInt(duration * 3 / 1000) + 'seconds',
-    start: new Date(+start - duration).toJSON()
+    duration: parseInt(actualDuration / 1000) + 'seconds',
+    start: new Date(actualStart).toJSON()
   };
 };
 
