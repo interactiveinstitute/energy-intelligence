@@ -9,6 +9,10 @@ var emitter = new events.EventEmitter;
 
 var commands = ['reload'];
 
+var log = function(ip, message) {
+  console.log(new Date().toJSON(), ip, message);
+};
+
 http.createServer(function(request, response) {
   if (request.method == 'GET' && request.url == '/') {
     response.writeHead(200, {
@@ -18,25 +22,23 @@ http.createServer(function(request, response) {
       'Access-Control-Allow-Origin': '*'
     });
     var ip = request.connection.remoteAddress;
-    var listener = function(command, data) {
-      response.write([
-        'event: ', command,
-        '\ndata: ', JSON.stringify(data), '\n\n'
-      ].join(''));
-    };
+    var listener = function(command, data) { response.write([
+      'event: ', command,
+      '\ndata: ', JSON.stringify(data), '\n\n'
+    ].join('')); };
     var close = function() {
       response.end();
       emitter.removeListener('command', listener);
-      console.log('closed', ip);
+      log(ip, 'closed');
     };
     emitter.on('command', listener);
     response.on('close', close);
     response.setTimeout(config.remote_timeout, close);
-    console.log('connected', ip);
+    log(ip, 'connected');
   } else if (request.method == 'GET' && commands.indexOf(request.url.slice(1)) != -1) {
     var command = request.url.slice(1);
     emitter.emit('command', command);
-    console.log('command', command, 'from', request.connection.remoteAddress);
+    log(request.connection.remoteAddress, 'command: ' + command);
     response.end();
   } else {
     response.end();
