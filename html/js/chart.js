@@ -87,8 +87,8 @@ Chart.prototype.init = function ChartInit(container) {
   this.chart = d3.select(container)
       .attr('width', this.width)
       .attr('height', this.height)
-      .call(this.zoom)
-    .select('.time > g');
+    .select('.time > g')
+      .call(this.zoom);
 
   this.container = this.chart.select('.container');
 
