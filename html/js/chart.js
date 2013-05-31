@@ -6,19 +6,24 @@ function Chart(db, width, height) {
   this.ready = false;
   this.onReady = [];
   
-  this.getJSON(db + '/_design/energy_data/_rewrite/feeds_and_datastreams', function(info) {
-    this.getJSON(db + '/_design/energy_data/_view/domains?group=true', function(domains) {
-      this.intervals = info.intervals;
-      this.domains = {};
-      domains.rows.forEach(function(row) {
-        this.domains[row.key] = [row.value.min, row.value.max];
-      }, this);
-      this.construct();
-      this.ready = true;
-    
-      var callback;
-      while (callback = this.onReady.shift())
-        callback(this);
+  this.getJSON('config.json', function(config) {
+    this.config = config;
+    this.getJSON(db + '/_design/energy_data/_rewrite/feeds_and_datastreams', function(info) {
+      this.getJSON(db + '/_design/energy_data/_view/domains?group=true', function(domains) {
+        this.intervals = info.intervals;
+        this.domains = {};
+        domains.rows.forEach(function(row) {
+          this.domains[row.key] = [row.value.min, row.value.max];
+        }, this);
+        this.construct();
+        this.defaultDomain();
+
+        this.ready = true;
+      
+        var callback;
+        while (callback = this.onReady.shift())
+          callback(this);
+      }.bind(this));
     }.bind(this));
   }.bind(this));
 }
@@ -46,7 +51,6 @@ Chart.prototype.getJSON = function ChartGetJSON(url, callback) {
 
 Chart.prototype.construct = function ChartConstruct() {
   this.x = d3.time.scale()
-      .domain(this.domains[this.display[0].feed])
       .range([0, this.width]);
   this.y = d3.scale.linear()
       .domain([0, 200])
@@ -166,6 +170,16 @@ Chart.prototype.button = function(cls, handler, state) {
         el.classed('active', state);
         handler.bind(that)(state, this);
       });
+};
+
+Chart.prototype.defaultDomain = function() {
+  var now = new Date;
+  var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+      this.config.work_day_hours[0]);
+  var endHour = (now.getHours() < this.config.work_day_hours[0] - 1) ?
+      this.config.work_day_hours[1] : start.getHours() + 24;
+  var end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour);
+  this.x.domain([start, end]);
 };
 
 Chart.prototype.transform = function ChartTransform() {

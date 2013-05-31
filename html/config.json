@@ -1,3 +1,5 @@
 {
-  "couch": "http://aktivahuset.tii.se:8001/sp"
+  "couch": "http://aktivahuset.tii.se:8001/sp",
+  "work_day_hours": [6, 18],
+  "default_view_after": 10000
 }
