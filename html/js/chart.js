@@ -78,110 +78,21 @@ Chart.prototype.construct = function ChartConstruct() {
 Chart.prototype.init = function ChartInit(container) {
   this.page = container;
 
-  this.chart = d3.select(container).append('svg')
-      .attr('class', 'time')
+  this.chart = d3.select(container)
       .attr('width', this.width)
       .attr('height', this.height)
       .call(this.zoom)
-    .append('g')
-      .attr('transform', 'translate(0, 0)')
+    .select('.time > g');
 
-  this.chart.append('rect')
-      .attr('width', this.width)
-      .attr('height', this.height);
-
-  this.chart.append('g')
-      .attr('class', 'x axis');  
-  this.chart.append('g')
-      .attr('class', 'y axis');
-
-  this.container = this.chart.append('g')
-      .attr('class', 'container');
+  this.container = this.chart.select('.container');
 
   this.display[0].init();
 
   var defs = this.chart.append('defs');
 
-  var popupGradient = defs.append('radialGradient')
-      .attr('id', 'popup-gradient')
-      .attr('gradientUnits', 'userSpaceOnUse')
-      .attr('r', 200);
-  popupGradient.append('stop')
-      .attr('stop-color', 'black')
-      .attr('stop-opacity', '0')
-      .attr('offset', '50%');
-  popupGradient.append('stop')
-      .attr('stop-color', 'black')
-      .attr('stop-opacity', '.5')
-      .attr('offset', '100%');
-
-  var shadow = defs.append('filter')
-      .attr('id', 'popup-shadow');
-  shadow.append('feOffset')
-      .attr('result', 'offOut')
-      .attr('in', 'SourceAlpha')
-      .attr('dx', 0)
-      .attr('dy', 0);
-  shadow.append('feGaussianBlur')
-      .attr('result', 'blurOut')
-      .attr('in', 'offOut')
-      .attr('stdDeviation', 4);
-  shadow.append('feBlend')
-      .attr('in', 'SourceGraphic')
-      .attr('in2', 'blurOut')
-      .attr('mode', 'normal');
-
-  var gradient = defs.append('linearGradient')
-      .attr('id', 'now-line-gradient')
-      .attr('x1', '0%')
-      .attr('x2', '100%')
-      .attr('y1', '0%')
-      .attr('y2', '0%');
-  gradient.append('stop')
-      .attr('stop-color', 'white')
-      .attr('stop-opacity', 0)
-      .attr('offset', '0%');
-  gradient.append('stop')
-      .attr('stop-color', 'white')
-      .attr('stop-opacity', 1)
-      .attr('offset', '50%');
-  gradient.append('stop')
-      .attr('stop-color', 'white')
-      .attr('stop-opacity', 0)
-      .attr('offset', '100%');
-  var gradient = defs.append('radialGradient')
-      .attr('id', 'now-dot-gradient');
-  gradient.append('stop')
-      .attr('stop-color', 'white')
-      .attr('stop-opacity', 1)
-      .attr('offset', '25%');
-  gradient.append('stop')
-      .attr('stop-color', 'white')
-      .attr('stop-opacity', 0)
-      .attr('offset', '100%');
-
   // TODO hide gradient during pan & zoom to make it smoother
-  var gradient = defs.append('linearGradient')
-      .attr('id', 'leftGradient')
-      .attr('x1', '0%')
-      .attr('x2', '100%')
-      .attr('y1', '0%')
-      .attr('y2', '0%');
-  gradient.append('stop')
-      .attr('offset', '0%')
-      .style('stop-color', '#111111')
-      .style('stop-opacity', 1);
-  gradient.append('stop')
-      .attr('offset', '100%')
-      .style('stop-color', '#111111')
-      .style('stop-opacity', 0);
-  this.chart.append('rect')
-      .attr('width', 90)
-      .attr('height', this.height)
-      .attr('fill', 'url(#leftGradient)');
-
-  this.chart.append('g')
-      .attr('class', 'yText axis');
+  this.chart.select('.leftGradientBox')
+      .attr('height', this.height);
 
   (function() {
     var timeout;
@@ -204,21 +115,13 @@ Chart.prototype.init = function ChartInit(container) {
   
   BubbleBath.db = this.db;
   BubbleBath.chart = this;
-  BubbleBath.container = this.chart.append('g')
-      .attr('class', 'bubblebath')
-      .classed('withHighlights', false);
+  BubbleBath.container = this.chart.select('.bubblebath');
 
  var zooming = -1;
-  this.zoomer = d3.select(container).append('div')
-      .attr('class', 'zoomer');
-  this.zoomer.append('div')
-      .attr('class', 'handle')
-      .on('touchstart', function() {
-        zooming = d3.touches(this)[0][0];
-      })
-      .on('touchend', function() {
-        zooming = -1;
-      });
+  this.zoomer = d3.select('.zoomer');
+  this.zoomer.select('.handle')
+      .on('touchstart', function() { zooming = d3.touches(this)[0][0]; })
+      .on('touchend', function() { zooming = -1; });
   d3.select(container)
       .on('touchmove', function() {
         if (zooming == -1) return;
