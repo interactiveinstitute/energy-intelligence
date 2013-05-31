@@ -16,7 +16,8 @@ function Chart(db, width, height) {
           this.domains[row.key] = [row.value.min, row.value.max];
         }, this);
         this.construct();
-        this.defaultDomain();
+
+        //this.defaultView();
 
         this.ready = true;
       
@@ -51,6 +52,7 @@ Chart.prototype.getJSON = function ChartGetJSON(url, callback) {
 
 Chart.prototype.construct = function ChartConstruct() {
   this.x = d3.time.scale()
+      .domain(this.domains[this.display[0].feed])
       .range([0, this.width]);
   this.y = d3.scale.linear()
       .domain([0, 200])
@@ -172,7 +174,7 @@ Chart.prototype.button = function(cls, handler, state) {
       });
 };
 
-Chart.prototype.defaultDomain = function() {
+Chart.prototype.defaultView = function() {
   var now = new Date;
   var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
       this.config.work_day_hours[0]);
