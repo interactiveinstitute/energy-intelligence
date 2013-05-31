@@ -39,6 +39,19 @@ TotalPower.prototype.init = function() {
       .attr('class', 'nowDot')
       .attr('fill', 'url(#now-dot-gradient)')
       .attr('r', Chart.NOW_BAR_WIDTH);
+
+  var url = this.chart.db + '/_changes?filter=energy_data/measurements&source=' + this.feed;
+  this.chart.getJSON(url + '&descending=true&limit=2', function(result) {
+    this.eventSource = new EventSource(url + '&feed=eventsource&include_docs=true&since=' + result.last_seq, { withCredentials: true });
+    this.eventSource.withCredentials = true;
+    this.eventSource.onmessage = function(e) {
+      var doc = JSON.parse(e.data).doc;
+      d3.select(this.chart.page).select('.meter text').text((doc.ElectricEnergy | 0) + ' Wh');
+    }.bind(this);
+  }.bind(this));
+};
+TotalPower.prototype.stop = function() {
+  // TODO stop eventsource
 };
 TotalPower.prototype.getDataFromRequest = function(params, result) {
   var resample = +new Date(params.start);

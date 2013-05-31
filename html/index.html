@@ -20,6 +20,16 @@
 
 <body>
 
+<svg class="meter">
+<!-- TODO make #meterShape a <path> so that animation works -->
+  <rect id="meterShape" width="256" height="64" rx="32" ry="32" fill="#3fa9f5"/>
+  <text text-anchor="middle" alignment-baseline="central" dx="128" dy="32"/>
+  <circle cx="" cy="" r="5" fill="red">
+    <animateMotion dur="6s" repeatCount="indefinite">
+      <mpath xlink:href="#meterShape"/>
+    </animateMotion>
+  </circle>
+</svg>
 <svg class="time">
   <g transform="translate(0, 0)">
     <defs>

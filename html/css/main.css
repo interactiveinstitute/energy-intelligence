@@ -155,6 +155,15 @@ body {
   0% { opacity: 0; }
 }
 
+/* Meter */
+.meter {
+  position: absolute;
+  left: 832px;
+  top: 60px;
+  font-family: 'HelveticaNeueLT Std Cn', 'HelveticaNeue-CondensedBold', sans-serif;
+  font-size: 48px;
+}
+
 /* Cards */
 .cardboard {
 }
