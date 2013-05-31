@@ -158,8 +158,8 @@ body {
 /* Meter */
 .meter {
   position: absolute;
-  left: 832px;
-  top: 60px;
+  left: 823px;
+  top: 51px;
   font-family: 'HelveticaNeueLT Std Cn', 'HelveticaNeue-CondensedBold', sans-serif;
   font-size: 48px;
 }

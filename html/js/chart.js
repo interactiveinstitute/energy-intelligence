@@ -94,8 +94,6 @@ Chart.prototype.init = function ChartInit(container) {
 
   this.display[0].init();
 
-  var defs = this.chart.append('defs');
-
   // TODO hide gradient during pan & zoom to make it smoother
   this.chart.select('.leftGradientBox')
       .attr('height', this.height);

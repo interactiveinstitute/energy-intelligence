@@ -22,9 +22,9 @@
 
 <svg class="meter">
 <!-- TODO make #meterShape a <path> so that animation works -->
-  <rect id="meterShape" width="256" height="64" rx="32" ry="32" fill="#3fa9f5"/>
-  <text text-anchor="middle" alignment-baseline="central" dx="128" dy="32"/>
-  <circle cx="" cy="" r="5" fill="red">
+  <path id="meterShape" fill="#3fa9f5" d="M 41 9 L 201 9 A 32 32 180 1 1 201 73 L 41 73 A 32 32 180 1 1 41 9"/>
+  <text text-anchor="middle" alignment-baseline="central" dx="119" dy="41"/>
+  <circle cx="" cy="" r="8" fill="url(#now-dot-gradient)">
     <animateMotion dur="6s" repeatCount="indefinite">
       <mpath xlink:href="#meterShape"/>
     </animateMotion>
@@ -51,7 +51,7 @@
         <stop stop-color="#111111" stop-opacity="0" offset="100%"/>
       </linearGradient>
       <filter id="popup-shadow">
-        <feOffset in="sourceAlpha" dx="0" dy="0" result="offOut"/>
+        <feOffset in="SourceAlpha" dx="0" dy="0" result="offOut"/>
         <feGaussianBlur in="offOut" stdDeviation="4" result="blurOut"/>
         <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
       </filter>
@@ -61,6 +61,7 @@
     <g class="container"/>
     <rect class="leftGradientBox" width="90" fill="url(#left-gradient)"/>
     <g class="yText axis"/>
+    <g class="extras"/>
     <g class="bubblebath"/>
   </g>
 </svg>

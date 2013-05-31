@@ -29,7 +29,7 @@ TotalPower.prototype.init = function() {
       .datum([])
       .attr('d', this.line);
 
-  this.chart.chart
+  this.chart.chart.select('.extras')
     .append('rect')
       .attr('class', 'nowLine')
       .attr('fill', 'url(#now-line-gradient)')
@@ -41,14 +41,18 @@ TotalPower.prototype.init = function() {
       .attr('r', Chart.NOW_BAR_WIDTH);
 
   var url = this.chart.db + '/_changes?filter=energy_data/measurements&source=' + this.feed;
+  this.current = 0;
   this.chart.getJSON(url + '&descending=true&limit=2', function(result) {
     this.eventSource = new EventSource(url + '&feed=eventsource&include_docs=true&since=' + result.last_seq, { withCredentials: true });
     this.eventSource.withCredentials = true;
     this.eventSource.onmessage = function(e) {
       var doc = JSON.parse(e.data).doc;
       d3.select(this.chart.page).select('.meter text').text((doc.ElectricEnergy | 0) + ' Wh');
+      this.current = doc.ElectricPower;
+      this.transformExtras();
     }.bind(this);
   }.bind(this));
+  setInterval(this.transformExtras.bind(this), 1000);
 };
 TotalPower.prototype.stop = function() {
   // TODO stop eventsource
@@ -64,15 +68,14 @@ TotalPower.prototype.getDataFromRequest = function(params, result) {
   });
 };
 TotalPower.prototype.transformExtras = function() {
-  var current = 500;
   this.chart.chart.select('.nowLine')
       .attr('x', this.chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2)
-      .attr('y', this.chart.y(current) - Chart.PADDING_BOTTOM)
-      .attr('height', this.chart.height - this.chart.y(current));
+      .attr('y', this.chart.y(this.current) - Chart.PADDING_BOTTOM)
+      .attr('height', this.chart.height - this.chart.y(this.current));
 
   this.chart.chart.select('.nowDot')
       .attr('cx', this.chart.x(new Date))
-      .attr('cy', this.chart.y(current) - Chart.PADDING_BOTTOM);
+      .attr('cy', this.chart.y(this.current) - Chart.PADDING_BOTTOM);
 
 };
 TotalPower.prototype.setDataAndTransform = function(data, from, to) {
