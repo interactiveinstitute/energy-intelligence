@@ -44,7 +44,7 @@ TotalPower.prototype.init = function() {
     this.eventSource.withCredentials = true;
     this.eventSource.onmessage = function(e) {
       var doc = JSON.parse(e.data).doc;
-      d3.select(this.chart.page).select('.meter text').text((doc.ElectricEnergy | 0) + ' Wh');
+      this.chart.meter.select('text').text((doc.ElectricEnergy | 0) + ' Wh');
       this.current = doc.ElectricPower;
       this.transformExtras();
     }.bind(this);
