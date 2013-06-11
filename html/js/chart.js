@@ -8,8 +8,9 @@ function Chart(db, width, height) {
   
   this.getJSON('config.json', function(config) {
     this.config = config;
-    this.getJSON(db + '/_design/energy_data/_rewrite/feeds_and_datastreams', function(info) {
-      this.getJSON(db + '/_design/energy_data/_view/domains?group=true', function(domains) {
+    var design = db + '/_design/energy_data/';
+    this.getJSON(design + '_rewrite/feeds_and_datastreams', function(info) {
+      this.getJSON(design + '_view/domains?group=true', function(domains) {
         this.intervals = info.intervals;
         this.domains = {};
         domains.rows.forEach(function(row) {
@@ -20,43 +21,41 @@ function Chart(db, width, height) {
         //this.defaultView();
 
         this.ready = true;
-      
         var callback;
-        while (callback = this.onReady.shift())
-          callback(this);
+        while (callback = this.onReady.shift()) callback(this);
       }.bind(this));
     }.bind(this));
   }.bind(this));
 }
 
-Chart.SAMPLE_SIZE = 4; // px
+Chart.SAMPLE_SIZE = 2; // px
 Chart.EXTRA_UNITS_ABOVE = 50;
 Chart.PADDING_BOTTOM = 48;
+Chart.PADDING_TOP = 48;
 Chart.BAR_SPACING = 4;
 Chart.NOW_BAR_WIDTH = 8;
 
-Chart.prototype.then = function ChartThen(callback) {
+Chart.prototype.then = function(callback) {
   if (this.ready) callback(this);
   else this.onReady.push(callback);
 };
 
-Chart.prototype.getJSON = function ChartGetJSON(url, callback) {
+Chart.prototype.getJSON = function(url, callback) {
   var request = new XMLHttpRequest;
   request.open('GET', url, true);
   request.withCredentials = true;
-  request.onload = function(event) {
-    callback(JSON.parse(event.target.response));
-  };
+  request.onload = function(event) { callback(JSON.parse(request.response)); };
   request.send();
 };
 
-Chart.prototype.construct = function ChartConstruct() {
+Chart.prototype.construct = function() {
   this.x = d3.time.scale()
       .domain(this.domains[this.display[0].feed])
       .range([0, this.width]);
+  // TODO need to reset this.x.domain on feed change
   this.y = d3.scale.linear()
       .domain([0, 200])
-      .range([this.height - Chart.PADDING_BOTTOM, 0]);
+      .range([this.height - Chart.PADDING_BOTTOM - Chart.PADDING_TOP, 0]);
 
   this.xAxis = d3.svg.axis()
       .scale(this.x)
@@ -65,39 +64,45 @@ Chart.prototype.construct = function ChartConstruct() {
       .tickSubdivide(true)
       .tickPadding(6)
       .tickSize(this.height);
+  // TODO change labeling of this.xAxis here to make it always recognisable
   this.yAxis = d3.svg.axis()
       .scale(this.y)
       .orient('left')
       .ticks(5)
       .tickPadding(6)
       .tickSize(-this.width)
-      .tickFormat(function(d) { return d + ' ' + this.display[0].unit; }.bind(this));
+      .tickFormat(function(d) {
+        return d + ' ' + this.display[0].unit;
+      }.bind(this));
 
+  // Used to determine x axis stroke width.
   this.tickDistance = 0;
-  
+
   this.zoom = d3.behavior.zoom()
       .x(this.x)
       .scaleExtent([1, 1000]) // TODO prefer to define this related to time
       .on('zoom', this.transform.bind(this));
 };
 
-Chart.prototype.init = function ChartInit(container) {
-  this.page = container;
+Chart.prototype.init = function(time, zoomer, meter, buttons) {
+  this.time = d3.select(time);
+  this.zoomer = d3.select(zoomer);
+  this.meter = d3.select(meter);
+  this.buttons = d3.select(buttons);
 
-  this.chart = d3.select(container)
+  this.time
       .attr('width', this.width)
       .attr('height', this.height)
-    .select('.time > g')
+    //.select('.time > g') // TODO was this piece in between needed?
       .call(this.zoom);
-
-  this.container = this.chart.select('.container');
 
   this.display[0].init();
 
   // TODO hide gradient during pan & zoom to make it smoother
-  this.chart.select('.leftGradientBox')
+  this.time.select('.leftGradientBox')
       .attr('height', this.height);
 
+  // Call .loadData() if the user has been zooming the way we want.
   (function() {
     var timeout;
     var config = [];
@@ -115,29 +120,35 @@ Chart.prototype.init = function ChartInit(container) {
         d3.event.stopPropagation();
         d3.event.preventDefault();
       }, true);
+    // TODO prevent double tap
   }.bind(this))();
-  
+
   BubbleBath.db = this.db;
   BubbleBath.chart = this;
-  BubbleBath.container = this.chart.select('.bubblebath');
+  BubbleBath.container = this.time.select('.bubblebath');
 
- var zooming = -1;
+  // TODO use d3 drag functionality, is more stable
+  var zooming = -1;
   this.zoomer = d3.select('.zoomer');
   this.zoomer.select('.handle')
       .on('touchstart', function() { zooming = d3.touches(this)[0][0]; })
       .on('touchend', function() { zooming = -1; });
-  d3.select(container)
+  d3.select('body')
       .on('touchmove', function() {
         if (zooming == -1) return;
         var handle = this.zoomer.select('.handle').node();
-        var position = (d3.touches(this.zoomer.node())[0][0] - zooming) / (this.zoomer.node().clientWidth - handle.clientWidth);
+        var position = (d3.touches(this.zoomer.node())[0][0] - zooming) /
+            (this.zoomer.node().clientWidth - handle.clientWidth);
         if (position < 0) position = 0;
         if (position > 1) position = 1;
         var extent = this.zoom.scaleExtent();
-        var scale = extent[0] + Math.pow(position, 4) * (extent[1] - extent[0]);
-        
+        var scale = extent[0] +
+            Math.pow(position, 4) * (extent[1] - extent[0]);
+
         var screenOrigin = this.width / 2;
-        var translate = screenOrigin - (screenOrigin - this.zoom.translate()[0]) * scale / this.zoom.scale();
+        var translate = screenOrigin -
+            (screenOrigin - this.zoom.translate()[0]) *
+            scale / this.zoom.scale();
         this.zoom.translate([translate, 0]);
         this.zoom.scale(scale);
         this.transform();
@@ -155,12 +166,12 @@ Chart.prototype.init = function ChartInit(container) {
     d3.select('.bubblebath')
         .classed('withHighlights', showHighlights);
     // TODO: not enough, can't get popup bubble now
-  }, false);
+  }, true);
 };
 
 Chart.prototype.button = function(cls, handler, state) {
   var that = this;
-  return d3.select(this.page).append('div')
+  return this.buttons.append('div')
       .classed(cls, true)
       .classed('button', true)
       .classed('active', state)
@@ -173,6 +184,7 @@ Chart.prototype.button = function(cls, handler, state) {
 };
 
 Chart.prototype.defaultView = function() {
+  // TODO make this work
   var now = new Date;
   var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
       this.config.work_day_hours[0]);
@@ -183,7 +195,28 @@ Chart.prototype.defaultView = function() {
 };
 
 Chart.prototype.transform = function ChartTransform() {
-  var axis = this.chart.select('.x.axis')
+  this.transformXAxis();
+  
+  this.time.select('.zooms')
+      .attr('transform',
+          'translate(' + this.zoom.translate()[0] + ', 0) ' + 
+          'scale(' + this.zoom.scale() + ', 1)');
+  
+  var handle = this.zoomer.select('.handle').node();
+  var scale = this.zoom.scale();
+  var extent = this.zoom.scaleExtent();
+  var width = this.zoomer.node().clientWidth - handle.clientWidth;
+  handle.style.left = Math.pow(
+      (scale - extent[0]) / (extent[1] - extent[0]), 1/4) * width + 'px';
+
+  BubbleBath.position();
+
+  if (this.display[0].transformExtras) 
+    this.display[0].transformExtras();
+}
+
+Chart.prototype.transformXAxis = function() {
+  var axis = this.time.select('.x.axis')
       .call(this.xAxis);
   axis.selectAll('text')
       .attr('x', 16)
@@ -216,43 +249,32 @@ Chart.prototype.transform = function ChartTransform() {
   lines.style('stroke-width', this.tickDistance)
       .attr('x1', this.tickDistance / 2)
       .attr('x2', this.tickDistance / 2);
-  
-  this.chart.select('.container')
-      .attr('transform', 'translate(' + this.zoom.translate()[0] + ', 0) scale(' + this.zoom.scale() + ', 1)');
-  
-  var handle = this.zoomer.select('.handle').node();
-  var scale = this.zoom.scale();
-  var extent = this.zoom.scaleExtent();
-  var width = this.zoomer.node().clientWidth - handle.clientWidth;
-  handle.style.left = Math.pow((scale - extent[0]) / (extent[1] - extent[0]), 1/4) * width + 'px';
+};
 
-  BubbleBath.position();
-
-  if (this.display[0].transformExtras) 
-    this.display[0].transformExtras();
-}
-
-Chart.prototype.loadData = function ChartLoadData() {
+Chart.prototype.loadData = function() {
   var params = this.display[0].getParameters();
   params.feed = this.display[0].feed;
   params.datastream = this.display[0].datastream;
-  var url = this.db + '/_design/energy_data/_show/historical?' + Object.keys(params).map(function(key) {
+  var url = this.db + '/_design/energy_data/_show/historical?' +
+      Object.keys(params).map(function(key) {
     return key + '=' + encodeURIComponent(params[key]);
   }).join('&');
   
   this.getJSON(url, function(result) {
     var data = this.display[0].getDataFromRequest(params, result);
 
+    // Make transition to new domain on y axis
     var oldDomain = this.y.domain()[1];
-    var newDomain = d3.max(data.map(function(d) { return d.value })) + Chart.EXTRA_UNITS_ABOVE;
+    var newDomain = d3.max(
+        data.map(function(d) { return d.value })) + Chart.EXTRA_UNITS_ABOVE;
     var tempScale = newDomain / oldDomain;
 
     this.y.domain([0, newDomain]);
-    var axis = this.chart.select('.y.axis')
+    var axis = this.time.select('.y.axis')
       .transition()
         .duration(1000)
         .call(this.yAxis);
-    axis = this.chart.select('.yText.axis')
+    axis = this.time.select('.yText.axis')
       .transition()
         .duration(1000)
         .call(this.yAxis)
@@ -260,8 +282,12 @@ Chart.prototype.loadData = function ChartLoadData() {
         .attr('x', 5)
         .attr('y', -16);
 
-    var from = 'matrix(1, 0, 0, ' + tempScale + ', 0, ' + (this.height - 48) * (1 - tempScale) + ') scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)';
-    var to = 'scale(' + (1 / this.zoom.scale()) + ', 1) translate(' + -this.zoom.translate()[0] + ', 0)';
+    var from = 'matrix(1, 0, 0, ' +
+        tempScale + ', 0, ' + (this.height - 48) * (1 - tempScale) + ') ' +
+        'scale(' + (1 / this.zoom.scale()) + ', 1) ' +
+        'translate(' + -this.zoom.translate()[0] + ', 0)';
+    var to = 'scale(' + (1 / this.zoom.scale()) + ', 1) ' +
+        'translate(' + -this.zoom.translate()[0] + ', 0)';
     
     this.display[0].setDataAndTransform(data, from, to);
 
@@ -269,6 +295,8 @@ Chart.prototype.loadData = function ChartLoadData() {
       this.display[0].transformExtras();
 
     BubbleBath.position();
-    BubbleBath.load([this.display[0].feed], this.x.domain()[0], this.x.domain()[1]);
+    BubbleBath.load([this.display[0].feed],
+        this.x.domain()[0], this.x.domain()[1]);
+    // TODO load extra offscreen bubbles?
   }.bind(this));
 };

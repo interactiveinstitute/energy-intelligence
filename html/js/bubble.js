@@ -45,7 +45,8 @@ var bubble = (function() {
       this._el = this.container
         .append('g')
           .attr('class', 'popup')
-          .attr('filter', 'url(#popup-shadow)')
+          //.attr('filter', 'url(#popup-shadow)')
+          // TODO add shadow when still
           .on('touchstart', function() {
             if (this.closesOnTouch) {
               d3.event.stopPropagation()

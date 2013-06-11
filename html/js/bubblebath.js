@@ -36,7 +36,7 @@ var BubbleBath = function() {
         
         var time = +chart.x.invert(position[0])
         
-        var data = chart.chart.select('.area').datum()
+        var data = chart.time.select('.area').datum()
         var dt = Infinity
         for (var i = 0; i < data.length; i++) {
           var delta = Math.abs(+data[i].resampledAt - time)
@@ -67,14 +67,14 @@ var BubbleBath = function() {
             .attr('height', chart.height)
             .attr('fill', 'url(#popup-gradient)')
             .on('touchend', function() { if (opening) cancel() })
-        chart.chart.select('#popup-gradient')
+        chart.time.select('#popup-gradient')
             .attr('cx', chart.x(datum.resampledAt))
             .attr('cy', chart.y(datum.value))
 
         container.selectAll('.bubble')
             .each(function() { bubble(this).toggleSeeThrough(true) })
       }
-      chart.chart
+      chart.time
           .on('touchstart', function() {
             if (chart.display[0].type != 'TotalPower') return
             

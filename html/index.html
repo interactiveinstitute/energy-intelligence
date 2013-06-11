@@ -21,7 +21,6 @@
 <body>
 
 <svg class="meter">
-<!-- TODO make #meterShape a <path> so that animation works -->
   <path id="meterShape" fill="#3fa9f5" d="M 41 9 L 201 9 A 32 32 180 1 1 201 73 L 41 73 A 32 32 180 1 1 41 9"/>
   <text text-anchor="middle" alignment-baseline="central" dx="119" dy="41"/>
   <circle cx="" cy="" r="8" fill="url(#now-dot-gradient)">
@@ -31,42 +30,48 @@
   </circle>
 </svg>
 <svg class="time">
-  <g transform="translate(0, 0)">
-    <defs>
-      <radialGradient id="popup-gradient" gradientUnits="userSpaceOnUse" r="200">
-        <stop stop-color="black" stop-opacity="0" offset="50%"/>
-        <stop stop-color="black" stop-opacity=".5" offset="100%"/>
-      </radialGradient>
-      <linearGradient id="now-line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop stop-color="white" stop-opacity="0" offset="0%"/>
-        <stop stop-color="white" stop-opacity="1" offset="50%"/>
-        <stop stop-color="white" stop-opacity="0" offset="100%"/>
-      </linearGradient>
-      <radialGradient id="now-dot-gradient">
-        <stop stop-color="white" stop-opacity="1" offset="25%"/>
-        <stop stop-color="white" stop-opacity="0" offset="100%"/>
-      </radialGradient>
-      <linearGradient id="left-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop stop-color="#111111" stop-opacity="1" offset="0%"/>
-        <stop stop-color="#111111" stop-opacity="0" offset="100%"/>
-      </linearGradient>
-      <filter id="popup-shadow">
-        <feOffset in="SourceAlpha" dx="0" dy="0" result="offOut"/>
-        <feGaussianBlur in="offOut" stdDeviation="4" result="blurOut"/>
-        <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
-      </filter>
-    </defs>
-    <g class="x axis"/>
-    <g class="y axis"/>
+  <defs>
+    <radialGradient id="popup-gradient" gradientUnits="userSpaceOnUse" r="200">
+      <stop stop-color="black" stop-opacity="0" offset="50%"/>
+      <stop stop-color="black" stop-opacity=".5" offset="100%"/>
+    </radialGradient>
+    <linearGradient id="now-line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop stop-color="white" stop-opacity="0" offset="0%"/>
+      <stop stop-color="white" stop-opacity="1" offset="50%"/>
+      <stop stop-color="white" stop-opacity="0" offset="100%"/>
+    </linearGradient>
+    <radialGradient id="now-dot-gradient">
+      <stop stop-color="white" stop-opacity="1" offset="25%"/>
+      <stop stop-color="white" stop-opacity="0" offset="100%"/>
+    </radialGradient>
+    <linearGradient id="left-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop stop-color="#111111" stop-opacity="1" offset="0%"/>
+      <stop stop-color="#111111" stop-opacity="0" offset="100%"/>
+    </linearGradient>
+    <filter id="popup-shadow">
+      <feOffset in="SourceAlpha" dx="0" dy="0" result="offOut"/>
+      <feGaussianBlur in="offOut" stdDeviation="4" result="blurOut"/>
+      <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
+    </filter>
+  </defs>
+  <g class="x axis"/>
+  <g class="y axis"/>
+  <g class="zooms">
     <g class="container"/>
-    <rect class="leftGradientBox" width="90" fill="url(#left-gradient)"/>
-    <g class="yText axis"/>
-    <g class="extras"/>
-    <g class="bubblebath"/>
   </g>
+  <g class="bubblebath withHighlights"/>
+  <rect class="leftGradientBox" width="90" fill="url(#left-gradient)"/>
+  <g class="yText axis"/>
+  <g class="extras"/>
 </svg>
 <div class="zoomer">
   <div class="handle"></div>
 </div>
+<div class="buttons">
+</div>
 
-<script>chart.then(function(chart) { chart.init('body'); });</script>
+<script>
+  chart.then(function(chart) {
+    chart.init('.time', '.zoomer', '.meter', '.buttons');
+  });
+</script>

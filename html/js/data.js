@@ -16,31 +16,29 @@ TotalPower.prototype.unit = 'W';
 TotalPower.prototype.feed = 'allRooms';
 TotalPower.prototype.datastream = 'ElectricPower';
 TotalPower.prototype.init = function() {
-  this.chart.container.selectAll('*').remove();
-
-  this.chart.container
-    .append('path')
+  var container = this.chart.time.select('.container');
+  container.selectAll('*').remove();
+  container.append('path')
       .attr('class', 'area')
       .datum([])
       .attr('d', this.area);
-      
-  this.chart.chart.select('.container').append('path')
+  container.append('path')
       .attr('class', 'line')
       .datum([])
       .attr('d', this.line);
 
-  this.chart.chart.select('.extras')
+  this.chart.time.select('.extras')
     .append('rect')
       .attr('class', 'nowLine')
       .attr('fill', 'url(#now-line-gradient)')
       .attr('width', Chart.NOW_BAR_WIDTH);
-  this.chart.chart
-    .append('circle')
+  this.chart.time.append('circle')
       .attr('class', 'nowDot')
       .attr('fill', 'url(#now-dot-gradient)')
       .attr('r', Chart.NOW_BAR_WIDTH);
 
-  var url = this.chart.db + '/_changes?filter=energy_data/measurements&source=' + this.feed;
+  var url = this.chart.db +
+      '/_changes?filter=energy_data/measurements&source=' + this.feed;
   this.current = 0;
   this.chart.getJSON(url + '&descending=true&limit=2', function(result) {
     this.eventSource = new EventSource(url + '&feed=eventsource&include_docs=true&since=' + result.last_seq, { withCredentials: true });
@@ -68,18 +66,17 @@ TotalPower.prototype.getDataFromRequest = function(params, result) {
   });
 };
 TotalPower.prototype.transformExtras = function() {
-  this.chart.chart.select('.nowLine')
+  this.chart.time.select('.nowLine')
       .attr('x', this.chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2)
       .attr('y', this.chart.y(this.current) - Chart.PADDING_BOTTOM)
       .attr('height', this.chart.height - this.chart.y(this.current));
 
-  this.chart.chart.select('.nowDot')
+  this.chart.time.select('.nowDot')
       .attr('cx', this.chart.x(new Date))
       .attr('cy', this.chart.y(this.current) - Chart.PADDING_BOTTOM);
-
 };
 TotalPower.prototype.setDataAndTransform = function(data, from, to) {
-  this.chart.chart.select('.area')
+  this.chart.time.select('.area')
       .datum(data)
       .attr('d', this.area)
       .attr('transform', from)
@@ -87,7 +84,7 @@ TotalPower.prototype.setDataAndTransform = function(data, from, to) {
       .duration(1000)
       .attr('transform', to);
 
-  this.chart.chart.select('.line')
+  this.chart.time.select('.line')
       .datum(data)
       .attr('d', this.line)
       .attr('transform', from)
