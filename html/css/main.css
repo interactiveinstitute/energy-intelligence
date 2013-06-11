@@ -60,6 +60,17 @@ body {
   fill: rgba(63, 169, 245, .8);
 }
 
+.time .loading {
+  -webkit-transition: opacity .3s;
+  pointer-events: none;
+}
+.time .loading text {
+  font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  fill: #eee;
+}
+
 .zoomer {
   position: absolute;
   bottom: 56px;

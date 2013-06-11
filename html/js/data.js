@@ -27,12 +27,11 @@ TotalPower.prototype.init = function() {
       .datum([])
       .attr('d', this.line);
 
-  this.chart.time.select('.extras')
-    .append('rect')
+  this.chart.time.select('.extras').append('rect')
       .attr('class', 'nowLine')
       .attr('fill', 'url(#now-line-gradient)')
       .attr('width', Chart.NOW_BAR_WIDTH);
-  this.chart.time.append('circle')
+  this.chart.time.select('.extras').append('circle')
       .attr('class', 'nowDot')
       .attr('fill', 'url(#now-dot-gradient)')
       .attr('r', Chart.NOW_BAR_WIDTH);

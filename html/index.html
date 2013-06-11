@@ -45,8 +45,8 @@
       <stop stop-color="white" stop-opacity="0" offset="100%"/>
     </radialGradient>
     <linearGradient id="left-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop stop-color="#111111" stop-opacity="1" offset="0%"/>
-      <stop stop-color="#111111" stop-opacity="0" offset="100%"/>
+      <stop stop-color="#000" stop-opacity="1" offset="0%"/>
+      <stop stop-color="#000" stop-opacity="0" offset="100%"/>
     </linearGradient>
     <filter id="popup-shadow">
       <feOffset in="SourceAlpha" dx="0" dy="0" result="offOut"/>
@@ -63,6 +63,10 @@
   <rect class="leftGradientBox" width="90" fill="url(#left-gradient)"/>
   <g class="yText axis"/>
   <g class="extras"/>
+  <g class="loading">
+    <rect fill="#000"/>
+    <text text-anchor="middle" alignment-baseline="central">loading</text>
+  </g>
 </svg>
 <div class="zoomer">
   <div class="handle"></div>

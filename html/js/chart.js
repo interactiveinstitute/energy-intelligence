@@ -10,20 +10,12 @@ function Chart(db, width, height) {
     this.config = config;
     var design = db + '/_design/energy_data/';
     this.getJSON(design + '_rewrite/feeds_and_datastreams', function(info) {
-      this.getJSON(design + '_view/domains?group=true', function(domains) {
-        this.intervals = info.intervals;
-        this.domains = {};
-        domains.rows.forEach(function(row) {
-          this.domains[row.key] = [row.value.min, row.value.max];
-        }, this);
-        this.construct();
+      this.intervals = info.intervals;
+      this.construct();
 
-        //this.defaultView();
-
-        this.ready = true;
-        var callback;
-        while (callback = this.onReady.shift()) callback(this);
-      }.bind(this));
+      this.ready = true;
+      var callback;
+      while (callback = this.onReady.shift()) callback(this);
     }.bind(this));
   }.bind(this));
 }
@@ -34,6 +26,8 @@ Chart.PADDING_BOTTOM = 48;
 Chart.PADDING_TOP = 48;
 Chart.BAR_SPACING = 4;
 Chart.NOW_BAR_WIDTH = 8;
+Chart.MIN_TIME_IN_VIEW = 60 * 60 * 1000;
+Chart.MAX_TIME_IN_VIEW = 2 * 7 * 24 * 60 * 60 * 1000;
 
 Chart.prototype.then = function(callback) {
   if (this.ready) callback(this);
@@ -49,17 +43,15 @@ Chart.prototype.getJSON = function(url, callback) {
 };
 
 Chart.prototype.construct = function() {
-  this.x = d3.time.scale()
-      .domain(this.domains[this.display[0].feed])
-      .range([0, this.width]);
+  this.x = d3.time.scale();
   // TODO need to reset this.x.domain on feed change
   this.y = d3.scale.linear()
       .domain([0, 200])
       .range([this.height - Chart.PADDING_BOTTOM - Chart.PADDING_TOP, 0]);
 
   this.xAxis = d3.svg.axis()
-      .scale(this.x)
       .orient('bottom')
+      .scale(this.x)
       .ticks(5)
       .tickSubdivide(true)
       .tickPadding(6)
@@ -80,8 +72,10 @@ Chart.prototype.construct = function() {
 
   this.zoom = d3.behavior.zoom()
       .x(this.x)
-      .scaleExtent([1, 1000]) // TODO prefer to define this related to time
       .on('zoom', this.transform.bind(this));
+  // TODO need to reset this.zoom.scaleExtent on feed change
+ 
+  this.defaultView();
 };
 
 Chart.prototype.init = function(time, zoomer, meter, buttons) {
@@ -152,8 +146,17 @@ Chart.prototype.init = function(time, zoomer, meter, buttons) {
         this.zoom.translate([translate, 0]);
         this.zoom.scale(scale);
         this.transform();
+        this.showLoading = true;
       }.bind(this));
       this.transform();
+
+  this.loading = this.time.select('.loading');
+  this.loading.select('rect')
+      .attr('width', this.width)
+      .attr('height', this.height);
+  this.loading.select('text')
+      .attr('dx', this.width / 2)
+      .attr('dy', this.height / 2);
   
   this.loadData();
   
@@ -184,14 +187,21 @@ Chart.prototype.button = function(cls, handler, state) {
 };
 
 Chart.prototype.defaultView = function() {
-  // TODO make this work
-  var now = new Date;
-  var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
-      this.config.work_day_hours[0]);
-  var endHour = (now.getHours() < this.config.work_day_hours[0] - 1) ?
+  var n = new Date;
+  var startH = (n.getHours() > this.config.work_day_hours[0]) ?
+      this.config.work_day_hours[0] : this.config.work_day_hours[0] - 24;
+  var start = new Date(n.getFullYear(), n.getMonth(), n.getDate(), startH);
+  var endHour = (n.getHours() < this.config.work_day_hours[0] - 1) ?
       this.config.work_day_hours[1] : start.getHours() + 24;
-  var end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour);
-  this.x.domain([start, end]);
+  var end = new Date(n.getFullYear(), n.getMonth(), n.getDate(), endHour);
+  this.x
+      .domain([start, end])
+      .range([0, this.width]);
+
+  var defaultTimeInView = end - start;
+  var minScale = defaultTimeInView / Chart.MAX_TIME_IN_VIEW;
+  var maxScale = defaultTimeInView / Chart.MIN_TIME_IN_VIEW;
+  this.zoom.x(this.x).scaleExtent([minScale, maxScale]);
 };
 
 Chart.prototype.transform = function ChartTransform() {
@@ -298,5 +308,12 @@ Chart.prototype.loadData = function() {
     BubbleBath.load([this.display[0].feed],
         this.x.domain()[0], this.x.domain()[1]);
     // TODO load extra offscreen bubbles?
+
+    this.loading.attr('opacity', 0);
   }.bind(this));
+
+  if (this.showLoading) {
+    this.loading.attr('opacity', .6);
+    this.showLoading = false;
+  }
 };
