@@ -158,7 +158,7 @@ Chart.prototype.init = function(time, zoomer, meter, buttons) {
       .attr('dx', this.width / 2)
       .attr('dy', this.height / 2);
   
-  this.loadData();
+  this.loadData(true);
   
   this.button('watt-hours', function(showWattHours) {
     this.display[0] = new (showWattHours ? TotalEnergy : TotalPower)(this);
@@ -261,7 +261,7 @@ Chart.prototype.transformXAxis = function() {
       .attr('x2', this.tickDistance / 2);
 };
 
-Chart.prototype.loadData = function() {
+Chart.prototype.loadData = function(first) {
   var params = this.display[0].getParameters();
   params.feed = this.display[0].feed;
   params.datastream = this.display[0].datastream;
@@ -280,14 +280,17 @@ Chart.prototype.loadData = function() {
     var tempScale = newDomain / oldDomain;
 
     this.y.domain([0, newDomain]);
-    var axis = this.time.select('.y.axis')
-      .transition()
-        .duration(1000)
-        .call(this.yAxis);
+    var axis = this.time.select('.y.axis');
+    if (!first) {
+      axis = axis.transition().duration(1000);
+    }
+    axis.call(this.yAxis);
     axis = this.time.select('.yText.axis')
-      .transition()
-        .duration(1000)
-        .call(this.yAxis)
+    if (!first) {
+      axis = axis.transition().duration(1000);
+    }
+    axis
+       .call(this.yAxis)
       .selectAll('text')
         .attr('x', 5)
         .attr('y', -16);
@@ -298,6 +301,7 @@ Chart.prototype.loadData = function() {
         'translate(' + -this.zoom.translate()[0] + ', 0)';
     var to = 'scale(' + (1 / this.zoom.scale()) + ', 1) ' +
         'translate(' + -this.zoom.translate()[0] + ', 0)';
+    if (first) from = to;
     
     this.display[0].setDataAndTransform(data, from, to);
 
