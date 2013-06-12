@@ -97,7 +97,6 @@ TotalPower.prototype.transform = function() {
   this.chart.time.select('.line')
       .attr('d', this.line);
 };
-
 TotalPower.prototype.getParameters = function(domain) {
   var start = domain[0];
   var duration = +domain[1] - +domain[0];
@@ -119,6 +118,8 @@ TotalPower.prototype.getParameters = function(domain) {
     start: new Date(actualStart).toJSON()
   };
 };
+
+/******************************************************************************/
 
 function TotalEnergy(chart) {
   this.chart = chart;
