@@ -1,3 +1,10 @@
+var Cardboard = {};
+
+Cardboard.init = function(containers) {
+  this.containers = d3.selectAll(containers.join(','));
+};
+
+/*
 function Cardboard(db, width, height) {
   this.db = db;
   this.width = width;
@@ -8,12 +15,9 @@ function Cardboard(db, width, height) {
   this.construct();
   
   var callback;
-  while (callback = this.onReady.shift())
-    callback(this);
+  while (callback = this.onReady.shift()) callback(this);
   this.ready = true;
 }
-
-Cardboard.COLUMN_COUNT = 3;
 
 Cardboard.prototype.then = function(callback) {
   if (this.ready) callback(this);
@@ -23,7 +27,7 @@ Cardboard.prototype.then = function(callback) {
 Cardboard.prototype.construct = function() {
 };
 
-Cardboard.prototype.init = function(container) {
+Cardboard.prototype.init = function(containers) {
   this.el = d3.select(container).append('div')
       .attr('class', 'cardboard')
       .style('width', this.width + 'px')
@@ -37,3 +41,4 @@ Cardboard.prototype.init = function(container) {
         .attr('height', this.height + 'px');
   }
 };
+*/

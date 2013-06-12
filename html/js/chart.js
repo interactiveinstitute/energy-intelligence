@@ -1,26 +1,11 @@
-function Chart(db, width, height) {
+function Chart(config, db) {
+  this.config = config;
   this.db = db;
-  this.width = width;
-  this.height = height;
   this.display = [new TotalPower(this)];
-  this.ready = false;
-  this.onReady = [];
-  
-  this.getJSON('config.json', function(config) {
-    this.config = config;
-    var design = db + '/_design/energy_data/';
-    this.getJSON(design + '_rewrite/feeds_and_datastreams', function(info) {
-      this.intervals = info.intervals;
-      this.construct();
-
-      this.ready = true;
-      var callback;
-      while (callback = this.onReady.shift()) callback(this);
-    }.bind(this));
-  }.bind(this));
+  this.construct();
 }
 
-Chart.SAMPLE_SIZE = 6; // px
+Chart.SAMPLE_SIZE = 2; // px
 Chart.EXTRA_UNITS_ABOVE = 50;
 Chart.PADDING_BOTTOM = 48;
 Chart.PADDING_TOP = 48;
@@ -28,11 +13,6 @@ Chart.BAR_SPACING = 4;
 Chart.NOW_BAR_WIDTH = 8;
 Chart.MIN_TIME_IN_VIEW = 60 * 60 * 1000;
 Chart.MAX_TIME_IN_VIEW = 2 * 7 * 24 * 60 * 60 * 1000;
-
-Chart.prototype.then = function(callback) {
-  if (this.ready) callback(this);
-  else this.onReady.push(callback);
-};
 
 Chart.prototype.getJSON = function(url, callback) {
   var request = new XMLHttpRequest;
@@ -46,23 +26,20 @@ Chart.prototype.construct = function() {
   this.x = d3.time.scale();
   // TODO need to reset this.x.domain on feed change
   this.y = d3.scale.linear()
-      .domain([0, 200])
-      .range([this.height - Chart.PADDING_BOTTOM - Chart.PADDING_TOP, 0]);
+      .domain([0, 200]);
 
   this.xAxis = d3.svg.axis()
       .orient('bottom')
       .scale(this.x)
       .ticks(5)
       .tickSubdivide(true)
-      .tickPadding(6)
-      .tickSize(this.height);
+      .tickPadding(6);
   // TODO change labeling of this.xAxis here to make it always recognisable
   this.yAxis = d3.svg.axis()
       .scale(this.y)
       .orient('left')
       .ticks(5)
       .tickPadding(6)
-      .tickSize(-this.width)
       .tickFormat(function(d) {
         return d + ' ' + this.display[0].unit;
       }.bind(this));
@@ -71,30 +48,26 @@ Chart.prototype.construct = function() {
   this.tickDistance = 0;
 
   this.zoom = d3.behavior.zoom()
-      .x(this.x)
       .on('zoom', this.transform.bind(this));
   // TODO need to reset this.zoom.scaleExtent on feed change
- 
-  this.defaultView();
 };
 
-Chart.prototype.init = function(time, zoomer, meter, buttons) {
+Chart.prototype.init = function(time, zoomer, meter, buttons, toggle) {
   this.time = d3.select(time);
   this.zoomer = d3.select(zoomer);
   this.meter = d3.select(meter);
   this.buttons = d3.select(buttons);
+  this.toggle = d3.select(toggle);
+
+  this.loading = this.time.select('.loading');
 
   this.time
-      .attr('width', this.width)
-      .attr('height', this.height)
-    //.select('.time > g') // TODO was this piece in between needed?
       .call(this.zoom);
 
-  this.display[0].init();
+  this.toggleFullscreen(false);
+  this.defaultView();
 
-  // TODO hide gradient during pan & zoom to make it smoother
-  this.time.select('.leftGradientBox')
-      .attr('height', this.height);
+  this.display[0].init();
 
   // Call .loadData() if the user has been zooming the way we want.
   (function() {
@@ -149,14 +122,6 @@ Chart.prototype.init = function(time, zoomer, meter, buttons) {
         this.showLoading = true;
       }.bind(this));
       this.transform();
-
-  this.loading = this.time.select('.loading');
-  this.loading.select('rect')
-      .attr('width', this.width)
-      .attr('height', this.height);
-  this.loading.select('text')
-      .attr('dx', this.width / 2)
-      .attr('dy', this.height / 2);
   
   this.loadData(true);
   
@@ -174,6 +139,57 @@ Chart.prototype.init = function(time, zoomer, meter, buttons) {
   this.meter.on('touchstart', function() {
     this.autopan(this.defaultDomain());
   }.bind(this));
+
+  this.toggle.on('touchstart', function() {
+    this.toggleFullscreen(undefined, function() {
+      this.defaultView();
+      this.transform();
+      this.loadData();
+    }.bind(this));
+  }.bind(this));
+};
+
+Chart.prototype.adjustToSize = function() {
+  this.x
+      .range([0, this.width]);
+
+  this.y
+      .range([this.height - Chart.PADDING_BOTTOM - Chart.PADDING_TOP, 0]);
+
+  this.xAxis
+      .scale(this.x)
+      .tickSize(this.height);
+  this.yAxis
+      .scale(this.y)
+      .tickSize(-this.width);
+
+  this.time.select('.x.axis')
+      .call(this.xAxis);
+
+  this.time.select('.y.axis')
+      .call(this.yAxis);
+
+  this.time.select('.yText.axis')
+      .call(this.yAxis)
+    .selectAll('text')
+      .attr('x', 5)
+      .attr('y', -16);
+
+  this.time
+      .attr('width', this.width)
+      .attr('height', this.height);
+
+  this.time.select('.leftGradientBox')
+      .attr('height', this.height);
+
+  this.loading.select('rect')
+      .attr('width', this.width)
+      .attr('height', this.height);
+  this.loading.select('text')
+      .attr('dx', this.width / 2)
+      .attr('dy', this.height / 2);
+
+  this.display[0].transform();
 };
 
 Chart.prototype.button = function(cls, handler, state) {
@@ -202,11 +218,12 @@ Chart.prototype.defaultDomain = function() {
 };
 
 Chart.prototype.defaultView = function() {
-  this.x
-      .domain(this.defaultDomain())
-      .range([0, this.width]);
+  var domain = this.defaultDomain();
 
-  var defaultTimeInView = this.defaultDomain()[1] - this.defaultDomain()[0];
+  this.x
+      .domain(domain);
+
+  var defaultTimeInView = domain[1] - domain[0];
   var minScale = defaultTimeInView / Chart.MAX_TIME_IN_VIEW;
   var maxScale = defaultTimeInView / Chart.MIN_TIME_IN_VIEW;
   this.zoom.x(this.x).scaleExtent([minScale, maxScale]);
@@ -368,4 +385,51 @@ Chart.prototype.loadData = function(first, domain, callback) {
     this.loading.attr('opacity', .6);
     this.showLoading = false;
   }
+};
+
+Chart.prototype.toggleFullscreen = function(fullscreen, callback) {
+  var transition = this.fullscreen !== undefined;
+  this.fullscreen = fullscreen === undefined ? !this.fullscreen : fullscreen;
+
+  var change = function(x, y, width, height, bubbleOpacity) {
+    this.width = width;
+    this.height = height;
+    this.time.style('-webkit-transform', 'translate(' +
+        x + 'px,' + y + 'px)');
+    this.adjustToSize();
+    this.time.select('.bubblebath').attr('opacity', bubbleOpacity);
+  }.bind(this);
+
+  var resize = function(x, y, width, height, bubbleOpacity) {
+    if (transition) {
+      this.time
+          .classed('resizing', true)
+          .style('-webkit-transform', 'translate(' +
+              x + 'px,' + y + 'px) ' +
+              'scale(' +
+              (width / this.width) + ',' +
+              (height / this.height) + ')')
+          .on('webkitTransitionEnd', function() {
+            d3.select(this).on('webkitTransitionEnd', null);
+            change(x, y, width, height, bubbleOpacity);
+            this.classList.remove('resizing');
+            callback && callback();
+          });
+    } else {
+      change(x, y, width, height, bubbleOpacity);
+      callback && callback();
+    }
+  }.bind(this);
+
+  if (this.fullscreen) {
+    resize(0, 200, innerWidth, innerHeight - 366, 1);
+  } else {
+    resize(
+        32 + 512 + 32, 192,
+        innerWidth - 2 * (32 + 512 + 32), innerHeight - 192 - 32,
+        0);
+  }
+
+  this.buttons.classed('visible', this.fullscreen);
+  this.zoomer.classed('visible', this.fullscreen);
 };

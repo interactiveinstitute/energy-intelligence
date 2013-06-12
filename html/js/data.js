@@ -4,7 +4,9 @@ function TotalPower(chart) {
   this.area = d3.svg.area()
       //.interpolate('step-after')
       .x(function(d) { return this.chart.x(d.resampledAt); }.bind(this))
-      .y0(this.chart.height - Chart.PADDING_BOTTOM)
+      .y0(function(d) {
+        return this.chart.height - Chart.PADDING_BOTTOM;
+      }.bind(this))
       .y1(function(d) { return this.chart.y(d.value); }.bind(this));
   this.line = d3.svg.line()
       //.interpolate('step-after')
@@ -106,10 +108,10 @@ TotalPower.prototype.getParameters = function(domain) {
   var actualDuration = Math.max(+actualStart, actualEnd) - +actualStart;
 
   var n = this.chart.width / Chart.SAMPLE_SIZE;
-  for (var i = 0; i < this.chart.intervals.length; i++) {
-    if (this.chart.intervals[i] > duration * Chart.SAMPLE_SIZE / this.chart.width / 1000) break;
+  for (var i = 0; i < this.chart.config.intervals.length; i++) {
+    if (this.chart.config.intervals[i] > duration * Chart.SAMPLE_SIZE / this.chart.width / 1000) break;
   }
-  var interval = this.chart.intervals[i - 1] || 1;
+  var interval = this.chart.config.intervals[i - 1] || 1;
   var n = Math.ceil(duration * 3 / interval / 1000);
   
   return {
@@ -176,10 +178,10 @@ TotalEnergy.prototype.getParameters = function() {
   
   // TODO use tick width instead of sample size. This will work as well but slower.
   var n = this.chart.width / Chart.SAMPLE_SIZE;
-  for (var i = 0; i < this.chart.intervals.length; i++) {
-    if (this.chart.intervals[i] > duration * Chart.SAMPLE_SIZE / this.chart.width / 1000) break;
+  for (var i = 0; i < this.chart.config.intervals.length; i++) {
+    if (this.chart.config.intervals[i] > duration * Chart.SAMPLE_SIZE / this.chart.width / 1000) break;
   }
-  var interval = this.chart.intervals[i - 1] || 1;
+  var interval = this.chart.config.intervals[i - 1] || 1;
   var n = Math.ceil(duration * 3 / interval / 1000);
   
   return {

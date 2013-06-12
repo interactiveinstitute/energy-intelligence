@@ -13,9 +13,18 @@ body {
 .time {
   display: block;
   position: absolute;
-  top: 200px;
   overflow: hidden;
 }
+
+.time.resizing {
+  transition: -webkit-transform .2s;
+  -webkit-transform-origin: 0 0;
+}
+.time.resizing text,
+.time.resizing .popup {
+  display: none;
+}
+
 .time .x.axis line.major {
   stroke: transparent;
 }
@@ -80,6 +89,11 @@ body {
   width: 361px;
   height: 45px;
   /*box-shadow: 0 0 40px 40px #000;*/
+  transition: -webkit-transform .2s;
+  -webkit-transform: translate(0, 120px);
+}
+.zoomer.visible {
+  -webkit-transform: none;
 }
 .zoomer .handle {
   width: 44px;
@@ -89,6 +103,15 @@ body {
   position: absolute;
 }
 
+.buttons {
+  position: absolute;
+  bottom: 0;
+  transition: -webkit-transform .2s;
+  -webkit-transform: translate(0, 120px);
+}
+.buttons.visible {
+  -webkit-transform: none;
+}
 .button {
   position: absolute;
   bottom: 0;
@@ -221,4 +244,14 @@ body {
 
 /* Cards */
 .cardboard {
+}
+
+.toggle {
+  color: #fff;
+  background: #666;
+  width: 64px;
+  height: 64px;
+  text-align: center;
+  font: 500 10px/64px Avenir;
+  letter-spacing: 1px;
 }

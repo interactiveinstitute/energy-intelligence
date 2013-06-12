@@ -13,9 +13,18 @@
 <script src="js/bubble.js"></script>
 <script src="js/bubblebath.js"></script>
 <script src="js/chart.js"></script>
+<script src="js/cardboard.js"></script>
 <script>
+  var config = {
+    work_day_hours: [6, 18],
+    default_view_after: 10000,
+    intervals: [1, 30, 60, 300, 900, 1800, 3600, 10800, 21600, 43200, 86400]
+  };
   var remote = new Remote('http:/livinglab.powerprojects.se:8002/');
-  var chart = new Chart('https://livinglab.powerprojects.se:6984/sp', innerWidth, innerHeight - 366);
+  var chart = new Chart(config, 'https://livinglab.powerprojects.se:6984/sp', innerWidth, innerHeight - 366);
+  Cardboard.db = 'https://livinglab.powerprojects.se:6984/sp';
+  Cardboard.width = innerWidth;
+  Cardboard.height = innerHeight;
 </script>
 
 <body>
@@ -74,8 +83,12 @@
 <div class="buttons">
 </div>
 
+<div class="toggle">TOGGLE!</div>
+
+<div class="cards left"></div>
+<div class="cards right"></div>
+
 <script>
-  chart.then(function(chart) {
-    chart.init('.time', '.zoomer', '.meter', '.buttons');
-  });
+  chart.init('.time', '.zoomer', '.meter', '.buttons', '.toggle');
+  Cardboard.init(['.cards.left', '.cards.right']);
 </script>
