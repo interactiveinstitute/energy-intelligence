@@ -91,9 +91,16 @@ TotalPower.prototype.setDataAndTransform = function(data, from, to) {
       .duration(1000)
       .attr('transform', to);
 };
-TotalPower.prototype.getParameters = function() {
-  var start = this.chart.x.domain()[0];
-  var duration = +this.chart.x.domain()[1] - +this.chart.x.domain()[0];
+TotalPower.prototype.transform = function() {
+  this.chart.time.select('.area')
+      .attr('d', this.area);
+  this.chart.time.select('.line')
+      .attr('d', this.line);
+};
+
+TotalPower.prototype.getParameters = function(domain) {
+  var start = domain[0];
+  var duration = +domain[1] - +domain[0];
 
   var actualStart = +start - duration;
   var actualEnd = Math.min(+start + 2 * duration, +new Date);

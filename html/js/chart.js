@@ -170,6 +170,10 @@ Chart.prototype.init = function(time, zoomer, meter, buttons) {
         .classed('withHighlights', showHighlights);
     // TODO: not enough, can't get popup bubble now
   }, true);
+
+  this.meter.on('touchstart', function() {
+    this.autopan(this.defaultDomain());
+  }.bind(this));
 };
 
 Chart.prototype.button = function(cls, handler, state) {
@@ -186,7 +190,7 @@ Chart.prototype.button = function(cls, handler, state) {
       });
 };
 
-Chart.prototype.defaultView = function() {
+Chart.prototype.defaultDomain = function() {
   var n = new Date;
   var startH = (n.getHours() > this.config.work_day_hours[0]) ?
       this.config.work_day_hours[0] : this.config.work_day_hours[0] - 24;
@@ -194,17 +198,44 @@ Chart.prototype.defaultView = function() {
   var endHour = (n.getHours() < this.config.work_day_hours[0] - 1) ?
       this.config.work_day_hours[1] : start.getHours() + 24;
   var end = new Date(n.getFullYear(), n.getMonth(), n.getDate(), endHour);
+  return [start, end];
+};
+
+Chart.prototype.defaultView = function() {
   this.x
-      .domain([start, end])
+      .domain(this.defaultDomain())
       .range([0, this.width]);
 
-  var defaultTimeInView = end - start;
+  var defaultTimeInView = this.defaultDomain()[1] - this.defaultDomain()[0];
   var minScale = defaultTimeInView / Chart.MAX_TIME_IN_VIEW;
   var maxScale = defaultTimeInView / Chart.MIN_TIME_IN_VIEW;
   this.zoom.x(this.x).scaleExtent([minScale, maxScale]);
 };
 
-Chart.prototype.transform = function ChartTransform() {
+Chart.prototype.autopan = function(domain) {
+  var transition = d3.transition().duration(1000).tween('zoom', function() {
+    var oldStart = this.x.domain()[0];
+    var oldEnd = this.x.domain()[1];
+    var interpolate = d3.interpolate([+oldStart, +oldEnd],
+        [+domain[0], +domain[1]]);
+    return function(t) {
+      this.x.domain(interpolate(t));
+      this.zoom.x(this.x);
+      this.transform();
+      //this.display[0].transform();
+      // TODO translate and zoom display, don't recalculate
+    }.bind(this);
+  }.bind(this))
+      .each('end', function() {
+        //this.showLoading = true;
+        this.loadData(true, domain, function() {
+          this.time.select('.zooms').style('opacity', 1);
+        }.bind(this));
+      }.bind(this));
+  this.time.select('.zooms').style('opacity', 0);
+};
+
+Chart.prototype.transform = function() {
   this.transformXAxis();
   
   this.time.select('.zooms')
@@ -261,8 +292,10 @@ Chart.prototype.transformXAxis = function() {
       .attr('x2', this.tickDistance / 2);
 };
 
-Chart.prototype.loadData = function(first) {
-  var params = this.display[0].getParameters();
+Chart.prototype.loadData = function(first, domain, callback) {
+  if (!domain) domain = this.x.domain();
+
+  var params = this.display[0].getParameters(domain);
   params.feed = this.display[0].feed;
   params.datastream = this.display[0].datastream;
   var url = this.db + '/_design/energy_data/_show/historical?' +
@@ -314,6 +347,8 @@ Chart.prototype.loadData = function(first) {
     // TODO load extra offscreen bubbles?
 
     this.loading.attr('opacity', 0);
+
+    if (callback) callback();
   }.bind(this));
 
   if (this.showLoading) {
