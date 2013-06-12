@@ -128,9 +128,8 @@ TotalEnergy.prototype.unit = 'Wh';
 TotalEnergy.prototype.feed = 'allRooms';
 TotalEnergy.prototype.datastream = 'ElectricEnergy';
 TotalEnergy.prototype.init = function() {
-  this.chart.container.selectAll('*').remove();
-  
-  this.group = this.chart.container;
+  this.group = this.chart.time.select('.container');
+  this.group.selectAll('*').remove();
 };
 TotalEnergy.prototype.getDataFromRequest = function(params, result) {
   var resample = +new Date(params.start);
