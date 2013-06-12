@@ -112,33 +112,75 @@ body {
 }
 
 .popup {
-  -webkit-transition: opacity .2s;
+  -webkit-transition: opacity .2s, -webkit-transform .5s;
 }
 .popup path {
   stroke: #aee0ff;
   stroke-width: 2;
   fill: #000;
   -webkit-animation: popup-start-path .2s ease-in-out;
+  transition: -webkit-transform .2s;
 }
+.future .popup path {
+  -webkit-transform: rotate(-180deg);
+}
+.future + .future .popup path { -webkit-transform: rotate(-175deg); }
+.future + .future + .future .popup path { -webkit-transform: rotate(-172deg); }
+.future + .future + .future + .future .popup path { -webkit-transform: rotate(-170deg); }
+.past + .past .popup path { -webkit-transform: rotate(-5deg); }
+.past + .past + .past .popup path { -webkit-transform: rotate(-8deg); }
+.past + .past + .past + .past .popup path { -webkit-transform: rotate(-10deg); }
+
 .popup rect {
   fill: #aee0ff;
+  /*
   -webkit-animation: popup-start-label .2s ease-in-out .2s;
   -webkit-animation-fill-mode: backwards;
+  */
+  transition: -webkit-transform .2s;
+  transition-delay: .4s;
+  -webkit-transform: scale(.1) translate(-57px, 0);
+}
+.current .popup rect {
+  -webkit-transform: none;
+  transition-delay: 0;
 }
 .popup .value {
   font-family: 'HelveticaNeueLT Std Cn', 'HelveticaNeue-CondensedBold', sans-serif;
   font-size: 28px;
   font-weight: bold;
   fill: #aee0ff;
+  /*
   -webkit-animation: popup-start-text .5s ease-in-out .2s;
   -webkit-animation-fill-mode: backwards;
+  */
+  opacity: 0;
+  transition: opacity .2s;
 }
-.popup .time {
+.current .popup .value {
+  opacity: 1;
+}
+.popup .note {
   font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
   font-weight: bold;
   font-size: 18px;
+  /*
   -webkit-animation: popup-start-text .5s ease-in-out .4s;
   -webkit-animation-fill-mode: backwards;
+  */
+  /*
+  transition: -webkit-transform .2s;
+  -webkit-transform: scale(.1) translate(-57px, 0);
+  */
+  opacity: 0;
+  transition: opacity .2s;
+  transition-delay: .2s;
+}
+.current .popup .note {
+  /*
+  -webkit-transform: scale(1) translate(-57px, 0);
+  */
+  opacity: 1;
 }
 
 @-webkit-keyframes popup-start-path {
@@ -160,6 +202,8 @@ body {
 }
 .bubblebath .backdrop {
   -webkit-animation: fade-in .5s;
+}
+.bubblebath .bubble.past .popup {
 }
 
 @-webkit-keyframes fade-in {

@@ -20,7 +20,7 @@ function Chart(db, width, height) {
   }.bind(this));
 }
 
-Chart.SAMPLE_SIZE = 2; // px
+Chart.SAMPLE_SIZE = 6; // px
 Chart.EXTRA_UNITS_ABOVE = 50;
 Chart.PADDING_BOTTOM = 48;
 Chart.PADDING_TOP = 48;
@@ -213,6 +213,7 @@ Chart.prototype.defaultView = function() {
 };
 
 Chart.prototype.autopan = function(domain) {
+  this.showLoading = true;
   var transition = d3.transition().duration(1000).tween('zoom', function() {
     var oldStart = this.x.domain()[0];
     var oldEnd = this.x.domain()[1];
@@ -224,15 +225,27 @@ Chart.prototype.autopan = function(domain) {
       this.transform();
       //this.display[0].transform();
       // TODO translate and zoom display, don't recalculate
+      BubbleBath.position();
     }.bind(this);
   }.bind(this))
       .each('end', function() {
-        //this.showLoading = true;
+        this.showLoading = true;
         this.loadData(true, domain, function() {
           this.time.select('.zooms').style('opacity', 1);
         }.bind(this));
       }.bind(this));
   this.time.select('.zooms').style('opacity', 0);
+};
+
+Chart.prototype.bringIntoView = function(time) {
+  var add = 0;
+  var domain = this.x.domain();
+  var start = +domain[0];
+  var end = +domain[1];
+  var interval = end - start;
+  while (+time < start + add) add -= interval;
+  while (+time > end + add) add += interval;
+  this.autopan([new Date(start + add), new Date(end + add)]);
 };
 
 Chart.prototype.transform = function() {

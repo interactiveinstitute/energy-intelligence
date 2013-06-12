@@ -33,6 +33,11 @@ var bubble = (function() {
     return obj
   }
 
+  function value(v) {
+    if (v < 1000) return Math.round(v * 10) / 10
+    else return Math.round(v)
+  }
+
   Bubble = function() {}
   Bubble.prototype = {
     publish: function(obj, methods) {
@@ -48,10 +53,14 @@ var bubble = (function() {
           //.attr('filter', 'url(#popup-shadow)')
           // TODO add shadow when still
           .on('touchstart', function() {
-            if (this.closesOnTouch) {
-              d3.event.stopPropagation()
-              this.close()
-            } else this.toggleSeeThrough(true)
+            if (this.container.classed('current')) {
+              if (this.closesOnTouch) {
+                d3.event.stopPropagation()
+                this.close()
+              } else this.toggleSeeThrough(true)
+            } else {
+              this.chart.bringIntoView(this.at);
+            }
           }.bind(this))
           .on('touchend', onTouchEnd)
       var labelBackground = this._el.append('rect')
@@ -64,13 +73,13 @@ var bubble = (function() {
           .attr('d', 'M 16 -8 A 48 48 340 1 1 16 8 L 0 0 L 16 -8')
       this._el.append('text')
           .attr('class', 'value')
-          .text(this.value + ' ' + this.value_type)
+          .text(value(this.value) + ' ' + this.value_type)
           .attr('text-anchor', 'middle')
           .attr('alignment-baseline', 'central')
           .attr('dx', 63)
           .attr('dy', 0)
       var labelText = this._el.append('text')
-          .attr('class', 'time')
+          .attr('class', 'note')
           .text(this.note)
           .attr('text-anchor', 'start')
           .attr('alignment-baseline', 'central')
@@ -86,11 +95,13 @@ var bubble = (function() {
       this._dispatch.close()
       return this
     },
-    position: function() {
-      var x = this.chart.x(this.at)
-      var y = this.chart.y(this.value)
+    position: function(transition, x, y) {
+      if (x === undefined || y === undefined) {
+        x = this.chart.x(this.at)
+        y = this.chart.y(this.value)
+      }
 
-      this._el
+      (transition ? this._el.transition().duration(300) : this._el)
           .attr('transform', 'translate(' + x + ',' + y + ')')
 
       return this

@@ -1,7 +1,7 @@
 // TODO on .position(), if a bubble is out of view, render a link to it in-view
 
 var BubbleBath = function() {
-  var db, container, bubbles, json, chart
+  var db, container, bubbles, json, position, chart, startts, endts
 
   bubbles = []
 
@@ -14,6 +14,27 @@ var BubbleBath = function() {
     req.withCredentials = true
     req.onload = function(e) { cb(JSON.parse(req.response)) }
     req.send()
+  }
+
+  position = function() {
+    startts = chart.x.domain()[0]
+    endts = chart.x.domain()[1]
+    container.selectAll('.bubble').each(function(d) {
+      if (d.timestamp <= startts) {
+        var trans = !this.classList.contains('past')
+        d3.select(this).attr('class', 'bubble past')
+        bubble(this).position(trans, 10, chart.height - Chart.PADDING_BOTTOM)
+      } else if (d.timestamp >= endts) {
+        var trans = !this.classList.contains('future')
+        d3.select(this).attr('class', 'bubble future')
+        bubble(this).position(trans,
+            chart.width - 10, chart.height - Chart.PADDING_BOTTOM)
+      } else {
+        var trans = !this.classList.contains('current')
+        d3.select(this).attr('class', 'bubble current')
+        bubble(this).position(trans)
+      }
+    })
   }
 
   return {
@@ -100,10 +121,14 @@ var BubbleBath = function() {
           .on('touchend', function() { if (opening) cancel() }, true);
     },
     load: function(feeds, start, end) {
+      startts = +start
+      endts = +end
+      var timespan = endts - startts
       json('/_design/events/_view/bubbles_by_feed_and_time', {
-        startkey: [feeds[0], +start],
-        endkey: [feeds[0], +end]
+        startkey: [feeds[0], startts - timespan],
+        endkey: [feeds[0], endts + timespan]
       }, function(result) {
+        var that = this;
         var bubbles = container.selectAll('.bubble')
             .data(result.rows.map(function(row) {
               return utils.extend(row.value, {
@@ -114,16 +139,19 @@ var BubbleBath = function() {
             }), function(d) { return d.at })
         bubbles.enter().append('g')
             .attr('class', 'bubble')
+            .classed('past', function(d) { return d.timestamp <= startts })
+            .classed('future', function(d) { return d.timestamp >= endts })
+            .classed('current', function(d) {
+              return startts < d.timestamp && d.timestamp < endts
+            })
             .each(function() { bubble(this).position() })
         bubbles.exit()
             .each(function(d) { bubble(this).close() })
             .remove()
+        position()
       })
       return this
     },
-    position: function() {
-      container.selectAll('.bubble')
-          .each(function() { bubble(this).position() })
-    }
+    position: position
   }
 }()
