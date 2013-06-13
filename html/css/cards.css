@@ -1,0 +1,20 @@
+.card {
+  background: white;
+  border-radius: 6px;
+  font-size: 28px;
+  font-weight: bold;
+  font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
+}
+.card, .card * {
+  box-sizing: border-box;
+}
+.card * {
+  margin: 0;
+  padding: 0;
+}
+
+.card.weeklyExtrema {
+  background: #666;
+  color: #eee;
+  padding: 12px;
+}

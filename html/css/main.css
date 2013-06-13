@@ -243,7 +243,16 @@ body {
 }
 
 /* Cards */
-.cardboard {
+.cards {
+  position: absolute;
+}
+.cards.left {
+  top: 192px;
+  left: 32px;
+}
+.cards.right {
+  top: 192px;
+  right: 32px;
 }
 
 .toggle {
