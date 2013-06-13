@@ -142,8 +142,8 @@ Chart.prototype.init = function(time, zoomer, meter, buttons, toggle) {
 
   this.toggle.on('touchstart', function() {
     this.toggleFullscreen(undefined, function() {
-      this.defaultView();
       this.transform();
+      this.defaultView();
       this.loadData();
     }.bind(this));
   }.bind(this));
