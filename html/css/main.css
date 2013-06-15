@@ -73,6 +73,7 @@ svg.time .axis text {
   font-size: 28px;
   font-weight: bold;
   font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
+  font: bold 28px 'HelveticaNeueLT Std Cn', 'HelveticaNeue-CondensedBold', sans-serif;
   text-anchor: start !important;
 }
 svg.time .x.axis .domain {
