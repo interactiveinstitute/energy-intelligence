@@ -174,8 +174,16 @@ Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons,
           }
         }.bind(that));
   })(this);
-};
 
+  setTimeout(function() {
+    this.toggleFullscreen(true, function() {
+      this.transform();
+      this.defaultView();
+      this.loadData();
+    }.bind(this));
+    this.fullscreener.classed('hidden', true);
+  }.bind(this), 0);
+};
 Chart.prototype.adjustToSize = function() {
   this.x
       .range([0, this.width]);
@@ -293,6 +301,7 @@ Chart.prototype.bringIntoView = function(time) {
 };
 
 Chart.prototype.transform = function() {
+  console.log(this.zoom.translate()[0], this.zoom.scale())
   this.transformXAxis();
   
   this.time.select('.zooms')
@@ -347,6 +356,21 @@ Chart.prototype.transformXAxis = function() {
   lines.style('stroke-width', this.tickDistance)
       .attr('x1', this.tickDistance / 2)
       .attr('x2', this.tickDistance / 2);
+};
+
+Chart.prototype.getTickInfo = function() {
+  var ticks = this.time.selectAll('.x.axis .tick');
+  if (ticks[0] && ticks[0].length > 1) {
+    var dates = [];
+    ticks.each(function(d) { dates.push(new Date(d)); });
+    dates = dates.sort();
+    if (dates.length >= 2) {
+      return {
+        duration: +dates[1] - +dates[0],
+        first: dates[0]
+      };
+    }
+  }
 };
 
 Chart.prototype.loadData = function(first, domain, callback) {

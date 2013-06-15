@@ -19,6 +19,7 @@ TotalPower.prototype.feed = 'allRooms';
 TotalPower.prototype.datastream = 'ElectricPower';
 TotalPower.prototype.init = function() {
   var container = this.chart.time.select('.container');
+  container.attr('transform', '');
   container.selectAll('*').remove();
   container.append('path')
       .attr('class', 'area')
@@ -135,6 +136,23 @@ TotalEnergy.prototype.init = function() {
   this.group.selectAll('*').remove();
 };
 TotalEnergy.prototype.getDataFromRequest = function(params, result) {
+  var info = this.chart.getTickInfo();
+  var pointsPerBar = info.duration / (params.interval * 1000);
+  var data = [];
+  var n = 0;
+  while ((n + 1) * pointsPerBar < result.datapoints.length) {
+    var startIndex = n * pointsPerBar;
+    var endIndex = (n + 1) * pointsPerBar;
+    var end = parseFloat(result.datapoints[endIndex].value || 0);
+    var start = parseFloat(result.datapoints[startIndex].value || 0);
+    data[n++] = {
+      start: new Date(result.datapoints[startIndex].at),
+      end: new Date(result.datapoints[endIndex].at),
+      value: (end > start && start > 0) ? (end - start) * 1000 : 0
+    }
+  }
+  return data;
+  /*
   var resample = +new Date(params.start);
   
   var pointsPerBar = 20;
@@ -156,33 +174,109 @@ TotalEnergy.prototype.getDataFromRequest = function(params, result) {
   }
   console.log(data);
   return data;
+  */
+};
+TotalEnergy.prototype.transform = function() {
+  /*
+  this.group.selectAll('.bar')
+      .attr('transform', 'translate(' + this.chart.zoom.translate()[0] + ', 0) scaleX(' + this.chart.zoom.scale() + ')');
+      */
+  this.group.selectAll('.bar rect')
+      .attr('x', function(d) { return this.chart.x(d.start); }.bind(this))
+      .attr('width', function(d) { return this.chart.x(d.end) - this.chart.x(d.start); }.bind(this));
+  this.group.selectAll('.bar text')
+      .attr('dx', function(d) {
+        return this.chart.x(d.start);
+      }.bind(this))
 };
 TotalEnergy.prototype.setDataAndTransform = function(data, from, to) {
+  console.log('data',data);
+  // TODO
   this.group
       .attr('transform', to);
   
   var bar = this.group.selectAll('.bar')
-      .data(data)
-    .enter().append('g')
-      .attr('class', 'bar')
-      .attr('transform', function(d) { return 'translate(' + this.chart.x(d.start) + ',0)'; }.bind(this));
-  bar.append('rect')
+      .data(data, function(d) {
+        console.log(+d.start + '>' + +d.end);
+        return +d.start + '>' + +d.end;
+      });
+  var g = bar.enter().append('g')
+      .attr('class', 'bar');
+  g.append('rect')
+    /*
+      .attr('x', function(d) {
+        console.log('x1', d.start, this.chart.x(d.start));
+        console.log('x2', d.end, this.chart.x(d.end));
+        return this.chart.x(d.start);
+      }.bind(this))
+      */
+      .attr('y', function(d) {
+        return this.chart.y(d.value);
+      }.bind(this))
+  /*
+      .attr('width', function(d) {
+        return this.chart.x(d.end) - this.chart.x(d.start);
+      }.bind(this))
+        */
+      .attr('height', function(d) {
+        return this.chart.height - Chart.PADDING_BOTTOM - this.chart.y(d.value);
+      }.bind(this));
+  g.append('text')
+      .text(function(d) {
+        return d.start.toLocaleDateString() + '|' + d.start.toLocaleTimeString() + '>' + d.end.toLocaleTimeString();
+      })
+      .attr('text-anchor', 'left')
+      .attr('alignment-baseline', 'bottom')
+      .attr('dx', function(d) {
+        return this.chart.x(d.start);
+      }.bind(this))
+      .attr('dy', this.chart.height - Chart.PADDING_BOTTOM)
+  g.append('text')
+      .text(function(d) {
+        return d.value;
+      })
+      .attr('text-anchor', 'left')
+      .attr('alignment-baseline', 'bottom')
+      .attr('dy', this.chart.height - Chart.PADDING_BOTTOM - 20)
+      .attr('dx', function(d) {
+        return this.chart.x(d.start);
+      }.bind(this))
+
+
+  bar.exit().remove();
+      /*
+      .attr('x', function(d) { return this.chart.x(d.start); }.bind(this))
+      .attr('width', function(d) {
+        return this.chart.x(d.end) - this.chart.x(d.start);
+      }.bind(this))
+      .attr('height', function(d) {
+      }
+      */
+      /*
+      .attr('transform', function(d) {
+        return 'translate(' + this.chart.x(d.start) + ',0)';
+      }.bind(this));
+      */
+  /*
       .attr('x', Chart.BAR_SPACING / 2)
       .attr('y', function(d) { return this.chart.y(d.value); }.bind(this))
       .attr('width', this.chart.x(data[1].start) - +this.chart.x(data[0].start) - Chart.BAR_SPACING / 2)
       .attr('height', function(d) { return this.chart.height - Chart.PADDING_BOTTOM - this.chart.y(d.value); }.bind(this));
+      */
+  this.transform();
 };
 TotalEnergy.prototype.getParameters = function() {
+  var info = this.chart.getTickInfo();
   var start = this.chart.x.domain()[0];
   var duration = +this.chart.x.domain()[1] - +this.chart.x.domain()[0];
+  console.log(start, new Date(+start - duration));
   
-  // TODO use tick width instead of sample size. This will work as well but slower.
   var n = this.chart.width / Chart.SAMPLE_SIZE;
-  for (var i = 0; i < this.chart.config.intervals.length; i++) {
-    if (this.chart.config.intervals[i] > duration * Chart.SAMPLE_SIZE / this.chart.width / 1000) break;
-  }
+  for (var i = 0; i < this.chart.config.intervals.length; i++)
+    if (this.chart.config.intervals[i] > info.duration / 1000) break;
   var interval = this.chart.config.intervals[i - 1] || 1;
-  var n = Math.ceil(duration * 3 / interval / 1000);
+
+  // TODO determine the right start time using info.first
   
   return {
     interval: interval,
