@@ -52,12 +52,12 @@ Chart.prototype.construct = function() {
   // TODO need to reset this.zoom.scaleExtent on feed change
 };
 
-Chart.prototype.init = function(time, zoomer, meter, buttons, toggle) {
+Chart.prototype.init = function(time, zoomer, meter, buttons, fs) {
   this.time = d3.select(time);
   this.zoomer = d3.select(zoomer);
   this.meter = d3.select(meter);
   this.buttons = d3.select(buttons);
-  this.toggle = d3.select(toggle);
+  this.fullscreener = d3.select(fs);
 
   this.loading = this.time.select('.loading');
 
@@ -124,7 +124,16 @@ Chart.prototype.init = function(time, zoomer, meter, buttons, toggle) {
       this.transform();
   
   this.loadData(true);
-  
+
+  var button = this.button('overview', function() {
+    this.fullscreener.classed('hidden', false);
+    this.toggleFullscreen(false, function() {
+      this.transform();
+      this.defaultView();
+      this.loadData();
+    }.bind(this));
+    button.classed('active', true);
+  }, true);
   this.button('watt-hours', function(showWattHours) {
     this.display[0] = new (showWattHours ? TotalEnergy : TotalPower)(this);
     this.display[0].init();
@@ -140,13 +149,28 @@ Chart.prototype.init = function(time, zoomer, meter, buttons, toggle) {
     this.autopan(this.defaultDomain());
   }.bind(this));
 
-  this.toggle.on('touchstart', function() {
-    this.toggleFullscreen(undefined, function() {
-      this.transform();
-      this.defaultView();
-      this.loadData();
-    }.bind(this));
-  }.bind(this));
+  (function(that) {
+    var fullscreening = false;
+    that.fullscreener
+        .on('touchstart', function() {
+          d3.select(this).classed('active', true);
+          fullscreening = true;
+        })
+    d3.select('body')
+        .on('touchend', function() {
+          if (fullscreening) {
+            fullscreening = false;
+            that.fullscreener
+                .classed('active', false)
+                .classed('hidden', true);
+            this.toggleFullscreen(true, function() {
+              this.transform();
+              this.defaultView();
+              this.loadData();
+            }.bind(this));
+          }
+        }.bind(that));
+  })(this);
 };
 
 Chart.prototype.adjustToSize = function() {

@@ -4,7 +4,7 @@ html {
 }
 
 body {
-  background: #000 url(../img/app-mockup.png);
+  background: #000;
   margin: 0;
   /*cursor: none;*/
   -ms-touch-action: none;
@@ -137,6 +137,10 @@ svg.time .loading text {
   background: url(../img/button-highlights.png);
   left: 744px;
 }
+.button.overview {
+  background: url(../img/button-overview.png);
+  left: 24px;
+}
 
 .popup {
   -webkit-transition: opacity .2s, -webkit-transform .5s;
@@ -246,6 +250,31 @@ svg.time .loading text {
   font-size: 48px;
 }
 
+/* Click target for going fullscreen */
+.fullscreener {
+  border-radius: 6px;
+  position: absolute;
+  top: 32px; left: 576px;
+  width: 768px;
+  height: 1016px;
+}
+.fullscreener.active {
+  background: -webkit-linear-gradient(top, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0));
+  border: 2px solid #bdccd4;
+  display: block;
+  -webkit-animation: fade-in .1s;
+}
+.fullscreener.hidden {
+  display: none;
+}
+
+/* Logos */
+.logo.sp {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+}
+
 /* Cards */
 .cards {
   position: absolute;
@@ -262,14 +291,4 @@ svg.time .loading text {
 }
 .cards.visible {
   -webkit-transform: none;
-}
-
-.toggle {
-  color: #fff;
-  background: #666;
-  width: 64px;
-  height: 64px;
-  text-align: center;
-  font: 500 10px/64px Avenir;
-  letter-spacing: 1px;
 }
