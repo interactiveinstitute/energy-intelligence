@@ -96,35 +96,36 @@ Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons,
   BubbleBath.chart = this;
   BubbleBath.container = this.time.select('.bubblebath');
 
-  // TODO use d3 drag functionality, is more stable
-  var zooming = -1;
-  this.zoomer = d3.select('.zoomer');
-  this.zoomer.select('.handle')
-      .on('touchstart', function() { zooming = d3.touches(this)[0][0]; })
-      .on('touchend', function() { zooming = -1; });
-  d3.select('body')
-      .on('touchmove', function() {
-        if (zooming == -1) return;
-        var handle = this.zoomer.select('.handle').node();
-        var position = (d3.touches(this.zoomer.node())[0][0] - zooming) /
-            (this.zoomer.node().clientWidth - handle.clientWidth);
+  var that = this;
+  var offset = 0;
+  var drag = d3.behavior.drag()
+      .on('dragstart', function() {
+        if (d3.touches(this).length) offset = -d3.touches(this)[0][0];
+      })
+      .on('drag', function() {
+        var position = (d3.event.x + offset) /
+            (that.zoomer.node().clientWidth - this.clientWidth);
         if (position < 0) position = 0;
         if (position > 1) position = 1;
-        var extent = this.zoom.scaleExtent();
+
+        var extent = that.zoom.scaleExtent();
         var scale = extent[0] +
             Math.pow(position, 4) * (extent[1] - extent[0]);
 
-        var screenOrigin = this.width / 2;
+        var screenOrigin = that.width / 2;
         var translate = screenOrigin -
-            (screenOrigin - this.zoom.translate()[0]) *
-            scale / this.zoom.scale();
-        this.zoom.translate([translate, 0]);
-        this.zoom.scale(scale);
-        this.transform();
-        this.showLoading = true;
-      }.bind(this));
-      this.transform();
-  
+            (screenOrigin - that.zoom.translate()[0]) *
+            scale / that.zoom.scale();
+        that.zoom.translate([translate, 0]);
+        that.zoom.scale(scale);
+        that.transform();
+      })
+  var zooming = -1;
+  this.zoomer = d3.select('.zoomer');
+  this.zoomer.select('.handle')
+      .call(drag);
+
+  this.transform();
   this.loadData(true);
 
   var button = this.button('overview', function() {
