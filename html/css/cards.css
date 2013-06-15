@@ -1,9 +1,11 @@
 .card {
-  background: white;
+  /*
   border-radius: 6px;
+  */
   font-size: 28px;
   font-weight: bold;
   font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
+  padding: 8px;
 }
 .card, .card * {
   box-sizing: border-box;
@@ -14,7 +16,56 @@
 }
 
 .card.weeklyExtrema {
-  background: #666;
-  color: #eee;
-  padding: 12px;
+  border-top: 4px solid;
+}
+
+/* Typography */
+.card h1, .card .value {
+  font: bold 48px/80px 'HelveticaNeueLT Std Cn', 'HelveticaNeue-CondensedBold', sans-serif;
+}
+
+/* Colors */
+.card {
+  color: #bdccd4;
+}
+.card.weeklyExtrema {
+  border-color: #bdccd4;
+}
+.card .power.value {
+  border-color: #3fa9f5;
+  color: #3fa9f5;
+}
+.card .energy.value {
+  background-color: #3fa9f5;
+  color: #000;
+}
+
+.card .value {
+  width: 256px;
+  height: 64px;
+  border-radius: 32px;
+  text-align: center;
+  border: 2px solid;
+  line-height: 60px;
+  display: block;
+}
+
+.card.weeklyExtrema p {
+  height: 192px;
+  width: 256px;
+  padding: 64px 0;
+  margin: 0 32px;
+}
+.card.weeklyExtrema .time {
+  display: block;
+  width: 256px;
+  text-align: center;
+}
+.card.weeklyExtrema .min {
+  color: #30ad23;
+  margin-top: 192px;
+}
+.card.weeklyExtrema .max {
+  color: #f96e6e;
+  float: right;
 }

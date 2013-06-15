@@ -1,5 +1,6 @@
 html {
   overflow: hidden;
+  background: #333;
 }
 
 body {
@@ -8,72 +9,75 @@ body {
   /*cursor: none;*/
   -ms-touch-action: none;
   -webkit-user-select: none;
+  width: 1920px;
+  height: 1080px;
+  position: relative;
 }
 
-.time {
+svg.time {
   display: block;
   position: absolute;
   overflow: hidden;
 }
 
-.time.resizing {
+svg.time.resizing {
   transition: -webkit-transform .2s;
   -webkit-transform-origin: 0 0;
 }
-.time.resizing text,
-.time.resizing .popup {
+svg.time.resizing text,
+svg.time.resizing .popup {
   display: none;
 }
 
-.time .x.axis line.major {
+svg.time .x.axis line.major {
   stroke: transparent;
 }
-.time .x.axis line.minor {
+svg.time .x.axis line.minor {
   stroke: #232323;
 }
-.time .axis .line {
+svg.time .axis .line {
   shape-rendering: crispEdges;
 }
-.time .axis text {
+svg.time .axis text {
   fill: #ddd;
   font-size: 28px;
   font-weight: bold;
   font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
   text-anchor: start !important;
 }
-.time .x.axis .domain {
+svg.time .x.axis .domain {
   display: none;
 }
-.time .area {
+svg.time .area {
   fill: rgba(63, 169, 245, .8);
 }
-.time .line {
+svg.time .line {
   fill: transparent;
   stroke: #3fa9f5;
   stroke-width: 3px;
 }
-.time .y.axis .tick:first-child, .time .yText.axis .tick:first-child {
+svg.time .y.axis .tick:first-child, .time .yText.axis .tick:first-child {
   display: none;
 }
-.time .y.axis line {
+svg.time .y.axis line {
   stroke: #6a7072;
 }
-.time .y.axis text {
+svg.time .y.axis text {
   display: none;
 }
-.time .y.axis .domain, .time .yText.axis .domain {
+svg.time .y.axis .domain, .time .yText.axis .domain {
   display: none;
 }
 
-.time .bar rect {
+svg.time .bar rect {
   fill: rgba(63, 169, 245, .8);
 }
 
-.time .loading {
+svg.time .loading {
   -webkit-transition: opacity .3s;
   pointer-events: none;
 }
-.time .loading text {
+svg.time .loading text {
   font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
   font-weight: bold;
   font-size: 18px;
@@ -249,10 +253,15 @@ body {
 .cards.left {
   top: 192px;
   left: 32px;
+  -webkit-transform: translate(-544px, 0);
+  transition: -webkit-transform .2s;
 }
 .cards.right {
   top: 192px;
   right: 32px;
+}
+.cards.visible {
+  -webkit-transform: none;
 }
 
 .toggle {

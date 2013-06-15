@@ -421,14 +421,18 @@ Chart.prototype.toggleFullscreen = function(fullscreen, callback) {
     }
   }.bind(this);
 
+  var width = document.body.clientWidth;
+  var height = document.body.clientHeight;
   if (this.fullscreen) {
-    resize(0, 200, innerWidth, innerHeight - 366, 1);
+    resize(0, 200, width, height - 366, 1);
   } else {
     resize(
         32 + 512 + 32, 192,
-        innerWidth - 2 * (32 + 512 + 32), innerHeight - 192 - 32,
+        width - 2 * (32 + 512 + 32), height - 192 - 32,
         0);
   }
+
+  Cardboard.toggleVisible(!this.fullscreen);
 
   this.buttons.classed('visible', this.fullscreen);
   this.zoomer.classed('visible', this.fullscreen);

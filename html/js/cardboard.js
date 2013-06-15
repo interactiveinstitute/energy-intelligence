@@ -27,6 +27,8 @@ Cardboard.init = function(containers) {
             .style('width', Cardboard.CARD_WIDTH + 'px')
             .style('height', this.dataset.height + 'px');
       });
+
+  this.toggleVisible(true);
  
   var params = parameters({
     filter: 'events/cards',
@@ -55,6 +57,10 @@ Cardboard.init = function(containers) {
       Cardboard._add(row.id, row.key[2], row.value);
     });
   });
+};
+
+Cardboard.toggleVisible = function(visible) {
+  if (this.containers) this.containers.classed('visible', visible);
 };
 
 Cardboard._add = function(_id, key, card) {
