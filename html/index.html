@@ -31,6 +31,10 @@
 
 <body>
 
+<h1 class="title">Building 14<br>Energy usage</h1>
+
+<h1 class="chart-title">Today’s electricity</h1>
+
 <svg class="meter">
   <path id="meterShape" fill="#3fa9f5" d="M 41 9 L 201 9 A 32 32 180 1 1 201 73 L 41 73 A 32 32 180 1 1 41 9"/>
   <text text-anchor="middle" alignment-baseline="central" dx="119" dy="41"/>
@@ -89,9 +93,9 @@
 <div class="logo sp"><img src="img/logo-sp.png"></div>
 
 <div class="cards left" data-height="512"></div>
-<div class="cards top right" data-height="256"></div>
+<div class="cards top right" data-height="1016"></div>
 
 <script>
-  chart.init('.time', '.zoomer', '.meter', '.buttons', '.fullscreener');
+  chart.init('.title', '.chart-title', '.time', '.zoomer', '.meter', '.buttons', '.fullscreener');
   Cardboard.init('.cards');
 </script>

@@ -52,7 +52,9 @@ Chart.prototype.construct = function() {
   // TODO need to reset this.zoom.scaleExtent on feed change
 };
 
-Chart.prototype.init = function(time, zoomer, meter, buttons, fs) {
+Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons, fs) {
+  this.title = d3.select(title);
+  this.chartTitle = d3.select(chartTitle);
   this.time = d3.select(time);
   this.zoomer = d3.select(zoomer);
   this.meter = d3.select(meter);
@@ -457,7 +459,11 @@ Chart.prototype.toggleFullscreen = function(fullscreen, callback) {
   }
 
   Cardboard.toggleVisible(!this.fullscreen);
+  this.title.classed('visible', !this.fullscreen);
 
   this.buttons.classed('visible', this.fullscreen);
   this.zoomer.classed('visible', this.fullscreen);
+
+  this.meter.classed('fullscreen', this.fullscreen);
+  this.chartTitle.classed('fullscreen', this.fullscreen);
 };
