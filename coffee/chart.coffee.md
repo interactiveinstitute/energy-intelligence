@@ -443,6 +443,4 @@ two ticks, but d3 might put faulty ticks somewhere.
         @meter.classed 'fullscreen', @fullscreen
         @chartTitle.classed 'fullscreen', @fullscreen
 
-## Links
-
 [1]: http://bl.ocks.org/mbostock/4149176
