@@ -307,17 +307,29 @@
     };
 
     Chart.prototype.getTickInfo = function() {
-      var dts, ticks, _ref;
+      var date, distance, dts, i, smallest, ticks, _i, _len, _ref;
       ticks = this.time.selectAll('.x.axis .tick');
       if ((_ref = ticks[0]) != null ? _ref.length : void 0) {
         dts = [];
         ticks.each(function(d) {
           return dts.push(new Date(d));
         });
-        dts = dts.sort();
-        if (dts.length >= 2) {
+        dts = dts.sort(function(a, b) {
+          return +a - +b;
+        });
+        smallest = Infinity;
+        for (i = _i = 0, _len = dts.length; _i < _len; i = ++_i) {
+          date = dts[i];
+          if (i > 0) {
+            distance = +date - +dts[i - 1];
+            if (distance < smallest) {
+              smallest = distance;
+            }
+          }
+        }
+        if (smallest < Infinity) {
           return {
-            duration: +dts[1] - +dts[0],
+            duration: smallest,
             first: dts[0]
           };
         }

@@ -299,13 +299,26 @@
             .attr('x', 5)
             .attr('y', -16)
 
+# **getTickInfo()** tells about the first x axis tick in the DOM, and the
+# smallest distance (duration) between two ticks.
+#
+# We could assume that this duration equals the distance between the first
+# two ticks, but d3 might put faulty ticks somewhere.
+
       getTickInfo: ->
         ticks = @time.selectAll('.x.axis .tick')
         if ticks[0]?.length
           dts = []
           ticks.each (d) -> dts.push new Date d
-          dts = dts.sort()
-          { duration: +dts[1] - +dts[0], first: dts[0] } if dts.length >= 2
+          dts = dts.sort((a, b) -> +a - +b)
+
+          smallest = Infinity
+          for date, i in dts
+            if i > 0
+              distance = +date - +dts[i - 1]
+              smallest = distance if distance < smallest
+
+          { duration: smallest, first: dts[0] } if smallest < Infinity
 
       loadData: (first, domain = @x.domain(), callback) ->
         params = @display[0].getParameters domain
