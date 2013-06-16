@@ -5,15 +5,17 @@ var BubbleBath = function() {
 
   bubbles = []
 
-  json = function(path, params, cb) {
+  json = function(path, params) {
+    var deferred = Q.defer()
     var req = new XMLHttpRequest
     var url = db + path + '?' + Object.keys(params).map(function(k) {
       return k + '=' + encodeURIComponent(JSON.stringify(params[k]))
     }).join('&')
     req.open('GET', url, true)
     req.withCredentials = true
-    req.onload = function(e) { cb(JSON.parse(req.response)) }
+    req.onload = function(e) { deferred.resolve(JSON.parse(req.response)) }
     req.send()
+    return deferred.promise
   }
 
   position = function() {
@@ -123,11 +125,12 @@ var BubbleBath = function() {
     load: function(feeds, start, end) {
       startts = +start
       endts = +end
+      var deferred = Q.defer();
       var timespan = endts - startts
       json('/_design/events/_view/bubbles_by_feed_and_time', {
         startkey: [feeds[0], startts - timespan],
         endkey: [feeds[0], endts + timespan]
-      }, function(result) {
+      }).then(function(result) {
         var that = this;
         var bubbles = container.selectAll('.bubble')
             .data(result.rows.map(function(row) {
@@ -149,8 +152,9 @@ var BubbleBath = function() {
             .each(function(d) { bubble(this).close() })
             .remove()
         position()
+        deferred.resolve(bubbles)
       })
-      return this
+      return deferred.promise
     },
     position: position
   }

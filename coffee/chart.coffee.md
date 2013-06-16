@@ -7,6 +7,9 @@ All datastream-specific code happens in `data.coffee.md`.
     class @Chart
       @SAMPLE_SIZE = 2
       @EXTRA_UNITS_ABOVE = 50
+      @Y_AXIS_FACTOR = 1.2
+      @Y_AXIS_MINIMUM_SIZE = 100
+      @Y_AXIS_SHRINK_FACTOR = .05
       @PADDING_BOTTOM = 48
       @PADDING_TOP = 48
       @BAR_SPACING = 4
@@ -19,7 +22,7 @@ All datastream-specific code happens in `data.coffee.md`.
 
         @x = d3.time.scale()
         @y = d3.scale.linear()
-            .domain [0, 200]
+            .domain [0, Chart.Y_AXIS_MINIMUM_SIZE]
 
         @xAxis = d3.svg.axis()
             .orient('bottom')
@@ -40,12 +43,15 @@ All datastream-specific code happens in `data.coffee.md`.
         @zoom = d3.behavior.zoom().on 'zoom', => @transform()
         # TODO need to reset @zoom.scaleExtent on feed change
 
-      getJSON: (url, callback) ->
+      getJSON: (url) ->
+        deferred = Q.defer()
         request = new XMLHttpRequest
         request.open 'GET', url, true
         request.withCredentials = true
-        request.onload = -> callback JSON.parse request.response
+        request.onload = ->
+          deferred.resolve JSON.parse request.response
         request.send()
+        deferred.promise
 
       init: (title, chartTitle, time, zoomer, meter, buttons, fs) ->
         @title = d3.select title
@@ -235,7 +241,8 @@ All datastream-specific code happens in `data.coffee.md`.
             BubbleBath.position()
         ).each('end', =>
           @showLoading = true
-          @loadData true, domain, => @time.select('.zooms').style 'opacity', 1
+          @loadData(true, domain).then =>
+            @time.select('.zooms').style 'opacity', 1
         )
         @time.select('.zooms').style 'opacity', 0
 
@@ -326,19 +333,32 @@ two ticks, but d3 might put faulty ticks somewhere.
 
           { duration: smallest, first: dts[0] } if smallest < Infinity
 
-      loadData: (first, domain = @x.domain(), callback) ->
+      loadData: (first, domain = @x.domain()) ->
+        deferred = Q.defer()
+
         params = @display[0].getParameters domain
         params.feed = @display[0].feed
         params.datastream = @display[0].datastream
         url = "#{@db}/_design/energy_data/_show/historical?" +
           ("#{k}=#{encodeURIComponent(v)}" for k, v of params).join '&'
 
-        @getJSON url, (result) =>
+        Q.spread [
+          @getJSON url
+          BubbleBath.load [@display[0].feed], @x.domain()...
+        ], (result, bubbles) =>
           data = @display[0].getDataFromRequest params, result
 
           # Make transition to new domain on y axis
           oldDomain = @y.domain()[1]
-          newDomain = d3.max(data.map (d) -> d.value) + Chart.EXTRA_UNITS_ABOVE
+          newDomain = d3.max(data.map (d) -> d.value)
+          bubbles.each (d) ->
+            newDomain = d3.max [newDomain, parseFloat(d.value)]
+          newDomain = Chart.Y_AXIS_MINIMUM_SIZE if newDomain is 0
+          if oldDomain * Chart.Y_AXIS_SHRINK_FACTOR < newDomain < oldDomain
+            newDomain = oldDomain
+          else
+            newDomain *= Chart.Y_AXIS_FACTOR
+          # TODO also take bubble height into account
           tempScale = newDomain / oldDomain
 
           @y.domain [0, newDomain]
@@ -353,19 +373,19 @@ two ticks, but d3 might put faulty ticks somewhere.
           from = to if first
 
           @display[0].setDataAndTransform data, from, to
-
           @display[0].transformExtras?()
 
           BubbleBath.position()
-          BubbleBath.load [@display[0].feed], @x.domain()[0], @x.domain()[1]
 
           @loading.attr 'opacity', 0
 
-          callback?()
+          deferred.resolve()
 
         if @showLoading
           @loading.attr 'opacity', .6
           @showLoading = false
+
+        deferred.promise
 
       toggleFullscreen: (fullscreen, callback) ->
         transition = not fullscreen?

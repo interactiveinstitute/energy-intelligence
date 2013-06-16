@@ -37,7 +37,7 @@
       this.chart.time.select('.extras').append('circle').attr('class', 'nowDot').attr('fill', 'url(#now-dot-gradient)').attr('r', Chart.NOW_BAR_WIDTH);
       url = ("" + this.chart.db + "/_changes?filter=energy_data") + ("/measurements&source=" + this.feed);
       this.current = 0;
-      this.chart.getJSON("" + url + "&descending=true&limit=2", function(result) {
+      this.chart.getJSON("" + url + "&descending=true&limit=2").then(function(result) {
         _this.eventSource = new EventSource("" + url + "&feed=eventsource&include_docs=true&since=" + result.last_seq, {
           withCredentials: true
         });

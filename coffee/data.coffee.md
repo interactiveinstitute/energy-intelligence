@@ -40,7 +40,7 @@
         url = "#{@chart.db}/_changes?filter=energy_data" +
           "/measurements&source=#{@feed}"
         @current = 0
-        @chart.getJSON "#{url}&descending=true&limit=2", (result) =>
+        @chart.getJSON("#{url}&descending=true&limit=2").then (result) =>
           @eventSource = new EventSource(
             "#{url}&feed=eventsource&include_docs=true&since=#{result.last_seq}"
             withCredentials: true)
