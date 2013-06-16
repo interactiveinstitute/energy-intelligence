@@ -67,7 +67,7 @@ var BubbleBath = function() {
         var datum = data[i]
 
         container.append('g')
-            .attr('class', 'highlight')
+            .attr('class', 'highlight current')
             .datum({
               chart: chart,
               at: datum.resampledAt,

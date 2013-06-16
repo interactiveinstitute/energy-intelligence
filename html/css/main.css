@@ -197,10 +197,8 @@ svg.time .loading text {
 
 .popup rect {
   fill: #aee0ff;
-  /*
   -webkit-animation: popup-start-label .2s ease-in-out .2s;
   -webkit-animation-fill-mode: backwards;
-  */
   transition: -webkit-transform .2s;
   transition-delay: .4s;
   -webkit-transform: scale(.1) translate(-57px, 0);
@@ -214,10 +212,8 @@ svg.time .loading text {
   font-size: 28px;
   font-weight: bold;
   fill: #aee0ff;
-  /*
-  -webkit-animation: popup-start-text .5s ease-in-out .2s;
+  -webkit-animation: popup-start-text .2s ease-in-out .2s;
   -webkit-animation-fill-mode: backwards;
-  */
   opacity: 0;
   transition: opacity .2s;
 }
@@ -228,10 +224,8 @@ svg.time .loading text {
   font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
   font-weight: bold;
   font-size: 18px;
-  /*
   -webkit-animation: popup-start-text .5s ease-in-out .4s;
   -webkit-animation-fill-mode: backwards;
-  */
   /*
   transition: -webkit-transform .2s;
   -webkit-transform: scale(.1) translate(-57px, 0);
