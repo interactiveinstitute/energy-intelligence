@@ -38,7 +38,7 @@
         request = new XMLHttpRequest
         request.open 'GET', url, true
         request.withCredentials = true
-        request.onload = () -> callback JSON.parse request.response
+        request.onload = -> callback JSON.parse request.response
         request.send()
 
       init: (title, chartTitle, time, zoomer, meter, buttons, fs) ->
