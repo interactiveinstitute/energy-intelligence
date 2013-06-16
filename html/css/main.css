@@ -92,6 +92,7 @@ svg.time .y.axis .tick:first-child, .time .yText.axis .tick:first-child {
 }
 svg.time .y.axis line {
   stroke: #6a7072;
+  shape-rendering: crispEdges;
 }
 svg.time .y.axis text {
   display: none;
