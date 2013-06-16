@@ -131,7 +131,7 @@
     };
 
     TotalEnergy.prototype.getDataFromRequest = function(params, result) {
-      var data, end, endIndex, info, n, pointsPerBar, start, startIndex, _ref, _ref1;
+      var data, end, endIndex, info, n, pointsPerBar, start, startIndex, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       info = this.chart.getTickInfo();
       pointsPerBar = info.duration / (params.interval * 1000);
       data = [];
@@ -139,11 +139,11 @@
       while ((n + 1) * pointsPerBar < result.datapoints.length) {
         startIndex = n * pointsPerBar;
         endIndex = (n + 1) * pointsPerBar;
-        end = parseFloat((_ref = result.datapoints[endIndex].value) != null ? _ref : 0);
-        start = parseFloat((_ref1 = result.datapoints[startIndex].value) != null ? _ref1 : 0);
+        end = parseFloat((_ref = (_ref1 = result.datapoints[endIndex]) != null ? _ref1.value : void 0) != null ? _ref : 0);
+        start = parseFloat((_ref2 = (_ref3 = result.datapoints[startIndex]) != null ? _ref3.value : void 0) != null ? _ref2 : 0);
         data[n++] = {
-          start: new Date(result.datapoints[startIndex].at),
-          end: new Date(result.datapoints[endIndex].at),
+          start: new Date((_ref4 = result.datapoints[startIndex]) != null ? _ref4.at : void 0),
+          end: new Date((_ref5 = result.datapoints[endIndex]) != null ? _ref5.at : void 0),
           value: (0 < start && start < end) ? (end - start) * 1000 : 0
         };
       }
@@ -202,7 +202,7 @@
       n = Math.ceil(duration * 3 / interval / 1000);
       first = +info.first;
       earliest = first + info.duration * Math.floor((+start - duration - first) / info.duration);
-      latest = first + info.duration * Math.ceil((+start + duration - first) / info.duration);
+      latest = first + 2 * info.duration * Math.ceil((+start + duration - first) / info.duration);
       return {
         interval: interval,
         duration: "" + (parseInt((latest - earliest) / 1000)) + "seconds",

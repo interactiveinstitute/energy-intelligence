@@ -131,11 +131,11 @@
         while (n + 1) * pointsPerBar < result.datapoints.length
           startIndex = n * pointsPerBar
           endIndex = (n + 1) * pointsPerBar
-          end = parseFloat result.datapoints[endIndex].value ? 0
-          start = parseFloat result.datapoints[startIndex].value ? 0
+          end = parseFloat result.datapoints[endIndex]?.value ? 0
+          start = parseFloat result.datapoints[startIndex]?.value ? 0
           data[n++] =
-            start: new Date result.datapoints[startIndex].at
-            end: new Date result.datapoints[endIndex].at
+            start: new Date result.datapoints[startIndex]?.at
+            end: new Date result.datapoints[endIndex]?.at
             value: if 0 < start < end then (end - start) * 1000 else 0
         data
 
@@ -188,7 +188,7 @@
         first = +info.first
         earliest = first + info.duration *
           Math.floor (+start - duration - first) / info.duration
-        latest = first + info.duration *
+        latest = first + 2 * info.duration *
           Math.ceil (+start + duration - first) / info.duration
 
         interval: interval
