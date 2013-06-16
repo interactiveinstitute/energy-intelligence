@@ -30,6 +30,32 @@ All datastream-specific code happens in `data.coffee.md`.
             .ticks(5)
             .tickSubdivide(true)
             .tickPadding(6)
+
+Time formats are implemented as in [Custom Time Format] [1].
+
+[1]: http://bl.ocks.org/mbostock/4149176
+
+        formats = [
+          [d3.time.format('%Y'), -> true]
+          [d3.time.format('%b'), (d) -> d.getMonth()]
+          [d3.time.format('%b %d'), (d) -> d.getDate() != 1]
+          [d3.time.format('%b %d'), (d) -> d.getDay() and d.getDate() != 1]
+          [d3.time.format('%a %d'), (d) -> d.getHours() ]
+          [d3.time.format('%I %p'), (d) -> d.getMinutes() ]
+        ]
+        @xTextAxis = d3.svg.axis()
+            .orient('bottom')
+            .scale(@x)
+            .ticks(10)
+            .tickPadding(6)
+            .tickFormat((date) ->
+              i = formats.length - 1
+              f = formats[i]
+              f = formats[--i] until f[1](date)
+              f[0](date))
+
+        # TODO add another axis for global labels?
+
         @yAxis = d3.svg.axis()
             .scale(@y)
             .orient('left')
@@ -168,9 +194,11 @@ All datastream-specific code happens in `data.coffee.md`.
         @y.range [@height - Chart.PADDING_BOTTOM, Chart.PADDING_TOP]
 
         @xAxis.scale(@x).tickSize(@height)
+        @xTextAxis.scale(@x).tickSize(@height)
         @yAxis.scale(@y).tickSize(-@width)
 
         @time.select('.x.axis').call(@xAxis)
+        @time.select('.xText.axis').call(@xTextAxis)
         @transformYAxis()
 
         @time
@@ -274,10 +302,13 @@ All datastream-specific code happens in `data.coffee.md`.
         @display[0].transformExtras?()
 
       transformXAxis: ->
-        axis = @time.select('.x.axis').call @xAxis
-        axis.selectAll('text')
+        @time.select('.xText.axis')
+            .call(@xTextAxis)
+          .selectAll('text')
             .attr('x', 16)
             .attr('y', @height - 32)
+        axis = @time.select('.x.axis').call @xAxis
+        axis.selectAll('text').remove()
 
         # Set x axis line width
         lines = axis.selectAll 'line'

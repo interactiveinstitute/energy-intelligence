@@ -26,13 +26,50 @@
     Chart.MAX_TIME_IN_VIEW = 2 * 7 * 24 * 60 * 60 * 1000;
 
     function Chart(config, db) {
-      var _this = this;
+      var formats,
+        _this = this;
       this.config = config;
       this.db = db;
       this.display = [new TotalPower(this)];
       this.x = d3.time.scale();
       this.y = d3.scale.linear().domain([0, Chart.Y_AXIS_MINIMUM_SIZE]);
       this.xAxis = d3.svg.axis().orient('bottom').scale(this.x).ticks(5).tickSubdivide(true).tickPadding(6);
+      formats = [
+        [
+          d3.time.format('%Y'), function() {
+            return true;
+          }
+        ], [
+          d3.time.format('%b'), function(d) {
+            return d.getMonth();
+          }
+        ], [
+          d3.time.format('%b %d'), function(d) {
+            return d.getDate() !== 1;
+          }
+        ], [
+          d3.time.format('%b %d'), function(d) {
+            return d.getDay() && d.getDate() !== 1;
+          }
+        ], [
+          d3.time.format('%a %d'), function(d) {
+            return d.getHours();
+          }
+        ], [
+          d3.time.format('%I %p'), function(d) {
+            return d.getMinutes();
+          }
+        ]
+      ];
+      this.xTextAxis = d3.svg.axis().orient('bottom').scale(this.x).ticks(10).tickPadding(6).tickFormat(function(date) {
+        var f, i;
+        i = formats.length - 1;
+        f = formats[i];
+        while (!f[1](date)) {
+          f = formats[--i];
+        }
+        return f[0](date);
+      });
       this.yAxis = d3.svg.axis().scale(this.y).orient('left').ticks(5).tickPadding(6).tickFormat(function(d) {
         return "" + d + " " + _this.display[0].unit;
       });
@@ -167,8 +204,10 @@
       this.x.range([0, this.width]);
       this.y.range([this.height - Chart.PADDING_BOTTOM, Chart.PADDING_TOP]);
       this.xAxis.scale(this.x).tickSize(this.height);
+      this.xTextAxis.scale(this.x).tickSize(this.height);
       this.yAxis.scale(this.y).tickSize(-this.width);
       this.time.select('.x.axis').call(this.xAxis);
+      this.time.select('.xText.axis').call(this.xTextAxis);
       this.transformYAxis();
       this.time.attr('width', this.width).attr('height', this.height);
       this.time.select('.leftGradientBox').attr('height', this.height);
@@ -263,8 +302,9 @@
 
     Chart.prototype.transformXAxis = function() {
       var axis, left, line, lines, next, position, transform, _i, _j, _len, _len1, _ref, _ref1, _ref2;
+      this.time.select('.xText.axis').call(this.xTextAxis).selectAll('text').attr('x', 16).attr('y', this.height - 32);
       axis = this.time.select('.x.axis').call(this.xAxis);
-      axis.selectAll('text').attr('x', 16).attr('y', this.height - 32);
+      axis.selectAll('text').remove();
       lines = axis.selectAll('line');
       if (((_ref = lines[0]) != null ? _ref.length : void 0) > 1) {
         left = Infinity;
