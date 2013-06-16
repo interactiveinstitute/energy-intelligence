@@ -1,3 +1,9 @@
+# Chart control
+
+On the visualisation page, a single **Chart** instance is used.
+
+All datastream-specific code happens in `data.coffee.md`.
+
     class @Chart
       @SAMPLE_SIZE = 2
       @EXTRA_UNITS_ABOVE = 50
