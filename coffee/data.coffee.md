@@ -190,8 +190,6 @@
           Math.floor (+start - duration - first) / info.duration
         latest = first + info.duration *
           Math.ceil (+start + duration - first) / info.duration
-        console.log 'info', info
-        console.log new Date(earliest), new Date(first), new Date(latest)
 
         interval: interval
         duration: "#{parseInt (latest - earliest) / 1000}seconds"
