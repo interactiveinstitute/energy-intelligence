@@ -59,15 +59,10 @@ svg.time.resizing .popup {
   display: none;
 }
 
-svg.time .xText.axis .domain {
-  display: none;
-}
-svg.time .xText.axis .tick {
-}
 svg.time .x.axis line.major {
   stroke: transparent;
 }
-svg.time .x.axis line.minor {
+svg.time .x.axis .tick.odd line {
   stroke: #232323;
 }
 svg.time .axis .line {

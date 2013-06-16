@@ -24,26 +24,20 @@ All datastream-specific code happens in `data.coffee.md`.
         @y = d3.scale.linear()
             .domain [0, Chart.Y_AXIS_MINIMUM_SIZE]
 
-        @xAxis = d3.svg.axis()
-            .orient('bottom')
-            .scale(@x)
-            .ticks(5)
-            .tickSubdivide(true)
-            .tickPadding(6)
-
 Time formats are implemented as in [Custom Time Format] [1].
-
-[1]: http://bl.ocks.org/mbostock/4149176
 
         formats = [
           [d3.time.format('%Y'), -> true]
           [d3.time.format('%b'), (d) -> d.getMonth()]
-          [d3.time.format('%b %d'), (d) -> d.getDate() != 1]
-          [d3.time.format('%b %d'), (d) -> d.getDay() and d.getDate() != 1]
-          [d3.time.format('%a %d'), (d) -> d.getHours() ]
-          [d3.time.format('%I %p'), (d) -> d.getMinutes() ]
+          [d3.time.format('%b %_d'), (d) -> d.getDate() != 1]
+          [d3.time.format('%a %_d'), (d) -> d.getDay() and d.getDate() != 1]
+          [d3.time.format('%_H:%M'), (d) -> d.getHours() ]
+          [d3.time.format('%_H:%M'), (d) -> d.getMinutes() ]
+          [d3.time.format(':%S'), (d) -> d.getSeconds() ]
+          [d3.time.format('.%L'), (d) -> d.getMilliseconds() ]
         ]
-        @xTextAxis = d3.svg.axis()
+
+        @xAxis = d3.svg.axis()
             .orient('bottom')
             .scale(@x)
             .ticks(10)
@@ -194,11 +188,9 @@ Time formats are implemented as in [Custom Time Format] [1].
         @y.range [@height - Chart.PADDING_BOTTOM, Chart.PADDING_TOP]
 
         @xAxis.scale(@x).tickSize(@height)
-        @xTextAxis.scale(@x).tickSize(@height)
         @yAxis.scale(@y).tickSize(-@width)
 
         @time.select('.x.axis').call(@xAxis)
-        @time.select('.xText.axis').call(@xTextAxis)
         @transformYAxis()
 
         @time
@@ -302,33 +294,24 @@ Time formats are implemented as in [Custom Time Format] [1].
         @display[0].transformExtras?()
 
       transformXAxis: ->
-        @time.select('.xText.axis')
-            .call(@xTextAxis)
-          .selectAll('text')
+        axis = @time.select('.x.axis')
+            .call(@xAxis)
+        oi = 0 # odd index
+        axis.selectAll('.tick')
+            .sort((a, b) -> +a - +b)
+            .each((_, i) -> oi = i if oi is 0 and d3.select(@).classed 'odd')
+            .each((_, i) -> d3.select(@).classed 'odd', oi % 2 is i % 2)
+        axis.selectAll('text')
             .attr('x', 16)
             .attr('y', @height - 32)
-        axis = @time.select('.x.axis').call @xAxis
-        axis.selectAll('text').remove()
 
         # Set x axis line width
-        lines = axis.selectAll 'line'
-        if lines[0]?.length > 1
-          left = Infinity
-          for line in lines[0]
-            transform = line.transform.baseVal
-            if transform.numberOfItems
-              position = transform.getItem(0).matrix.e
-              left = position if 0 <= position < left
-          next = Infinity
-          for line in lines[0]
-            transform = line.transform.baseVal
-            if transform.numberOfItems
-              position = transform.getItem(0).matrix.e
-              next = position if left < position < next
-          if left isnt Infinity and next isnt Infinity
-            @tickDistance = (next - left) / 2
-        lines
-            .style('stroke-width', @tickDistance)
+        ticks = axis.selectAll '.tick'
+        left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e
+        left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e
+        @tickDistance = left2 - left1
+        axis.selectAll('line')
+            .attr('stroke-width', @tickDistance)
             .attr('x1', @tickDistance / 2)
             .attr('x2', @tickDistance / 2)
 
@@ -459,3 +442,7 @@ two ticks, but d3 might put faulty ticks somewhere.
 
         @meter.classed 'fullscreen', @fullscreen
         @chartTitle.classed 'fullscreen', @fullscreen
+
+## Links
+
+[1]: http://bl.ocks.org/mbostock/4149176

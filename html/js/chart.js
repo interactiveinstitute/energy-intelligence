@@ -33,7 +33,6 @@
       this.display = [new TotalPower(this)];
       this.x = d3.time.scale();
       this.y = d3.scale.linear().domain([0, Chart.Y_AXIS_MINIMUM_SIZE]);
-      this.xAxis = d3.svg.axis().orient('bottom').scale(this.x).ticks(5).tickSubdivide(true).tickPadding(6);
       formats = [
         [
           d3.time.format('%Y'), function() {
@@ -44,24 +43,32 @@
             return d.getMonth();
           }
         ], [
-          d3.time.format('%b %d'), function(d) {
+          d3.time.format('%b %_d'), function(d) {
             return d.getDate() !== 1;
           }
         ], [
-          d3.time.format('%b %d'), function(d) {
+          d3.time.format('%a %_d'), function(d) {
             return d.getDay() && d.getDate() !== 1;
           }
         ], [
-          d3.time.format('%a %d'), function(d) {
+          d3.time.format('%_H:%M'), function(d) {
             return d.getHours();
           }
         ], [
-          d3.time.format('%I %p'), function(d) {
+          d3.time.format('%_H:%M'), function(d) {
             return d.getMinutes();
+          }
+        ], [
+          d3.time.format(':%S'), function(d) {
+            return d.getSeconds();
+          }
+        ], [
+          d3.time.format('.%L'), function(d) {
+            return d.getMilliseconds();
           }
         ]
       ];
-      this.xTextAxis = d3.svg.axis().orient('bottom').scale(this.x).ticks(10).tickPadding(6).tickFormat(function(date) {
+      this.xAxis = d3.svg.axis().orient('bottom').scale(this.x).ticks(10).tickPadding(6).tickFormat(function(date) {
         var f, i;
         i = formats.length - 1;
         f = formats[i];
@@ -204,10 +211,8 @@
       this.x.range([0, this.width]);
       this.y.range([this.height - Chart.PADDING_BOTTOM, Chart.PADDING_TOP]);
       this.xAxis.scale(this.x).tickSize(this.height);
-      this.xTextAxis.scale(this.x).tickSize(this.height);
       this.yAxis.scale(this.y).tickSize(-this.width);
       this.time.select('.x.axis').call(this.xAxis);
-      this.time.select('.xText.axis').call(this.xTextAxis);
       this.transformYAxis();
       this.time.attr('width', this.width).attr('height', this.height);
       this.time.select('.leftGradientBox').attr('height', this.height);
@@ -301,41 +306,24 @@
     };
 
     Chart.prototype.transformXAxis = function() {
-      var axis, left, line, lines, next, position, transform, _i, _j, _len, _len1, _ref, _ref1, _ref2;
-      this.time.select('.xText.axis').call(this.xTextAxis).selectAll('text').attr('x', 16).attr('y', this.height - 32);
+      var axis, left1, left2, oi, ticks;
       axis = this.time.select('.x.axis').call(this.xAxis);
-      axis.selectAll('text').remove();
-      lines = axis.selectAll('line');
-      if (((_ref = lines[0]) != null ? _ref.length : void 0) > 1) {
-        left = Infinity;
-        _ref1 = lines[0];
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          line = _ref1[_i];
-          transform = line.transform.baseVal;
-          if (transform.numberOfItems) {
-            position = transform.getItem(0).matrix.e;
-            if ((0 <= position && position < left)) {
-              left = position;
-            }
-          }
+      oi = 0;
+      axis.selectAll('.tick').sort(function(a, b) {
+        return +a - +b;
+      }).each(function(_, i) {
+        if (oi === 0 && d3.select(this).classed('odd')) {
+          return oi = i;
         }
-        next = Infinity;
-        _ref2 = lines[0];
-        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-          line = _ref2[_j];
-          transform = line.transform.baseVal;
-          if (transform.numberOfItems) {
-            position = transform.getItem(0).matrix.e;
-            if ((left < position && position < next)) {
-              next = position;
-            }
-          }
-        }
-        if (left !== Infinity && next !== Infinity) {
-          this.tickDistance = (next - left) / 2;
-        }
-      }
-      return lines.style('stroke-width', this.tickDistance).attr('x1', this.tickDistance / 2).attr('x2', this.tickDistance / 2);
+      }).each(function(_, i) {
+        return d3.select(this).classed('odd', oi % 2 === i % 2);
+      });
+      axis.selectAll('text').attr('x', 16).attr('y', this.height - 32);
+      ticks = axis.selectAll('.tick');
+      left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e;
+      left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e;
+      this.tickDistance = left2 - left1;
+      return axis.selectAll('line').attr('stroke-width', this.tickDistance).attr('x1', this.tickDistance / 2).attr('x2', this.tickDistance / 2);
     };
 
     Chart.prototype.transformYAxis = function(transition) {
