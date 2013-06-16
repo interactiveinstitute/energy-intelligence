@@ -150,6 +150,7 @@ TotalEnergy.prototype.getDataFromRequest = function(params, result) {
       end: new Date(result.datapoints[endIndex].at),
       value: (end > start && start > 0) ? (end - start) * 1000 : 0
     }
+    console.log(data[n-1])
   }
   return data;
   /*
@@ -190,14 +191,11 @@ TotalEnergy.prototype.transform = function() {
       }.bind(this))
 };
 TotalEnergy.prototype.setDataAndTransform = function(data, from, to) {
-  console.log('data',data);
-  // TODO
   this.group
       .attr('transform', to);
   
   var bar = this.group.selectAll('.bar')
       .data(data, function(d) {
-        console.log(+d.start + '>' + +d.end);
         return +d.start + '>' + +d.end;
       });
   var g = bar.enter().append('g')
@@ -269,18 +267,22 @@ TotalEnergy.prototype.getParameters = function() {
   var info = this.chart.getTickInfo();
   var start = this.chart.x.domain()[0];
   var duration = +this.chart.x.domain()[1] - +this.chart.x.domain()[0];
-  console.log(start, new Date(+start - duration));
+  //console.log(start, new Date(+start - duration));
   
   var n = this.chart.width / Chart.SAMPLE_SIZE;
   for (var i = 0; i < this.chart.config.intervals.length; i++)
-    if (this.chart.config.intervals[i] > info.duration / 1000) break;
+    if (this.chart.config.intervals[i] > info.duration / 3 / 1000) break;
   var interval = this.chart.config.intervals[i - 1] || 1;
 
-  // TODO determine the right start time using info.first
+  var first = +info.first;
+  var earliest = first + Math.floor((+start - duration - first) / info.duration) * info.duration;
+  var latest = first + Math.ceil((+start + duration - first) / info.duration) * info.duration;
+  console.log(info);
+  console.log(new Date(earliest), new Date(first), new Date(latest));
   
   return {
     interval: interval,
-    duration: parseInt(duration * 3 / 1000) + 'seconds',
-    start: new Date(+start - duration).toJSON()
+    duration: parseInt(/*duration * 3*/(latest - earliest) / 1000) + 'seconds',
+    start: new Date(earliest).toJSON()//new Date(+start - duration).toJSON()
   };
 };

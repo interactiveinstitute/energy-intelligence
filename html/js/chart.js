@@ -301,7 +301,6 @@ Chart.prototype.bringIntoView = function(time) {
 };
 
 Chart.prototype.transform = function() {
-  console.log(this.zoom.translate()[0], this.zoom.scale())
   this.transformXAxis();
   
   this.time.select('.zooms')
