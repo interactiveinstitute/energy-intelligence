@@ -165,7 +165,7 @@ All datastream-specific code happens in `data.coffee.md`.
 
       adjustToSize: ->
         @x.range [0, @width]
-        @y.range [@height - Chart.PADDING_BOTTOM - Chart.PADDING_TOP, 0]
+        @y.range [@height - Chart.PADDING_BOTTOM, Chart.PADDING_TOP]
 
         @xAxis.scale(@x).tickSize(@height)
         @yAxis.scale(@y).tickSize(-@width)

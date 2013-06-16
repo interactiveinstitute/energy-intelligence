@@ -37,17 +37,21 @@
     };
 
     Bubble.prototype.createDom = function() {
-      var labelBackground, labelText, onTouchEnd,
+      var labelBackground, labelText,
         _this = this;
-      onTouchEnd = utils.curry(this.toggleSeeThrough, [false], this);
-      d3.select('.surface').on('touchend', onTouchEnd);
-      this._el = this.container.append('g').attr('class', 'popup').on('touchstart', function() {
+      this._el = this.container.append('g').attr('class', 'popup').on('touchstart', function(d, i) {
+        var id;
         if (_this.container.classed('current')) {
           if (_this.closesOnTouch) {
             d3.event.stopPropagation();
             return _this.close();
           } else {
-            return _this.toggleSeeThrough(true);
+            _this.toggleSeeThrough(true);
+            id = "touchend.bubble" + (+d.at);
+            return d3.select('body').on(id, function() {
+              d3.select('body').on(id, null);
+              return _this.toggleSeeThrough(false);
+            });
           }
         } else {
           return _this.chart.bringIntoView(_this.at);

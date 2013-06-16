@@ -165,7 +165,7 @@
 
     Chart.prototype.adjustToSize = function() {
       this.x.range([0, this.width]);
-      this.y.range([this.height - Chart.PADDING_BOTTOM - Chart.PADDING_TOP, 0]);
+      this.y.range([this.height - Chart.PADDING_BOTTOM, Chart.PADDING_TOP]);
       this.xAxis.scale(this.x).tickSize(this.height);
       this.yAxis.scale(this.y).tickSize(-this.width);
       this.time.select('.x.axis').call(this.xAxis);

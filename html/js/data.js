@@ -42,10 +42,12 @@
           withCredentials: true
         });
         return _this.eventSource.onmessage = function(e) {
-          var doc, _ref;
+          var doc, _ref, _ref1;
           doc = JSON.parse(e.data).doc;
           _this.chart.meter.select('text').text("" + ((_ref = doc.ElectricEnergy) != null ? _ref : 0) + " Wh");
-          _this.current = doc.ElectricPower;
+          if ((_this.chart.x.domain()[0] < (_ref1 = doc.timestamp) && _ref1 < _this.chart.x.domain()[1])) {
+            _this.current = doc.ElectricPower;
+          }
           return _this.transformExtras();
         };
       });
@@ -70,8 +72,8 @@
     };
 
     TotalPower.prototype.transformExtras = function() {
-      this.chart.time.select('.nowLine').attr('x', this.chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2).attr('y', this.chart.y(this.current) - Chart.PADDING_BOTTOM).attr('height', this.chart.height - this.chart.y(this.current));
-      return this.chart.time.select('.nowDot').attr('cx', this.chart.x(new Date)).attr('cy', this.chart.y(this.current) - Chart.PADDING_BOTTOM);
+      this.chart.time.select('.nowLine').attr('x', this.chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2).attr('y', this.chart.y(this.current)).attr('height', this.chart.height - Chart.PADDING_BOTTOM - this.chart.y(this.current));
+      return this.chart.time.select('.nowDot').attr('cx', this.chart.x(new Date)).attr('cy', this.chart.y(this.current));
     };
 
     TotalPower.prototype.setDataAndTransform = function(data, from, to) {

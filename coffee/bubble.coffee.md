@@ -24,19 +24,20 @@
         methods.map (name) => @[name] = obj[name].bind obj
 
       createDom: ->
-        onTouchEnd = utils.curry @toggleSeeThrough, [false], this
-        d3.select('.surface').on 'touchend', onTouchEnd
-
         @_el = @container
           .append('g')
             .attr('class', 'popup')
-            .on('touchstart', =>
+            .on('touchstart', (d, i) =>
               if @container.classed 'current'
                 if @closesOnTouch
                   d3.event.stopPropagation()
                   @close()
                 else
                   @toggleSeeThrough true
+                  id = "touchend.bubble#{+d.at}"
+                  d3.select('body').on id, =>
+                    d3.select('body').on id, null
+                    @toggleSeeThrough false
               else
                 @chart.bringIntoView @at)
         labelBackground = @_el.append('rect')
@@ -78,7 +79,7 @@
         @
 
       toggleSeeThrough: (bool) ->
-        @_seeThrough = bool ? not @_seeThrough
+        @_seeThrough = if bool? then bool else not @_seeThrough
         @_el.attr 'opacity', if @_seeThrough then .2 else 1
         @
 

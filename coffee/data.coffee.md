@@ -47,7 +47,8 @@
           @eventSource.onmessage = (e) =>
             doc = JSON.parse(e.data).doc
             @chart.meter.select('text').text("#{doc.ElectricEnergy ? 0} Wh")
-            @current = doc.ElectricPower
+            if @chart.x.domain()[0] < doc.timestamp < @chart.x.domain()[1]
+              @current = doc.ElectricPower
             @transformExtras()
         setInterval((=> @transformExtras()), 1000)
 
@@ -62,14 +63,16 @@
           value: parseFloat d.value ? 0
 
       transformExtras: () ->
+        #now = @chart.y(@current)
         @chart.time.select('.nowLine')
             .attr('x', @chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2)
-            .attr('y', @chart.y(@current) - Chart.PADDING_BOTTOM)
-            .attr('height', @chart.height - @chart.y(@current));
+            .attr('y', @chart.y @current)
+            .attr('height',
+              @chart.height - Chart.PADDING_BOTTOM - @chart.y @current);
 
         @chart.time.select('.nowDot')
             .attr('cx', @chart.x new Date)
-            .attr('cy', @chart.y(@current) - Chart.PADDING_BOTTOM);
+            .attr('cy', @chart.y @current);
 
       setDataAndTransform: (data, from, to) ->
         @chart.time.select('.area')
