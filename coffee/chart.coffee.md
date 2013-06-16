@@ -299,11 +299,11 @@
             .attr('x', 5)
             .attr('y', -16)
 
-# **getTickInfo()** tells about the first x axis tick in the DOM, and the
-# smallest distance (duration) between two ticks.
-#
-# We could assume that this duration equals the distance between the first
-# two ticks, but d3 might put faulty ticks somewhere.
+**getTickInfo()** tells about the first x axis tick in the DOM, and the
+smallest distance (duration) between two ticks.
+
+We could assume that this duration equals the distance between the first
+two ticks, but d3 might put faulty ticks somewhere.
 
       getTickInfo: ->
         ticks = @time.selectAll('.x.axis .tick')
