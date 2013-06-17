@@ -25,11 +25,21 @@
 
     Chart.MAX_TIME_IN_VIEW = 2 * 7 * 24 * 60 * 60 * 1000;
 
+    Chart.QUICK_UPDATE = 1000;
+
+    Chart.FULL_UPDATE = 30000;
+
+    Chart.ENERGY_BUFFER_SIZE = 10;
+
     function Chart(config, db) {
       var formats,
         _this = this;
       this.config = config;
       this.db = db;
+      this.design = "" + this.db + "/_design/energy_data/";
+      this.feed = 'allRooms';
+      this.energyBufferTime = [];
+      this.energyBufferValue = [];
       this.display = [new TotalPower(this)];
       this.x = d3.time.scale();
       this.y = d3.scale.linear().domain([0, Chart.Y_AXIS_MINIMUM_SIZE]);
@@ -100,7 +110,7 @@
     };
 
     Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons, fs) {
-      var button, cancel, drag, fullscreening, offset, that, timeout, zoom,
+      var button, cancel, drag, endkey, fullscreening, loadTimeout, offset, process, returnTimeout, startkey, that, url, zoom,
         _this = this;
       this.title = d3.select(title);
       this.chartTitle = d3.select(chartTitle);
@@ -114,19 +124,36 @@
       this.toggleFullscreen(false);
       this.defaultView();
       this.display[0].init();
-      timeout = null;
+      returnTimeout = null;
+      loadTimeout = null;
       zoom = [];
-      d3.select(window).on('touchstart', function() {
-        return zoom = [_this.zoom.translate()[0], _this.zoom.scale()];
-      }, true).on('touchend', function() {
+      cancel = function(timeout) {
         if (timeout != null) {
           clearTimeout(timeout);
+          return timeout = null;
         }
+      };
+      d3.select(window).on('touchstart', function() {
+        zoom = [_this.zoom.translate()[0], _this.zoom.scale()];
+        return cancel(returnTimeout);
+      }, true).on('touchmove', function() {
+        return cancel(returnTimeout);
+      }).on('touchend', function() {
+        var timeout;
+        cancel(loadTimeout);
         if (zoom[0] !== _this.zoom.translate()[0] || zoom[1] !== _this.zoom.scale()) {
-          return timeout = setTimeout((function() {
+          timeout = setTimeout((function() {
             return _this.loadData();
           }), 500);
         }
+        return returnTimeout = setTimeout(function() {
+          _this.fullscreener.classed('hidden', false);
+          return _this.toggleFullscreen(false, function() {
+            _this.transform();
+            _this.autopan(_this.defaultDomain());
+            return _this.loadData();
+          });
+        }, _this.config.default_view_after);
       }, true).on('mousewheel', function() {
         d3.event.stopPropagation();
         return d3.event.preventDefault();
@@ -197,21 +224,32 @@
           return _this.loadData();
         });
       });
-      cancel = function() {
-        if (_this.timeout != null) {
-          clearTimeout(_this.timeout);
-          return _this.timeout = null;
-        }
+      process = function(doc) {
+        _this.doc = doc;
+        return console.log('got update', doc);
       };
-      d3.select(window).on('touchstart', cancel).on('touchmove', cancel).on('touchend', function() {
-        return _this.timeout = setTimeout(function() {
-          return _this.toggleFullscreen(false, function() {
-            _this.transform();
-            _this.autopan(_this.defaultDomain());
-            return _this.loadData();
-          });
-        }, _this.config.default_view_after);
+      startkey = JSON.stringify([this.feed]);
+      endkey = JSON.stringify([this.feed, {}]);
+      url = ("" + this.db + "/_design/energy_data/_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
+      this.getJSON(url).then(function(result) {
+        var source, value;
+        value = result.rows[0].value;
+        process({
+          timestamp: +new Date(value[_this.config.at_idx]),
+          ElectricPower: value[_this.config.datastream_idx.ElectricPower],
+          ElectricEnergy: value[_this.config.datastream_idx.ElectricEnergy]
+        });
+        url = ("" + _this.db + "/_changes?filter=energy_data/") + ("measurements&include_docs=true&source=" + _this.feed);
+        url = "" + url + "&feed=eventsource&since=now";
+        source = new EventSource(url, {
+          withCredentials: true
+        });
+        return source.onmessage = function(e) {
+          return process(JSON.parse(e.data).doc);
+        };
       });
+      this.lastFullUpdate = this.lastQuickUpdate = +(new Date);
+      this.scheduleUpdate();
       return setTimeout(function() {
         _this.toggleFullscreen(true, function() {
           _this.transform();
@@ -220,6 +258,94 @@
         });
         return _this.fullscreener.classed('hidden', true);
       }, 0);
+    };
+
+    Chart.prototype.energy = function(date) {
+      var deferred, index, process, url,
+        _this = this;
+      deferred = Q.defer();
+      index = this.energyBufferTime.indexOf(+date);
+      if (+date > +(new Date)) {
+        date = null;
+      }
+      if (index !== -1) {
+        deferred.resolve(this.energyBufferValue[index]);
+      } else {
+        process = function(timestamp, power, energy) {
+          var h, kW;
+          kW = power / 1000;
+          h = (+date - timestamp) / 1000 / 60 / 60;
+          if (h > 0) {
+            energy += kW * h;
+          }
+          _this.energyBufferTime.push(+date);
+          _this.energyBufferValue.push(+energy);
+          if (_this.energyBufferTime.length > Chart.ENERGY_BUFFER_SIZE) {
+            _this.energyBufferTime.shift();
+            _this.energyBufferValue.shift();
+          }
+          return deferred.resolve(energy);
+        };
+        if (!((date != null) || this.doc)) {
+          date = +(new Date);
+        }
+        if (date) {
+          url = ("" + this.design + "_show/unix_to_couchm_ts") + ("?feed=" + this.feed + "&timestamp=" + (+date));
+          this.getJSON(url).then(function(key) {
+            var endkey, startkey;
+            startkey = JSON.stringify([_this.feed]);
+            endkey = JSON.stringify(key);
+            url = ("" + _this.design + "_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
+            return _this.getJSON(url).then(function(result) {
+              var value;
+              value = result.rows[0].value;
+              return process(+new Date(value[_this.config.at_idx]), value[_this.config.datastream_idx.ElectricPower], value[_this.config.datastream_idx.ElectricEnergy]);
+            });
+          });
+        } else {
+          date = +(new Date);
+          process(this.doc.timestamp, this.doc.ElectricPower, this.doc.ElectricEnergy);
+        }
+      }
+      return deferred.promise;
+    };
+
+    Chart.prototype.quickUpdate = function() {
+      var _base, _ref,
+        _this = this;
+      this.lastQuickUpdate = +(new Date);
+      this.scheduleUpdate();
+      if ((+this.x.domain()[0] < (_ref = +(new Date)) && _ref < +this.x.domain()[1])) {
+        Q.spread([this.energy(), this.energy(this.defaultDomain()[0])], function(e1, e0) {
+          var energy, value;
+          energy = (e1 - e0) * 1000;
+          value = Math.round(energy);
+          return _this.meter.select('text').text("" + value + " Wh");
+        });
+        return typeof (_base = this.display[0]).transformExtras === "function" ? _base.transformExtras() : void 0;
+      }
+    };
+
+    Chart.prototype.fullUpdate = function() {
+      this.lastFullUpdate = this.lastQuickUpdate = +(new Date);
+      this.scheduleUpdate();
+      return this.loadData();
+    };
+
+    Chart.prototype.scheduleUpdate = function() {
+      var untilFull, untilQuick,
+        _this = this;
+      untilQuick = this.lastQuickUpdate + Chart.QUICK_UPDATE - +(new Date);
+      untilFull = this.lastFullUpdate + Chart.FULL_UPDATE - +(new Date);
+      if (untilFull <= Chart.QUICK_UPDATE) {
+        return setTimeout((function() {
+          return _this.fullUpdate();
+        }), untilFull);
+      } else {
+        return setTimeout((function() {
+          return _this.quickUpdate();
+        }), untilQuick);
+      }
     };
 
     Chart.prototype.adjustToSize = function() {

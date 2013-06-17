@@ -16,8 +16,17 @@ All datastream-specific code happens in `data.coffee.md`.
       @NOW_BAR_WIDTH = 8
       @MIN_TIME_IN_VIEW = 60 * 60 * 1000
       @MAX_TIME_IN_VIEW = 2 * 7 * 24 * 60 * 60 * 1000
+      @QUICK_UPDATE = 1000
+      @FULL_UPDATE = 30000
+      @ENERGY_BUFFER_SIZE = 10
 
       constructor: (@config, @db) ->
+        @design = "#{@db}/_design/energy_data/"
+        @feed = 'allRooms'
+
+        @energyBufferTime = []
+        @energyBufferValue = []
+
         @display = [new TotalPower this]
 
         @x = d3.time.scale()
@@ -91,15 +100,33 @@ Time formats are implemented as in [Custom Time Format] [1].
 
         @display[0].init()
 
-        timeout = null
+Return to the default overview after inactivity. The amount of milliseconds
+to wait is set in the config value `default_view_after`.
+
+        returnTimeout = null
+        loadTimeout = null
         zoom = []
+        cancel = (timeout) =>
+          if timeout?
+            clearTimeout timeout
+            timeout = null
         d3.select(window)
-            .on('touchstart', => zoom = [@zoom.translate()[0], @zoom.scale()]
+            .on('touchstart', =>
+              zoom = [@zoom.translate()[0], @zoom.scale()]
+              cancel returnTimeout
             true)
+            .on('touchmove', => cancel returnTimeout)
             .on('touchend', =>
-              clearTimeout timeout if timeout?
+              cancel loadTimeout
               if zoom[0] != @zoom.translate()[0] or zoom[1] != @zoom.scale()
                 timeout = setTimeout (=> @loadData()), 500
+              returnTimeout = setTimeout(=>
+                @fullscreener.classed 'hidden', false
+                @toggleFullscreen false, =>
+                  @transform()
+                  @autopan @defaultDomain()
+                  @loadData()
+              @config.default_view_after)
             true)
             .on('mousewheel', ->
               d3.event.stopPropagation()
@@ -173,23 +200,29 @@ Time formats are implemented as in [Custom Time Format] [1].
             )
         )
 
-Return to the default overview after inactivity. The amount of milliseconds
-to wait is set in the config value `default_view_after`.
+Always keep current power and energy values in memory.
 
-        cancel = =>
-          if @timeout?
-            clearTimeout @timeout
-            @timeout = null
-        d3.select(window)
-            .on('touchstart', cancel)
-            .on('touchmove', cancel)
-            .on('touchend', =>
-              @timeout = setTimeout(=>
-                @toggleFullscreen false, =>
-                  @transform()
-                  @autopan @defaultDomain()
-                  @loadData()
-              @config.default_view_after))
+        process = (doc) =>
+          @doc = doc
+          console.log 'got update', doc
+        startkey = JSON.stringify([@feed])
+        endkey = JSON.stringify([@feed, {}])
+        url = "#{@db}/_design/energy_data/_view/by_source_and_time" +
+          "?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
+        @getJSON(url).then (result) =>
+          value = result.rows[0].value
+          process
+            timestamp: +new Date(value[@config.at_idx])
+            ElectricPower: value[@config.datastream_idx.ElectricPower]
+            ElectricEnergy: value[@config.datastream_idx.ElectricEnergy]
+          url = "#{@db}/_changes?filter=energy_data/" +
+              "measurements&include_docs=true&source=#{@feed}"
+          url = "#{url}&feed=eventsource&since=now"
+          source = new EventSource(url, withCredentials: true)
+          source.onmessage = (e) => process JSON.parse(e.data).doc
+
+        @lastFullUpdate = @lastQuickUpdate = +new Date
+        @scheduleUpdate()
 
         # TODO for debugging
         setTimeout(=>
@@ -200,6 +233,74 @@ to wait is set in the config value `default_view_after`.
           )
           @fullscreener.classed 'hidden', true
         0)
+
+      energy: (date) ->
+        deferred = Q.defer()
+        # TODO do the index check only if we were planning to do a request (?)
+        index = @energyBufferTime.indexOf +date
+        date = null if +date > +new Date # Handle future as now
+        if index isnt -1
+          deferred.resolve @energyBufferValue[index]
+        else
+          process = (timestamp, power, energy) =>
+            kW = power / 1000
+            h = (+date - timestamp) / 1000 / 60 / 60
+            energy += kW * h if h > 0
+            @energyBufferTime.push +date
+            @energyBufferValue.push +energy
+            if @energyBufferTime.length > Chart.ENERGY_BUFFER_SIZE
+              @energyBufferTime.shift()
+              @energyBufferValue.shift()
+            deferred.resolve(energy)
+          date = +new Date unless date? or @doc
+          if date
+            url = "#{@design}_show/unix_to_couchm_ts" +
+              "?feed=#{@feed}&timestamp=#{+date}"
+            @getJSON(url).then (key) =>
+              startkey = JSON.stringify([@feed])
+              endkey = JSON.stringify(key)
+              url = "#{@design}_view/by_source_and_time" +
+                "?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
+              @getJSON(url).then (result) =>
+                value = result.rows[0].value
+                process(
+                  +new Date(value[@config.at_idx])
+                  value[@config.datastream_idx.ElectricPower]
+                  value[@config.datastream_idx.ElectricEnergy])
+          else
+            date = +new Date
+            process @doc.timestamp, @doc.ElectricPower, @doc.ElectricEnergy
+        deferred.promise
+
+A quick update updates the display with extrapolated cached information.
+
+      quickUpdate: ->
+        @lastQuickUpdate = +new Date
+        @scheduleUpdate()
+
+        if +@x.domain()[0] < +new Date < +@x.domain()[1]
+          Q.spread [@energy(), @energy(@defaultDomain()[0])], (e1, e0) =>
+            energy = (e1 - e0) * 1000
+            value = Math.round(energy)
+            @meter.select('text').text("#{value} Wh")
+
+          @display[0].transformExtras?()
+
+A full update (re-)requests the data needed for the current view, in order to
+get consistent with the database.
+
+      fullUpdate: ->
+        @lastFullUpdate = @lastQuickUpdate = +new Date
+        @scheduleUpdate()
+        @loadData()
+
+      scheduleUpdate: ->
+        untilQuick = @lastQuickUpdate + Chart.QUICK_UPDATE - +new Date
+        untilFull = @lastFullUpdate + Chart.FULL_UPDATE - +new Date
+        if untilFull <= Chart.QUICK_UPDATE
+          setTimeout (=> @fullUpdate()), untilFull
+        else
+          setTimeout (=> @quickUpdate()), untilQuick
 
       adjustToSize: ->
         @x.range [0, @width]

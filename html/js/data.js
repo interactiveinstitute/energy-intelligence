@@ -27,36 +27,14 @@
     }
 
     TotalPower.prototype.init = function() {
-      var container, url,
-        _this = this;
+      var container;
       container = this.chart.time.select('.container').attr('transform', '');
       container.selectAll('*').remove();
       container.append('path').attr('class', 'area').datum([]).attr('d', this.area);
       container.append('path').attr('class', 'line').datum([]).attr('d', this.line);
       this.chart.time.select('.extras').append('rect').attr('class', 'nowLine').attr('fill', 'url(#now-line-gradient)').attr('width', Chart.NOW_BAR_WIDTH);
-      this.chart.time.select('.extras').append('circle').attr('class', 'nowDot').attr('fill', 'url(#now-dot-gradient)').attr('r', Chart.NOW_BAR_WIDTH);
-      url = ("" + this.chart.db + "/_changes?filter=energy_data") + ("/measurements&source=" + this.feed);
-      this.current = 0;
-      this.chart.getJSON("" + url + "&descending=true&limit=2").then(function(result) {
-        _this.eventSource = new EventSource("" + url + "&feed=eventsource&include_docs=true&since=" + result.last_seq, {
-          withCredentials: true
-        });
-        return _this.eventSource.onmessage = function(e) {
-          var doc, _ref, _ref1;
-          doc = JSON.parse(e.data).doc;
-          _this.chart.meter.select('text').text("" + ((_ref = doc.ElectricEnergy) != null ? _ref : 0) + " Wh");
-          if ((_this.chart.x.domain()[0] < (_ref1 = doc.timestamp) && _ref1 < _this.chart.x.domain()[1])) {
-            _this.current = doc.ElectricPower;
-          }
-          return _this.transformExtras();
-        };
-      });
-      return setInterval((function() {
-        return _this.transformExtras();
-      }), 1000);
+      return this.chart.time.select('.extras').append('circle').attr('class', 'nowDot').attr('fill', 'url(#now-dot-gradient)').attr('r', Chart.NOW_BAR_WIDTH);
     };
-
-    TotalPower.prototype.stop = function() {};
 
     TotalPower.prototype.getDataFromRequest = function(params, result) {
       var resample;
@@ -72,8 +50,13 @@
     };
 
     TotalPower.prototype.transformExtras = function() {
-      this.chart.time.select('.nowLine').attr('x', this.chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2).attr('y', this.chart.y(this.current)).attr('height', this.chart.height - Chart.PADDING_BOTTOM - this.chart.y(this.current));
-      return this.chart.time.select('.nowDot').attr('cx', this.chart.x(new Date)).attr('cy', this.chart.y(this.current));
+      var y;
+      if (this.chart.doc == null) {
+        return;
+      }
+      y = this.chart.y(this.chart.doc.ElectricPower);
+      this.chart.time.select('.nowLine').attr('x', this.chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2).attr('y', y).attr('height', this.chart.height - Chart.PADDING_BOTTOM - y);
+      return this.chart.time.select('.nowDot').attr('cx', this.chart.x(new Date)).attr('cy', y);
     };
 
     TotalPower.prototype.setDataAndTransform = function(data, from, to) {
