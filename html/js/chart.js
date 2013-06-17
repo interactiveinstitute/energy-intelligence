@@ -38,6 +38,7 @@
       this.db = db;
       this.design = "" + this.db + "/_design/energy_data/";
       this.feed = 'allRooms';
+      this.touching = false;
       this.energyBufferTime = [];
       this.energyBufferValue = [];
       this.display = [new TotalPower(this)];
@@ -134,12 +135,14 @@
         }
       };
       d3.select(window).on('touchstart', function() {
+        _this.touching = true;
         zoom = [_this.zoom.translate()[0], _this.zoom.scale()];
         return cancel(returnTimeout);
       }, true).on('touchmove', function() {
         return cancel(returnTimeout);
       }).on('touchend', function() {
         var timeout;
+        _this.touching = false;
         cancel(loadTimeout);
         if (zoom[0] !== _this.zoom.translate()[0] || zoom[1] !== _this.zoom.scale()) {
           timeout = setTimeout((function() {
@@ -315,22 +318,24 @@
         _this = this;
       this.lastQuickUpdate = +(new Date);
       this.scheduleUpdate();
-      if ((+this.x.domain()[0] < (_ref = +(new Date)) && _ref < +this.x.domain()[1])) {
-        Q.spread([this.energy(), this.energy(this.defaultDomain()[0])], function(e1, e0) {
-          var energy, value;
-          energy = (e1 - e0) * 1000;
-          value = Math.round(energy);
-          return _this.meter.select('text').text("" + value + " Wh");
-        });
-        if (this.data != null) {
-          this.data.push({
-            at: new Date(this.doc.timestamp),
-            resampledAt: new Date,
-            value: parseFloat(this.doc.ElectricPower)
+      if (!this.touching) {
+        if ((+this.x.domain()[0] < (_ref = +(new Date)) && _ref < +this.x.domain()[1])) {
+          Q.spread([this.energy(), this.energy(this.defaultDomain()[0])], function(e1, e0) {
+            var energy, value;
+            energy = (e1 - e0) * 1000;
+            value = Math.round(energy);
+            return _this.meter.select('text').text("" + value + " Wh");
           });
+          if ((this.data != null) && (this.doc != null)) {
+            this.data.push({
+              at: new Date(this.doc.timestamp),
+              resampledAt: new Date,
+              value: parseFloat(this.doc.ElectricPower)
+            });
+            this.updateWithData();
+          }
+          return typeof (_base = this.display[0]).transformExtras === "function" ? _base.transformExtras() : void 0;
         }
-        this.updateWithData();
-        return typeof (_base = this.display[0]).transformExtras === "function" ? _base.transformExtras() : void 0;
       }
     };
 
@@ -578,14 +583,19 @@
         newDomain *= Chart.Y_AXIS_FACTOR;
       }
       tempScale = newDomain / oldDomain;
-      this.y.domain([0, newDomain]);
-      this.transformYAxis(true);
-      from = "matrix(1, 0, 0,          " + tempScale + ", 0, " + ((this.height - 48) * (1 - tempScale)) + ")          scale(" + (1 / this.zoom.scale()) + ", 1)          translate(" + (-this.zoom.translate()[0]) + ", 0)";
-      to = "scale(" + (1 / this.zoom.scale()) + ", 1)          translate(" + (-this.zoom.translate()[0]) + ", 0)";
-      if (stay) {
-        from = to;
+      if (newDomain !== oldDomain) {
+        this.y.domain([0, newDomain]);
+        this.transformYAxis(true);
+        from = "matrix(1, 0, 0,            " + tempScale + ", 0, " + ((this.height - 48) * (1 - tempScale)) + ")            scale(" + (1 / this.zoom.scale()) + ", 1)            translate(" + (-this.zoom.translate()[0]) + ", 0)";
+        to = "scale(" + (1 / this.zoom.scale()) + ", 1)            translate(" + (-this.zoom.translate()[0]) + ", 0)";
+        if (stay) {
+          from = to;
+        }
+        this.display[0].setDataAndTransform(this.data, from, to);
+      } else {
+        to = "scale(" + (1 / this.zoom.scale()) + ", 1)            translate(" + (-this.zoom.translate()[0]) + ", 0)";
+        this.display[0].setDataAndTransform(this.data, null, to, false);
       }
-      this.display[0].setDataAndTransform(this.data, from, to);
       if (typeof (_base = this.display[0]).transformExtras === "function") {
         _base.transformExtras();
       }

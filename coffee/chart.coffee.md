@@ -24,6 +24,8 @@ All datastream-specific code happens in `data.coffee.md`.
         @design = "#{@db}/_design/energy_data/"
         @feed = 'allRooms'
 
+        @touching = false
+
         @energyBufferTime = []
         @energyBufferValue = []
 
@@ -112,11 +114,13 @@ to wait is set in the config value `default_view_after`.
             timeout = null
         d3.select(window)
             .on('touchstart', =>
+              @touching = true
               zoom = [@zoom.translate()[0], @zoom.scale()]
               cancel returnTimeout
             true)
             .on('touchmove', => cancel returnTimeout)
             .on('touchend', =>
+              @touching = false
               cancel loadTimeout
               if zoom[0] != @zoom.translate()[0] or zoom[1] != @zoom.scale()
                 timeout = setTimeout (=> @loadData()), 500
@@ -278,21 +282,23 @@ A quick update updates the display with extrapolated cached information.
         @lastQuickUpdate = +new Date
         @scheduleUpdate()
 
-        if +@x.domain()[0] < +new Date < +@x.domain()[1]
-          Q.spread [@energy(), @energy(@defaultDomain()[0])], (e1, e0) =>
-            energy = (e1 - e0) * 1000
-            value = Math.round(energy)
-            @meter.select('text').text("#{value} Wh")
+        unless @touching
+          if +@x.domain()[0] < +new Date < +@x.domain()[1]
+            Q.spread [@energy(), @energy(@defaultDomain()[0])], (e1, e0) =>
+              energy = (e1 - e0) * 1000
+              value = Math.round(energy)
+              @meter.select('text').text("#{value} Wh")
 
-          # Add an extrapolated data point. TODO: do this in TotalPower or
-          # TotalEnergy, since the kind of datapoint we want depends on that.
-          if @data? then @data.push
-            at: new Date @doc.timestamp
-            resampledAt: new Date
-            value: parseFloat @doc.ElectricPower
-          @updateWithData()
+            # Add an extrapolated data point. TODO: do this in TotalPower or
+            # TotalEnergy, since the kind of datapoint we want depends on that.
+            if @data? and @doc?
+              @data.push
+                at: new Date @doc.timestamp
+                resampledAt: new Date
+                value: parseFloat @doc.ElectricPower
+              @updateWithData()
 
-          @display[0].transformExtras?()
+            @display[0].transformExtras?()
 
 A full update (re-)requests the data needed for the current view, in order to
 get consistent with the database.
@@ -510,18 +516,24 @@ two ticks, but d3 might put faulty ticks somewhere.
           newDomain *= Chart.Y_AXIS_FACTOR
         tempScale = newDomain / oldDomain
 
-        @y.domain [0, newDomain]
-        @transformYAxis true
+        unless newDomain is oldDomain
+          @y.domain [0, newDomain]
+          @transformYAxis true
 
-        from = "matrix(1, 0, 0,
-          #{tempScale}, 0, #{(@height - 48) * (1 - tempScale)})
-          scale(#{1 / @zoom.scale()}, 1)
-          translate(#{-@zoom.translate()[0]}, 0)"
-        to = "scale(#{1 / @zoom.scale()}, 1)
-          translate(#{-@zoom.translate()[0]}, 0)"
-        from = to if stay
+          from = "matrix(1, 0, 0,
+            #{tempScale}, 0, #{(@height - 48) * (1 - tempScale)})
+            scale(#{1 / @zoom.scale()}, 1)
+            translate(#{-@zoom.translate()[0]}, 0)"
+          to = "scale(#{1 / @zoom.scale()}, 1)
+            translate(#{-@zoom.translate()[0]}, 0)"
+          from = to if stay
 
-        @display[0].setDataAndTransform @data, from, to
+          @display[0].setDataAndTransform @data, from, to
+        else
+          to = "scale(#{1 / @zoom.scale()}, 1)
+            translate(#{-@zoom.translate()[0]}, 0)"
+          @display[0].setDataAndTransform @data, null, to, false
+
         @display[0].transformExtras?()
 
         BubbleBath.position()

@@ -59,9 +59,17 @@
       return this.chart.time.select('.nowDot').attr('cx', this.chart.x(new Date)).attr('cy', y);
     };
 
-    TotalPower.prototype.setDataAndTransform = function(data, from, to) {
-      this.chart.time.select('.area').datum(data).attr('d', this.area).attr('transform', from).transition().duration(1000).attr('transform', to);
-      return this.chart.time.select('.line').datum(data).attr('d', this.line).attr('transform', from).transition().duration(1000).attr('transform', to);
+    TotalPower.prototype.setDataAndTransform = function(data, from, to, transition) {
+      if (transition == null) {
+        transition = true;
+      }
+      if (transition) {
+        this.chart.time.select('.area').datum(data).attr('d', this.area).attr('transform', from).transition().duration(1000).attr('transform', to);
+        return this.chart.time.select('.line').datum(data).attr('d', this.line).attr('transform', from).transition().duration(1000).attr('transform', to);
+      } else {
+        this.chart.time.select('.area').datum(data).attr('d', this.area).attr('transform', to);
+        return this.chart.time.select('.line').datum(data).attr('d', this.line).attr('transform', to);
+      }
     };
 
     TotalPower.prototype.transform = function() {

@@ -57,22 +57,32 @@
             .attr('cx', @chart.x new Date)
             .attr('cy', y);
 
-      setDataAndTransform: (data, from, to) ->
-        @chart.time.select('.area')
-            .datum(data)
-            .attr('d', @area)
-            .attr('transform', from)
-          .transition()
-            .duration(1000)
-            .attr('transform', to)
+      setDataAndTransform: (data, from, to, transition = true) ->
+        if transition
+          @chart.time.select('.area')
+              .datum(data)
+              .attr('d', @area)
+              .attr('transform', from)
+            .transition()
+              .duration(1000)
+              .attr('transform', to)
 
-        @chart.time.select('.line')
-            .datum(data)
-            .attr('d', @line)
-            .attr('transform', from)
-          .transition()
-            .duration(1000)
-            .attr('transform', to)
+          @chart.time.select('.line')
+              .datum(data)
+              .attr('d', @line)
+              .attr('transform', from)
+            .transition()
+              .duration(1000)
+              .attr('transform', to)
+        else
+          @chart.time.select('.area')
+              .datum(data)
+              .attr('d', @area)
+              .attr('transform', to)
+          @chart.time.select('.line')
+              .datum(data)
+              .attr('d', @line)
+              .attr('transform', to)
 
       transform: ->
         # TODO not used?
