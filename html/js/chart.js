@@ -322,11 +322,13 @@
           value = Math.round(energy);
           return _this.meter.select('text').text("" + value + " Wh");
         });
-        this.data.push({
-          at: new Date(this.doc.timestamp),
-          resampledAt: new Date,
-          value: parseFloat(this.doc.ElectricPower)
-        });
+        if (this.data != null) {
+          this.data.push({
+            at: new Date(this.doc.timestamp),
+            resampledAt: new Date,
+            value: parseFloat(this.doc.ElectricPower)
+          });
+        }
         this.updateWithData();
         return typeof (_base = this.display[0]).transformExtras === "function" ? _base.transformExtras() : void 0;
       }

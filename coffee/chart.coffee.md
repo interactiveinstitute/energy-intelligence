@@ -286,7 +286,7 @@ A quick update updates the display with extrapolated cached information.
 
           # Add an extrapolated data point. TODO: do this in TotalPower or
           # TotalEnergy, since the kind of datapoint we want depends on that.
-          @data.push
+          if @data? then @data.push
             at: new Date @doc.timestamp
             resampledAt: new Date
             value: parseFloat @doc.ElectricPower
