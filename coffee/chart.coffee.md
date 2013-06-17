@@ -284,6 +284,14 @@ A quick update updates the display with extrapolated cached information.
             value = Math.round(energy)
             @meter.select('text').text("#{value} Wh")
 
+          # Add an extrapolated data point. TODO: do this in TotalPower or
+          # TotalEnergy, since the kind of datapoint we want depends on that.
+          @data.push
+            at: new Date @doc.timestamp
+            resampledAt: new Date
+            value: parseFloat @doc.ElectricPower
+          @updateWithData()
+
           @display[0].transformExtras?()
 
 A full update (re-)requests the data needed for the current view, in order to
@@ -478,40 +486,9 @@ two ticks, but d3 might put faulty ticks somewhere.
         Q.spread [
           @getJSON url
           BubbleBath.load [@display[0].feed], @x.domain()...
-        ], (result, bubbles) =>
-          data = @display[0].getDataFromRequest params, result
-
-          # Make transition to new domain on y axis
-          oldDomain = @y.domain()[1]
-          newDomain = d3.max(data.map (d) -> d.value)
-          bubbles.each (d) ->
-            newDomain = d3.max [newDomain, parseFloat(d.value)]
-          newDomain = Chart.Y_AXIS_MINIMUM_SIZE if newDomain is 0
-          if oldDomain * Chart.Y_AXIS_SHRINK_FACTOR < newDomain < oldDomain
-            newDomain = oldDomain
-          else
-            newDomain *= Chart.Y_AXIS_FACTOR
-          # TODO also take bubble height into account
-          tempScale = newDomain / oldDomain
-
-          @y.domain [0, newDomain]
-          @transformYAxis true
-
-          from = "matrix(1, 0, 0,
-            #{tempScale}, 0, #{(@height - 48) * (1 - tempScale)})
-            scale(#{1 / @zoom.scale()}, 1)
-            translate(#{-@zoom.translate()[0]}, 0)"
-          to = "scale(#{1 / @zoom.scale()}, 1)
-            translate(#{-@zoom.translate()[0]}, 0)"
-          from = to if first
-
-          @display[0].setDataAndTransform data, from, to
-          @display[0].transformExtras?()
-
-          BubbleBath.position()
-
-          @loading.attr 'opacity', 0
-
+        ], (result, @bubbles) =>
+          @data = @display[0].getDataFromRequest params, result
+          @updateWithData true
           deferred.resolve()
 
         if @showLoading
@@ -519,6 +496,37 @@ two ticks, but d3 might put faulty ticks somewhere.
           @showLoading = false
 
         deferred.promise
+
+      updateWithData: (stay = false, @data = @data, @bubbles = @bubbles) ->
+        # Make transition to new domain on y axis
+        oldDomain = @y.domain()[1]
+        newDomain = d3.max(@data.map (d) -> d.value)
+        @bubbles.each (d) ->
+          newDomain = d3.max [newDomain, parseFloat(d.value)]
+        newDomain = Chart.Y_AXIS_MINIMUM_SIZE if newDomain is 0
+        if oldDomain * Chart.Y_AXIS_SHRINK_FACTOR < newDomain < oldDomain
+          newDomain = oldDomain
+        else
+          newDomain *= Chart.Y_AXIS_FACTOR
+        tempScale = newDomain / oldDomain
+
+        @y.domain [0, newDomain]
+        @transformYAxis true
+
+        from = "matrix(1, 0, 0,
+          #{tempScale}, 0, #{(@height - 48) * (1 - tempScale)})
+          scale(#{1 / @zoom.scale()}, 1)
+          translate(#{-@zoom.translate()[0]}, 0)"
+        to = "scale(#{1 / @zoom.scale()}, 1)
+          translate(#{-@zoom.translate()[0]}, 0)"
+        from = to if stay
+
+        @display[0].setDataAndTransform @data, from, to
+        @display[0].transformExtras?()
+
+        BubbleBath.position()
+
+        @loading.attr 'opacity', 0 
 
       toggleFullscreen: (fullscreen, callback) ->
         transition = not fullscreen?

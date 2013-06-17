@@ -322,6 +322,12 @@
           value = Math.round(energy);
           return _this.meter.select('text').text("" + value + " Wh");
         });
+        this.data.push({
+          at: new Date(this.doc.timestamp),
+          resampledAt: new Date,
+          value: parseFloat(this.doc.ElectricPower)
+        });
+        this.updateWithData();
         return typeof (_base = this.display[0]).transformExtras === "function" ? _base.transformExtras() : void 0;
       }
     };
@@ -535,37 +541,9 @@
         return _results;
       })()).join('&');
       Q.spread([this.getJSON(url), BubbleBath.load.apply(BubbleBath, [[this.display[0].feed]].concat(__slice.call(this.x.domain())))], function(result, bubbles) {
-        var data, from, newDomain, oldDomain, tempScale, to, _base;
-        data = _this.display[0].getDataFromRequest(params, result);
-        oldDomain = _this.y.domain()[1];
-        newDomain = d3.max(data.map(function(d) {
-          return d.value;
-        }));
-        bubbles.each(function(d) {
-          return newDomain = d3.max([newDomain, parseFloat(d.value)]);
-        });
-        if (newDomain === 0) {
-          newDomain = Chart.Y_AXIS_MINIMUM_SIZE;
-        }
-        if ((oldDomain * Chart.Y_AXIS_SHRINK_FACTOR < newDomain && newDomain < oldDomain)) {
-          newDomain = oldDomain;
-        } else {
-          newDomain *= Chart.Y_AXIS_FACTOR;
-        }
-        tempScale = newDomain / oldDomain;
-        _this.y.domain([0, newDomain]);
-        _this.transformYAxis(true);
-        from = "matrix(1, 0, 0,            " + tempScale + ", 0, " + ((_this.height - 48) * (1 - tempScale)) + ")            scale(" + (1 / _this.zoom.scale()) + ", 1)            translate(" + (-_this.zoom.translate()[0]) + ", 0)";
-        to = "scale(" + (1 / _this.zoom.scale()) + ", 1)            translate(" + (-_this.zoom.translate()[0]) + ", 0)";
-        if (first) {
-          from = to;
-        }
-        _this.display[0].setDataAndTransform(data, from, to);
-        if (typeof (_base = _this.display[0]).transformExtras === "function") {
-          _base.transformExtras();
-        }
-        BubbleBath.position();
-        _this.loading.attr('opacity', 0);
+        _this.bubbles = bubbles;
+        _this.data = _this.display[0].getDataFromRequest(params, result);
+        _this.updateWithData(true);
         return deferred.resolve();
       });
       if (this.showLoading) {
@@ -573,6 +551,44 @@
         this.showLoading = false;
       }
       return deferred.promise;
+    };
+
+    Chart.prototype.updateWithData = function(stay, data, bubbles) {
+      var from, newDomain, oldDomain, tempScale, to, _base;
+      if (stay == null) {
+        stay = false;
+      }
+      this.data = data != null ? data : this.data;
+      this.bubbles = bubbles != null ? bubbles : this.bubbles;
+      oldDomain = this.y.domain()[1];
+      newDomain = d3.max(this.data.map(function(d) {
+        return d.value;
+      }));
+      this.bubbles.each(function(d) {
+        return newDomain = d3.max([newDomain, parseFloat(d.value)]);
+      });
+      if (newDomain === 0) {
+        newDomain = Chart.Y_AXIS_MINIMUM_SIZE;
+      }
+      if ((oldDomain * Chart.Y_AXIS_SHRINK_FACTOR < newDomain && newDomain < oldDomain)) {
+        newDomain = oldDomain;
+      } else {
+        newDomain *= Chart.Y_AXIS_FACTOR;
+      }
+      tempScale = newDomain / oldDomain;
+      this.y.domain([0, newDomain]);
+      this.transformYAxis(true);
+      from = "matrix(1, 0, 0,          " + tempScale + ", 0, " + ((this.height - 48) * (1 - tempScale)) + ")          scale(" + (1 / this.zoom.scale()) + ", 1)          translate(" + (-this.zoom.translate()[0]) + ", 0)";
+      to = "scale(" + (1 / this.zoom.scale()) + ", 1)          translate(" + (-this.zoom.translate()[0]) + ", 0)";
+      if (stay) {
+        from = to;
+      }
+      this.display[0].setDataAndTransform(this.data, from, to);
+      if (typeof (_base = this.display[0]).transformExtras === "function") {
+        _base.transformExtras();
+      }
+      BubbleBath.position();
+      return this.loading.attr('opacity', 0);
     };
 
     Chart.prototype.toggleFullscreen = function(fullscreen, callback) {
