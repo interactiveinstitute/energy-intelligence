@@ -173,6 +173,24 @@ Time formats are implemented as in [Custom Time Format] [1].
             )
         )
 
+Return to the default overview after inactivity. The amount of milliseconds
+to wait is set in the config value `default_view_after`.
+
+        cancel = =>
+          if @timeout?
+            clearTimeout @timeout
+            @timeout = null
+        d3.select(window)
+            .on('touchstart', cancel)
+            .on('touchmove', cancel)
+            .on('touchend', =>
+              @timeout = setTimeout(=>
+                @toggleFullscreen false, =>
+                  @transform()
+                  @autopan @defaultDomain()
+                  @loadData()
+              @config.default_view_after))
+
         # TODO for debugging
         setTimeout(=>
           @toggleFullscreen(true, =>

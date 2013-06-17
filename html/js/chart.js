@@ -100,7 +100,7 @@
     };
 
     Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons, fs) {
-      var button, drag, fullscreening, offset, that, timeout, zoom,
+      var button, cancel, drag, fullscreening, offset, that, timeout, zoom,
         _this = this;
       this.title = d3.select(title);
       this.chartTitle = d3.select(chartTitle);
@@ -196,6 +196,21 @@
           _this.defaultView();
           return _this.loadData();
         });
+      });
+      cancel = function() {
+        if (_this.timeout != null) {
+          clearTimeout(_this.timeout);
+          return _this.timeout = null;
+        }
+      };
+      d3.select(window).on('touchstart', cancel).on('touchmove', cancel).on('touchend', function() {
+        return _this.timeout = setTimeout(function() {
+          return _this.toggleFullscreen(false, function() {
+            _this.transform();
+            _this.autopan(_this.defaultDomain());
+            return _this.loadData();
+          });
+        }, _this.config.default_view_after);
       });
       return setTimeout(function() {
         _this.toggleFullscreen(true, function() {
