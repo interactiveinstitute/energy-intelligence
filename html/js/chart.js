@@ -111,7 +111,7 @@
     };
 
     Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons, fs) {
-      var button, cancel, drag, endkey, fullscreening, loadTimeout, offset, process, returnTimeout, startkey, that, url, zoom,
+      var button, cancel, drag, endkey, fullscreening, loadTimeout, offset, preventMultitouch, process, returnTimeout, startkey, that, url, zoom,
         _this = this;
       this.title = d3.select(title);
       this.chartTitle = d3.select(chartTitle);
@@ -134,15 +134,23 @@
           return timeout = null;
         }
       };
+      preventMultitouch = function() {
+        if (d3.touches(document.body).length > 1) {
+          d3.event.preventDefault();
+          return d3.event.stopPropagation();
+        }
+      };
       d3.select(window).on('touchstart', function() {
+        preventMultitouch();
         _this.touching = true;
-        console.log('startt', d3.touches(window).length);
         zoom = [_this.zoom.translate()[0], _this.zoom.scale()];
         return cancel(returnTimeout);
       }, true).on('touchmove', function() {
+        preventMultitouch();
         return cancel(returnTimeout);
-      }).on('touchend', function() {
+      }, true).on('touchend', function() {
         var timeout;
+        preventMultitouch();
         _this.touching = false;
         cancel(loadTimeout);
         if (zoom[0] !== _this.zoom.translate()[0] || zoom[1] !== _this.zoom.scale()) {

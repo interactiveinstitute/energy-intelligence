@@ -112,15 +112,23 @@ to wait is set in the config value `default_view_after`.
           if timeout?
             clearTimeout timeout
             timeout = null
+        preventMultitouch = ->
+          if d3.touches(document.body).length > 1
+            d3.event.preventDefault()
+            d3.event.stopPropagation()
         d3.select(window)
             .on('touchstart', =>
+              preventMultitouch()
               @touching = true
-              console.log 'startt', d3.touches(window).length
               zoom = [@zoom.translate()[0], @zoom.scale()]
               cancel returnTimeout
             true)
-            .on('touchmove', => cancel returnTimeout)
+            .on('touchmove', =>
+              preventMultitouch()
+              cancel returnTimeout
+            true)
             .on('touchend', =>
+              preventMultitouch()
               @touching = false
               cancel loadTimeout
               if zoom[0] != @zoom.translate()[0] or zoom[1] != @zoom.scale()
