@@ -109,8 +109,7 @@
               .on('webkitTransitionEnd', =>
                 @_el.on('webkitTransitionEnd', null)
                 @mobile = true
-                @position true
-                console.log 'ready')
+                @position true)
             .transition().duration(300)
           @mobile = false if fixed
         else

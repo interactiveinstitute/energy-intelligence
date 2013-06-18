@@ -103,8 +103,7 @@
         obj = this._el.on('webkitTransitionEnd', function() {
           _this._el.on('webkitTransitionEnd', null);
           _this.mobile = true;
-          _this.position(true);
-          return console.log('ready');
+          return _this.position(true);
         }).transition().duration(300);
         if (fixed) {
           this.mobile = false;
