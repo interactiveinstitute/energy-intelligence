@@ -262,7 +262,7 @@
       });
       this.lastFullUpdate = this.lastQuickUpdate = +(new Date);
       this.scheduleUpdate();
-      return setTimeout(function() {
+      setTimeout(function() {
         _this.toggleFullscreen(true, function() {
           _this.transform();
           _this.defaultView();
@@ -270,6 +270,9 @@
         });
         return _this.fullscreener.classed('hidden', true);
       }, 0);
+      return document.oncontextmenu = function() {
+        return false;
+      };
     };
 
     Chart.prototype.energy = function(date) {

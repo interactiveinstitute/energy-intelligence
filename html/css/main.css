@@ -9,6 +9,7 @@ body {
   /*cursor: none;*/
   -ms-touch-action: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none !important;
   width: 1920px;
   height: 1080px;
   position: relative;

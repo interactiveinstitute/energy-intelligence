@@ -247,6 +247,8 @@ Always keep current power and energy values in memory.
           @fullscreener.classed 'hidden', true
         0)
 
+        document.oncontextmenu = -> false
+
       energy: (date) ->
         deferred = Q.defer()
         # TODO do the index check only if we were planning to do a request (?)
