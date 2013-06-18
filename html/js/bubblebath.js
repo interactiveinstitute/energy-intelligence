@@ -125,6 +125,7 @@ var BubbleBath = function() {
       endts = +end
       var deferred = Q.defer();
       var timespan = endts - startts
+      if (!db) return;
       json('/_design/events/_view/bubbles_by_feed_and_time', {
         startkey: [feeds[0], startts - timespan],
         endkey: [feeds[0], endts + timespan]

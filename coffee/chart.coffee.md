@@ -25,6 +25,8 @@ All datastream-specific code happens in `data.coffee.md`.
         @feed = 'allRooms'
 
         @touching = false
+        @transforming = false
+        @toDefaultView = false
 
         @energyBufferTime = []
         @energyBufferValue = []
@@ -84,7 +86,7 @@ Time formats are implemented as in [Custom Time Format] [1].
         request.send()
         deferred.promise
 
-      init: (title, chartTitle, time, zoomer, meter, buttons, fs) ->
+      init: (title, chartTitle, time, zoomer, meter, buttons, fs, today) ->
         @title = d3.select title
         @chartTitle = d3.select chartTitle
         @time = d3.select time
@@ -92,6 +94,7 @@ Time formats are implemented as in [Custom Time Format] [1].
         @meter = d3.select meter
         @buttons = d3.select buttons
         @fullscreener = d3.select fs
+        @today = d3.select today
 
         @loading = @time.select '.loading'
 
@@ -125,11 +128,17 @@ to wait is set in the config value `default_view_after`.
             true)
             .on('touchmove', =>
               preventMultitouch()
+              unless @transforming
+                @hideMeter()
+                @transforming = true
               cancel returnTimeout
             true)
             .on('touchend', =>
               preventMultitouch()
               @touching = false
+              if @transforming
+                @showMeter()
+                @transforming = false
               cancel loadTimeout
               if zoom[0] != @zoom.translate()[0] or zoom[1] != @zoom.scale()
                 timeout = setTimeout (=> @loadData()), 500
@@ -137,6 +146,7 @@ to wait is set in the config value `default_view_after`.
                 @fullscreener.classed 'hidden', false
                 @toggleFullscreen false, =>
                   @transform()
+                  @toDefaultView = true
                   @autopan @defaultDomain()
                   @loadData()
               @config.default_view_after)
@@ -212,6 +222,14 @@ to wait is set in the config value `default_view_after`.
               @loadData()
             )
         )
+
+        @today
+            .on('touchstart', =>
+              @today.classed('active', true))
+            .on('touchend', =>
+              @toDefaultView = true
+              @autopan @defaultDomain()
+              @today.classed('active', false))
 
 Always keep current power and energy values in memory.
 
@@ -388,7 +406,12 @@ get consistent with the database.
         maxScale = defaultTimeInView / Chart.MIN_TIME_IN_VIEW
         @zoom.x(@x).scaleExtent [minScale, maxScale]
 
+        @today.style 'opacity', 0
+
+        setTimeout((=> @transform()), 0)
+
       autopan: (domain) ->
+        @today.style 'opacity', 1 unless @toDefaultView
         @showLoading = true
         d3.transition().duration(1000).tween('zoom', =>
           oldStart = @x.domain()[0]
@@ -409,6 +432,12 @@ get consistent with the database.
             @time.select('.zooms').style 'opacity', 1
         )
         @time.select('.zooms').style 'opacity', 0
+
+        format = d3.time.format '%b %d, %H:%M'
+        start = format domain[0]
+        end = format domain[1]
+        text = "Electricity between #{start} and #{end}"
+        d3.select('.chart-title').text text
 
       bringIntoView: (time) ->
         [start, end] = @x.domain().map (d) -> +d
@@ -436,6 +465,25 @@ get consistent with the database.
         BubbleBath.position()
 
         @display[0].transformExtras?()
+
+        if @toDefaultView
+          console.log 'todefview'
+          d3.select('.chart-title').text 'Today’s electricity'
+          @toDefaultView = false
+          @today.style 'opacity', 0
+        else if @transforming
+          format = d3.time.format '%b %d, %H:%M'
+          start = format @x.domain()[0]
+          end = format @x.domain()[1]
+          text = "Electricity between #{start} and #{end}"
+          d3.select('.chart-title').text text
+          @today.style 'opacity', 1
+
+      hideMeter: ->
+        @meter.classed 'hidden', true
+
+      showMeter: ->
+        @meter.classed 'hidden', false
 
       transformXAxis: ->
         axis = @time.select('.x.axis')
@@ -592,5 +640,10 @@ two ticks, but d3 might put faulty ticks somewhere.
 
         @meter.classed 'fullscreen', @fullscreen
         @chartTitle.classed 'fullscreen', @fullscreen
+
+        unless @fullscreen
+          @today.style 'opacity', 0
+          @loadData()
+          d3.select('.chart-title').text 'Today’s electricity'
 
 [1]: http://bl.ocks.org/mbostock/4149176

@@ -39,6 +39,8 @@
       this.design = "" + this.db + "/_design/energy_data/";
       this.feed = 'allRooms';
       this.touching = false;
+      this.transforming = false;
+      this.toDefaultView = false;
       this.energyBufferTime = [];
       this.energyBufferValue = [];
       this.display = [new TotalPower(this)];
@@ -110,7 +112,7 @@
       return deferred.promise;
     };
 
-    Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons, fs) {
+    Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons, fs, today) {
       var button, cancel, drag, endkey, fullscreening, loadTimeout, offset, preventMultitouch, process, returnTimeout, startkey, that, url, zoom,
         _this = this;
       this.title = d3.select(title);
@@ -120,6 +122,7 @@
       this.meter = d3.select(meter);
       this.buttons = d3.select(buttons);
       this.fullscreener = d3.select(fs);
+      this.today = d3.select(today);
       this.loading = this.time.select('.loading');
       this.time.call(this.zoom);
       this.toggleFullscreen(false);
@@ -147,11 +150,19 @@
         return cancel(returnTimeout);
       }, true).on('touchmove', function() {
         preventMultitouch();
+        if (!_this.transforming) {
+          _this.hideMeter();
+          _this.transforming = true;
+        }
         return cancel(returnTimeout);
       }, true).on('touchend', function() {
         var timeout;
         preventMultitouch();
         _this.touching = false;
+        if (_this.transforming) {
+          _this.showMeter();
+          _this.transforming = false;
+        }
         cancel(loadTimeout);
         if (zoom[0] !== _this.zoom.translate()[0] || zoom[1] !== _this.zoom.scale()) {
           timeout = setTimeout((function() {
@@ -162,6 +173,7 @@
           _this.fullscreener.classed('hidden', false);
           return _this.toggleFullscreen(false, function() {
             _this.transform();
+            _this.toDefaultView = true;
             _this.autopan(_this.defaultDomain());
             return _this.loadData();
           });
@@ -235,6 +247,13 @@
           _this.defaultView();
           return _this.loadData();
         });
+      });
+      this.today.on('touchstart', function() {
+        return _this.today.classed('active', true);
+      }).on('touchend', function() {
+        _this.toDefaultView = true;
+        _this.autopan(_this.defaultDomain());
+        return _this.today.classed('active', false);
       });
       process = function(doc) {
         _this.doc = doc;
@@ -410,17 +429,26 @@
     };
 
     Chart.prototype.defaultView = function() {
-      var defaultTimeInView, domain, maxScale, minScale;
+      var defaultTimeInView, domain, maxScale, minScale,
+        _this = this;
       domain = this.defaultDomain();
       this.x.domain(domain);
       defaultTimeInView = domain[1] - domain[0];
       minScale = defaultTimeInView / Chart.MAX_TIME_IN_VIEW;
       maxScale = defaultTimeInView / Chart.MIN_TIME_IN_VIEW;
-      return this.zoom.x(this.x).scaleExtent([minScale, maxScale]);
+      this.zoom.x(this.x).scaleExtent([minScale, maxScale]);
+      this.today.style('opacity', 0);
+      return setTimeout((function() {
+        return _this.transform();
+      }), 0);
     };
 
     Chart.prototype.autopan = function(domain) {
-      var _this = this;
+      var end, format, start, text,
+        _this = this;
+      if (!this.toDefaultView) {
+        this.today.style('opacity', 1);
+      }
       this.showLoading = true;
       d3.transition().duration(1000).tween('zoom', function() {
         var interpolate, oldEnd, oldStart;
@@ -439,7 +467,12 @@
           return _this.time.select('.zooms').style('opacity', 1);
         });
       });
-      return this.time.select('.zooms').style('opacity', 0);
+      this.time.select('.zooms').style('opacity', 0);
+      format = d3.time.format('%b %d, %H:%M');
+      start = format(domain[0]);
+      end = format(domain[1]);
+      text = "Electricity between " + start + " and " + end;
+      return d3.select('.chart-title').text(text);
     };
 
     Chart.prototype.bringIntoView = function(time) {
@@ -459,7 +492,7 @@
     };
 
     Chart.prototype.transform = function() {
-      var handle, scale, width, zmax, zmin, _base, _ref;
+      var end, format, handle, scale, start, text, width, zmax, zmin, _base, _ref;
       this.transformXAxis();
       this.time.select('.zooms').attr('transform', "translate(" + (this.zoom.translate()[0]) + ", 0) scale(" + (this.zoom.scale()) + ", 1)");
       handle = this.zoomer.select('.handle').node();
@@ -468,7 +501,30 @@
       width = this.zoomer.node().clientWidth - handle.clientWidth;
       handle.style.left = Math.pow((scale - zmin) / (zmax - zmin), 1 / 4) * width + 'px';
       BubbleBath.position();
-      return typeof (_base = this.display[0]).transformExtras === "function" ? _base.transformExtras() : void 0;
+      if (typeof (_base = this.display[0]).transformExtras === "function") {
+        _base.transformExtras();
+      }
+      if (this.toDefaultView) {
+        console.log('todefview');
+        d3.select('.chart-title').text('Today’s electricity');
+        this.toDefaultView = false;
+        return this.today.style('opacity', 0);
+      } else if (this.transforming) {
+        format = d3.time.format('%b %d, %H:%M');
+        start = format(this.x.domain()[0]);
+        end = format(this.x.domain()[1]);
+        text = "Electricity between " + start + " and " + end;
+        d3.select('.chart-title').text(text);
+        return this.today.style('opacity', 1);
+      }
+    };
+
+    Chart.prototype.hideMeter = function() {
+      return this.meter.classed('hidden', true);
+    };
+
+    Chart.prototype.showMeter = function() {
+      return this.meter.classed('hidden', false);
     };
 
     Chart.prototype.transformXAxis = function() {
@@ -652,7 +708,12 @@
       this.buttons.classed('visible', this.fullscreen);
       this.zoomer.classed('visible', this.fullscreen);
       this.meter.classed('fullscreen', this.fullscreen);
-      return this.chartTitle.classed('fullscreen', this.fullscreen);
+      this.chartTitle.classed('fullscreen', this.fullscreen);
+      if (!this.fullscreen) {
+        this.today.style('opacity', 0);
+        this.loadData();
+        return d3.select('.chart-title').text('Today’s electricity');
+      }
     };
 
     return Chart;

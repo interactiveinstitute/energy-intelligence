@@ -37,12 +37,13 @@ h1.title.visible {
   -webkit-transform: translate(448px, 0);
   transition: -webkit-transform .2s, border-top-width .2s;
   border-top: 4px solid #bdccd4;
-  width: 768px;
   line-height: 80px;
+  width: 768px;
 }
 .chart-title.fullscreen {
   -webkit-transform: none;
   border-top-width: 0;
+  width: auto;
 }
 
 svg.time {
@@ -210,10 +211,10 @@ svg.time .loading text {
 
 .future + .future .popup path { -webkit-transform: rotate(-175deg); }
 .future + .future + .future .popup path { -webkit-transform: rotate(-172deg); }
-.future + .future + .future + .future .popup path { -webkit-transform: rotate(-170deg); }
+.future + .future + .future + .future .popup path { -webkit-transform: rotate(-169deg); }
 .past + .past .popup path { -webkit-transform: rotate(-5deg); }
 .past + .past + .past .popup path { -webkit-transform: rotate(-8deg); }
-.past + .past + .past + .past .popup path { -webkit-transform: rotate(-10deg); }
+.past + .past + .past + .past .popup path { -webkit-transform: rotate(-11deg); }
 
 .popup rect {
   fill: #aee0ff;
@@ -295,16 +296,19 @@ svg.time .loading text {
 /* Meter */
 .meter {
   position: absolute;
-  left: 823px;
-  top: 51px;
+  right: 32px;
+  top: 32px;
   font-family: 'HelveticaNeueLT Std Cn', 'HelveticaNeue-CondensedBold', sans-serif;
   font-size: 48px;
-  transition: -webkit-transform .2s;
-  -webkit-transform: translate(256px, 160px);
+  transition: -webkit-transform .2s, opacity .2s;
+  -webkit-transform: translate(-580px, 180px);
   z-index: 3;
 }
 .meter.fullscreen {
   -webkit-transform: none;
+}
+.meter.hidden {
+  opacity: 0;
 }
 
 /* Click target for going fullscreen */
@@ -350,4 +354,24 @@ svg.time .loading text {
 }
 .cards.visible {
   -webkit-transform: none;
+}
+
+.today {
+  height: 42px;
+  line-height: 44px;
+  border: 1px solid #808080;
+  border-radius: 6px;
+  color: #969696;
+  font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  position: absolute;
+  bottom: 56px;
+  right: 449px;
+  padding: 0 12px;
+  transition: background .1s, color .1s, opacity .2s;
+}
+.today.active {
+  background: #808080;
+  color: #000;
 }
