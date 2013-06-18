@@ -115,7 +115,7 @@ to wait is set in the config value `default_view_after`.
         d3.select(window)
             .on('touchstart', =>
               @touching = true
-              console.log 'startt', d3.touches().length
+              console.log 'startt', d3.touches(window).length
               zoom = [@zoom.translate()[0], @zoom.scale()]
               cancel returnTimeout
             true)

@@ -136,7 +136,7 @@
       };
       d3.select(window).on('touchstart', function() {
         _this.touching = true;
-        console.log('startt', d3.touches().length);
+        console.log('startt', d3.touches(window).length);
         zoom = [_this.zoom.translate()[0], _this.zoom.scale()];
         return cancel(returnTimeout);
       }, true).on('touchmove', function() {
