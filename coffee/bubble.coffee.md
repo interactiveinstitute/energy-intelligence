@@ -49,8 +49,6 @@
               .attr('y', 0)
               .attr('width', 0)
               .attr('height', 0)
-              .attr('rx', 6)
-              .attr('ry', 6)
         @_el = @container.append('g')
             .attr('class', 'popup')
             .classed('energy', @value_type is 'Wh')

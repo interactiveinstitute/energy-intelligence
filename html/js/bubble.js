@@ -53,7 +53,7 @@
       var labelBackground, labelText,
         _this = this;
       if (this.interval != null) {
-        this._ival = this.container.append('rect').classed('interval', true).attr('x', 0).attr('y', 0).attr('width', 0).attr('height', 0).attr('rx', 6).attr('ry', 6);
+        this._ival = this.container.append('rect').classed('interval', true).attr('x', 0).attr('y', 0).attr('width', 0).attr('height', 0);
       }
       this._el = this.container.append('g').attr('class', 'popup').classed('energy', this.value_type === 'Wh').on('touchstart', function(d, i) {
         var id;
