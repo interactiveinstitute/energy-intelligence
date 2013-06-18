@@ -1,5 +1,3 @@
-// TODO on .position(), if a bubble is out of view, render a link to it in-view
-
 var BubbleBath = function() {
   var db, container, bubbles, json, position, chart, startts, endts
 
@@ -134,12 +132,20 @@ var BubbleBath = function() {
         var that = this;
         var bubbles = container.selectAll('.bubble')
             .data(result.rows.map(function(row) {
-              return utils.extend(row.value, {
+              var extra = {
                 chart: chart,
-                at: new Date(row.value.timestamp),
                 closesOnTouch: false
-              })
-            }), function(d) { return d.at })
+              };
+              if (row.value.timestamp) {
+                extra.at = new Date(row.value.timestamp);
+              } else if (row.value.timestamp_start && row.value.timestamp_end) {
+                extra.interval = [
+                  new Date(row.value.timestamp_start),
+                  new Date(row.value.timestamp_end)
+                ]
+              }
+              return utils.extend(row.value, extra)
+            }), function(d) { return d.at || JSON.stringify(d.interval) })
         bubbles.enter().append('g')
             .attr('class', 'bubble')
             .classed('past', function(d) { return d.timestamp <= startts })

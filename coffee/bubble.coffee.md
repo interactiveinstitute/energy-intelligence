@@ -8,6 +8,24 @@
         node.bubble = @
         @[k] = v for k, v of d
 
+        @id = if @at? then +@at else JSON.stringify @interval
+
+        @middle = new Date((+@interval[0] + +@interval[1]) / 2) if @interval?
+
+        if @value_type is 'W'
+          @str = if @value < 1000
+            Math.round(@value * 10) / 10
+          else
+            Math.round @value
+          @str += ' W'
+          @W = true
+        else if @value_type is 'Wh'
+          @str = "#{Math.round @value} Wh"
+          @_value = @value
+          @hours = (+@interval[1] - +@interval[0]) / 60 / 60 / 1000
+          @value = @value / @hours
+          @Wh = true
+
         if not @note? and @at
           time = "#{@at.getHours()}:"
           time += '0' if @at.getMinutes() < 10
@@ -24,9 +42,18 @@
         methods.map (name) => @[name] = obj[name].bind obj
 
       createDom: ->
-        @_el = @container
-          .append('g')
+        if @interval?
+          @_ival = @container.append('rect')
+              .classed('interval', true)
+              .attr('x', 0)
+              .attr('y', 0)
+              .attr('width', 0)
+              .attr('height', 0)
+              .attr('rx', 6)
+              .attr('ry', 6)
+        @_el = @container.append('g')
             .attr('class', 'popup')
+            .classed('energy', @value_type is 'Wh')
             .on('touchstart', (d, i) =>
               if @container.classed 'current'
                 if @closesOnTouch
@@ -34,13 +61,14 @@
                   @close()
                 else
                   @toggleSeeThrough true
-                  id = "touchend.bubble#{+d.at}"
+                  id = "touchend.bubble#{@id}"
                   d3.select('body').on id, =>
                     d3.select('body').on id, null
                     @toggleSeeThrough false
               else
                 @chart.bringIntoView @at)
         labelBackground = @_el.append('rect')
+            .classed('back', true)
             .attr('x', 63)
             .attr('y', -20)
             .attr('height', 40)
@@ -50,18 +78,18 @@
             .attr('d', 'M 16 -8 A 48 48 340 1 1 16 8 L 0 0 L 16 -8')
         @_el.append('text')
             .attr('class', 'value')
-            .text("#{value(@value)} #{@value_type}")
+            .text(@str)
             .attr('text-anchor', 'middle')
             .attr('alignment-baseline', 'central')
-            .attr('dx', 63)
-            .attr('dy', 0)
+            .attr('dx', if @W? then 63 else 49)
+            .attr('dy', if @W? then 0 else -45)
         labelText = @_el.append('text')
             .attr('class', 'note')
             .text(@note)
-            .attr('text-anchor', 'start')
+            .attr('text-anchor', if @W? then 'start' else 'middle')
             .attr('alignment-baseline', 'central')
-            .attr('dx', 120)
-            .attr('dy', 0)
+            .attr('dx', if @W? then 120 else 33)
+            .attr('dy', if @W? then 0 else -80)
         labelBackground.attr('width', 76 + labelText.node().getBBox().width)
         @
 
@@ -72,17 +100,22 @@
 
       position: (transition, x, y) ->
         unless x? and y?
-          x = @chart.x @at
+          x = @chart.x @at ? @middle
           y = @chart.y @value
         (if transition then @_el.transition().duration(300) else @_el)
             .attr 'transform', "translate(#{x}, #{y})"
+        if @Wh
+          y = @chart.y @value
+          @_ival
+              .attr('x', @chart.x @interval[0])
+              .attr('width', @chart.x(@interval[1]) - @chart.x(@interval[0]))
+              .attr('y', y)
+              .attr('height', @chart.height - Chart.PADDING_BOTTOM - y)
         @
 
       toggleSeeThrough: (bool) ->
         @_seeThrough = if bool? then bool else not @_seeThrough
         @_el.attr 'opacity', if @_seeThrough then .2 else 1
         @
-
-    value = (v) -> if v < 1000 then Math.round(v * 10) / 10 else Math.round v
 
     @bubble = (node) -> new Bubble node

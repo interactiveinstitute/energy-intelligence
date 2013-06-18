@@ -189,6 +189,24 @@ svg.time .loading text {
 .future .popup path {
   -webkit-transform: rotate(-180deg);
 }
+.popup.energy path {
+  -webkit-transform: rotate(-60deg);
+  fill: #aee0ff;
+}
+.popup.energy text.value {
+  fill: #000;
+  -webkit-transform: translate(-24px, -12px);
+}
+.bubble rect.interval {
+  stroke: rgba(255, 255, 255, .6);
+  stroke-width: 1;
+  fill: rgba(255, 255, 255, .2);
+}
+
+/* Why don't the rectangles display nicely on energy popups? */
+.popup.energy .back { display: none; }
+.popup.energy .note { fill: #000; }
+
 .future + .future .popup path { -webkit-transform: rotate(-175deg); }
 .future + .future + .future .popup path { -webkit-transform: rotate(-172deg); }
 .future + .future + .future + .future .popup path { -webkit-transform: rotate(-170deg); }
@@ -263,6 +281,10 @@ svg.time .loading text {
   -webkit-animation: fade-in .5s;
 }
 .bubblebath .bubble.past .popup {
+}
+.bubble .interval {
+  stroke: #fff;
+  stroke-width: 3;
 }
 
 @-webkit-keyframes fade-in {
