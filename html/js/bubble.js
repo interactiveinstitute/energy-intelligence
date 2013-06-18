@@ -28,6 +28,7 @@
         this.value = this.value / this.hours;
         this.Wh = true;
       }
+      this.mobile = true;
       if ((this.note == null) && this.at) {
         time = "" + (this.at.getHours()) + ":";
         if (this.at.getMinutes() < 10) {
@@ -88,12 +89,30 @@
     };
 
     Bubble.prototype.position = function(transition, x, y) {
-      var _ref;
+      var fixed, obj, _ref,
+        _this = this;
+      if (!this.mobile) {
+        return;
+      }
+      fixed = (x != null) && (y != null);
       if (!((x != null) && (y != null))) {
         x = this.chart.x((_ref = this.at) != null ? _ref : this.middle);
         y = this.chart.y(this.value);
       }
-      (transition ? this._el.transition().duration(300) : this._el).attr('transform', "translate(" + x + ", " + y + ")");
+      if (transition) {
+        obj = this._el.on('webkitTransitionEnd', function() {
+          _this._el.on('webkitTransitionEnd', null);
+          _this.mobile = true;
+          _this.position(true);
+          return console.log('ready');
+        }).transition().duration(300);
+        if (fixed) {
+          this.mobile = false;
+        }
+      } else {
+        obj = this._el;
+      }
+      obj.attr('transform', "translate(" + x + ", " + y + ")");
       if (this.Wh) {
         y = this.chart.y(this.value);
         this._ival.attr('x', this.chart.x(this.interval[0])).attr('width', this.chart.x(this.interval[1]) - this.chart.x(this.interval[0])).attr('y', y).attr('height', this.chart.height - Chart.PADDING_BOTTOM - y);

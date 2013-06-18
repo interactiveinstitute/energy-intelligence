@@ -26,6 +26,8 @@
           @value = @value / @hours
           @Wh = true
 
+        @mobile = true
+
         if not @note? and @at
           time = "#{@at.getHours()}:"
           time += '0' if @at.getMinutes() < 10
@@ -97,11 +99,23 @@
         @
 
       position: (transition, x, y) ->
+        return unless @mobile
+        fixed = x? and y?
         unless x? and y?
           x = @chart.x @at ? @middle
           y = @chart.y @value
-        (if transition then @_el.transition().duration(300) else @_el)
-            .attr 'transform', "translate(#{x}, #{y})"
+        if transition
+          obj = @_el
+              .on('webkitTransitionEnd', =>
+                @_el.on('webkitTransitionEnd', null)
+                @mobile = true
+                @position true
+                console.log 'ready')
+            .transition().duration(300)
+          @mobile = false if fixed
+        else
+          obj = @_el
+        obj.attr 'transform', "translate(#{x}, #{y})"
         if @Wh
           y = @chart.y @value
           @_ival
