@@ -22,10 +22,13 @@ http.createServer(function(request, response) {
       'Access-Control-Allow-Origin': '*'
     });
     var ip = request.connection.remoteAddress;
-    var listener = function(command, data) { response.write([
-      'event: ', command,
-      '\ndata: ', JSON.stringify(data), '\n\n'
-    ].join('')); };
+    var listener = function(command, data) {
+      response.write([
+        'event: ', command,
+        '\ndata: ', JSON.stringify(data), '\n\n'
+      ].join(''));
+      log(ip, 'received: ' + command);
+    };
     var close = function() {
       response.end();
       emitter.removeListener('command', listener);
@@ -37,8 +40,8 @@ http.createServer(function(request, response) {
     log(ip, 'connected');
   } else if (request.method == 'GET' && commands.indexOf(request.url.slice(1)) != -1) {
     var command = request.url.slice(1);
-    emitter.emit('command', command);
     log(request.connection.remoteAddress, 'command: ' + command);
+    emitter.emit('command', command);
     response.end();
   } else {
     response.end();
