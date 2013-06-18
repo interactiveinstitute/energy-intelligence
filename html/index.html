@@ -23,11 +23,12 @@
 <h1 class="title">Building 14<br>Energy usage</h1>
 
 <h1 class="chart-title">Today’s electricity</h1>
+<h2 class="chart-subtitle">Building 14, the 15 measured rooms on the second floor</h2>
 
 <svg class="meter" width="238" height="82">
   <path id="meterShape" fill="#3fa9f5" d="M 41 9 L 201 9 A 32 32 180 1 1 201 73 L 41 73 A 32 32 180 1 1 41 9"/>
   <text text-anchor="middle" alignment-baseline="central" dx="119" dy="41"/>
-  <circle cx="" cy="" r="8" fill="url(#now-dot-gradient)">
+  <circle cx="" cy="" r="8" fill="url(#now-dot-gradient)" class="now">
     <animateMotion dur="6s" repeatCount="indefinite">
       <mpath xlink:href="#meterShape"/>
     </animateMotion>

@@ -344,13 +344,32 @@
       return deferred.promise;
     };
 
+    Chart.prototype.valueAt = function(date) {
+      var deferred, url,
+        _this = this;
+      deferred = Q.defer();
+      url = ("" + this.design + "_show/unix_to_couchm_ts") + ("?feed=" + this.feed + "&timestamp=" + (+date));
+      this.getJSON(url).then(function(key) {
+        var endkey, startkey;
+        startkey = JSON.stringify([_this.feed]);
+        endkey = JSON.stringify(key);
+        url = ("" + _this.design + "_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
+        return _this.getJSON(url).then(function(result) {
+          var value;
+          value = result.rows[0].value;
+          return deferred.resolve([+new Date(value[_this.config.at_idx]), value[_this.config.datastream_idx.ElectricPower], value[_this.config.datastream_idx.ElectricEnergy]]);
+        });
+      });
+      return deferred.promise;
+    };
+
     Chart.prototype.quickUpdate = function() {
-      var _base, _ref,
+      var _base,
         _this = this;
       this.lastQuickUpdate = +(new Date);
       this.scheduleUpdate();
       if (!this.touching) {
-        if ((+this.x.domain()[0] < (_ref = +(new Date)) && _ref < +this.x.domain()[1])) {
+        if (this.nowInView()) {
           Q.spread([this.energy(), this.energy(this.defaultDomain()[0])], function(e1, e0) {
             var energy, value;
             energy = (e1 - e0) * 1000;
@@ -423,7 +442,14 @@
       n = new Date;
       startH = n.getHours() > this.config.work_day_hours[0] ? this.config.work_day_hours[0] : this.config.work_day_hours[0] - 24;
       start = new Date(n.getFullYear(), n.getMonth(), n.getDate(), startH);
-      endH = n.getHours() < this.config.work_day_hours[0] - 1 ? this.config.work_day_hours[1] : startH + 24;
+      /*
+      endH = if n.getHours() < @config.work_day_hours[0] - 1
+        @config.work_day_hours[1]
+      else
+        startH + 24
+      */
+
+      endH = this.config.work_day_hours[1];
       end = new Date(n.getFullYear(), n.getMonth(), n.getDate(), endH);
       return [start, end];
     };
@@ -471,7 +497,7 @@
       format = d3.time.format('%b %d, %H:%M');
       start = format(domain[0]);
       end = format(domain[1]);
-      text = "Electricity between " + start + " and " + end;
+      text = "Electricity usage: " + start + " – " + end;
       return d3.select('.chart-title').text(text);
     };
 
@@ -506,14 +532,14 @@
       }
       if (this.toDefaultView) {
         console.log('todefview');
-        d3.select('.chart-title').text('Today’s electricity');
+        d3.select('.chart-title').text('Today’s electricity usage');
         this.toDefaultView = false;
         return this.today.style('opacity', 0);
       } else if (this.transforming) {
         format = d3.time.format('%b %d, %H:%M');
         start = format(this.x.domain()[0]);
         end = format(this.x.domain()[1]);
-        text = "Electricity between " + start + " and " + end;
+        text = "Electricity usage: " + start + " – " + end;
         d3.select('.chart-title').text(text);
         return this.today.style('opacity', 1);
       }
@@ -524,7 +550,30 @@
     };
 
     Chart.prototype.showMeter = function() {
-      return this.meter.classed('hidden', false);
+      var end, start;
+      if (this.nowInView()) {
+        this.meter.classed('hidden', false);
+        this.meter.select('.now').style('opacity', 0);
+        return this.quickUpdate();
+      } else {
+        start = this.x.domain()[0];
+        end = this.x.domain()[1];
+        console.log('getting');
+        return Q.spread([this.energy(start), this.energy(end)], function(e0, e1) {
+          var energy, value;
+          console.log('test', e0, e1);
+          energy = (e1 - e0) * 1000;
+          value = Math.round(energy);
+          this.meter.select('text').text("" + value + " Wh");
+          this.meter.classed('hidden', false);
+          return this.meter.select('.now').style('opacity', 0);
+        });
+      }
+    };
+
+    Chart.prototype.nowInView = function() {
+      var _ref;
+      return (+this.x.domain()[0] < (_ref = +(new Date)) && _ref < +this.x.domain()[1]);
     };
 
     Chart.prototype.transformXAxis = function() {
@@ -639,9 +688,11 @@
       newDomain = d3.max(this.data.map(function(d) {
         return d.value;
       }));
-      this.bubbles.each(function(d) {
-        return newDomain = d3.max([newDomain, parseFloat(d.value)]);
-      });
+      if (this.bubbles != null) {
+        this.bubbles.each(function(d) {
+          return newDomain = d3.max([newDomain, parseFloat(d.value)]);
+        });
+      }
       if (newDomain === 0) {
         newDomain = Chart.Y_AXIS_MINIMUM_SIZE;
       }
@@ -709,10 +760,11 @@
       this.zoomer.classed('visible', this.fullscreen);
       this.meter.classed('fullscreen', this.fullscreen);
       this.chartTitle.classed('fullscreen', this.fullscreen);
+      d3.select('.chart-subtitle').classed('fullscreen', this.fullscreen);
       if (!this.fullscreen) {
         this.today.style('opacity', 0);
         this.loadData();
-        return d3.select('.chart-title').text('Today’s electricity');
+        return d3.select('.chart-title').text('Today’s electricity usage');
       }
     };
 

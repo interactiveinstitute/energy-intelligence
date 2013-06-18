@@ -45,6 +45,20 @@ h1.title.visible {
   border-top-width: 0;
   width: auto;
 }
+.chart-subtitle {
+  font-family: 'Helvetica Neue', 'HelveticaNeueLT Std', sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  color: #808080;
+  position: absolute;
+  top: 80px;
+  left: 128px;
+  transition: opacity .2s;
+  opacity: 0;
+}
+.chart-subtitle.fullscreen {
+  opacity: 1;
+}
 
 svg.time {
   display: block;
@@ -168,10 +182,12 @@ svg.time .loading text {
 .button.watt-hours {
   background: url(../img/button-wh.png);
   left: 600px;
+  display: none;
 }
 .button.highlights {
   background: url(../img/button-highlights.png);
   left: 744px;
+  left: 176px;
 }
 .button.overview {
   background: url(../img/button-overview.png);
@@ -346,11 +362,14 @@ svg.time .loading text {
   bottom: 32px;
   left: 32px;
   -webkit-transform: translate(-544px, 0);
+  background-image: url(../img/left-side.png);
 }
+.cards.left * { display: none; }
 .cards.right {
   top: 32px;
   right: 32px;
   -webkit-transform: translate(544px, 0);
+  background-image: url(../img/right-side.png);
 }
 .cards.visible {
   -webkit-transform: none;

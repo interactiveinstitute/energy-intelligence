@@ -305,6 +305,24 @@ Always keep current power and energy values in memory.
             process @doc.timestamp, @doc.ElectricPower, @doc.ElectricEnergy
         deferred.promise
 
+      valueAt: (date) ->
+        deferred = Q.defer()
+        url = "#{@design}_show/unix_to_couchm_ts" +
+          "?feed=#{@feed}&timestamp=#{+date}"
+        @getJSON(url).then (key) =>
+          startkey = JSON.stringify([@feed])
+          endkey = JSON.stringify(key)
+          url = "#{@design}_view/by_source_and_time" +
+            "?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
+          @getJSON(url).then (result) =>
+            value = result.rows[0].value
+            deferred.resolve([
+              +new Date(value[@config.at_idx])
+              value[@config.datastream_idx.ElectricPower]
+              value[@config.datastream_idx.ElectricEnergy]
+            ])
+        deferred.promise
+
 A quick update updates the display with extrapolated cached information.
 
       quickUpdate: ->
@@ -312,7 +330,7 @@ A quick update updates the display with extrapolated cached information.
         @scheduleUpdate()
 
         unless @touching
-          if +@x.domain()[0] < +new Date < +@x.domain()[1]
+          if @nowInView()
             Q.spread [@energy(), @energy(@defaultDomain()[0])], (e1, e0) =>
               energy = (e1 - e0) * 1000
               value = Math.round(energy)
@@ -390,10 +408,13 @@ get consistent with the database.
         else
           @config.work_day_hours[0] - 24
         start = new Date n.getFullYear(), n.getMonth(), n.getDate(), startH
+        ###
         endH = if n.getHours() < @config.work_day_hours[0] - 1
           @config.work_day_hours[1]
         else
           startH + 24
+          ###
+        endH = @config.work_day_hours[1]
         end = new Date n.getFullYear(), n.getMonth(), n.getDate(), endH
         [start, end]
 
@@ -436,7 +457,7 @@ get consistent with the database.
         format = d3.time.format '%b %d, %H:%M'
         start = format domain[0]
         end = format domain[1]
-        text = "Electricity between #{start} and #{end}"
+        text = "Electricity usage: #{start} – #{end}"
         d3.select('.chart-title').text text
 
       bringIntoView: (time) ->
@@ -468,14 +489,14 @@ get consistent with the database.
 
         if @toDefaultView
           console.log 'todefview'
-          d3.select('.chart-title').text 'Today’s electricity'
+          d3.select('.chart-title').text 'Today’s electricity usage'
           @toDefaultView = false
           @today.style 'opacity', 0
         else if @transforming
           format = d3.time.format '%b %d, %H:%M'
           start = format @x.domain()[0]
           end = format @x.domain()[1]
-          text = "Electricity between #{start} and #{end}"
+          text = "Electricity usage: #{start} – #{end}"
           d3.select('.chart-title').text text
           @today.style 'opacity', 1
 
@@ -483,7 +504,23 @@ get consistent with the database.
         @meter.classed 'hidden', true
 
       showMeter: ->
-        @meter.classed 'hidden', false
+        if @nowInView()
+          @meter.classed 'hidden', false
+          @meter.select('.now').style 'opacity', 0
+          @quickUpdate()
+        else
+          start = @x.domain()[0]
+          end = @x.domain()[1]
+          console.log 'getting'
+          Q.spread [@energy(start), @energy(end)], (e0, e1) ->
+            console.log 'test', e0, e1
+            energy = (e1 - e0) * 1000
+            value = Math.round(energy)
+            @meter.select('text').text("#{value} Wh")
+            @meter.classed 'hidden', false
+            @meter.select('.now').style 'opacity', 0
+
+      nowInView: -> +@x.domain()[0] < +new Date < +@x.domain()[1]
 
       transformXAxis: ->
         axis = @time.select('.x.axis')
@@ -566,7 +603,7 @@ two ticks, but d3 might put faulty ticks somewhere.
         # Make transition to new domain on y axis
         oldDomain = @y.domain()[1]
         newDomain = d3.max(@data.map (d) -> d.value)
-        @bubbles.each (d) ->
+        if @bubbles? then @bubbles.each (d) ->
           newDomain = d3.max [newDomain, parseFloat(d.value)]
         newDomain = Chart.Y_AXIS_MINIMUM_SIZE if newDomain is 0
         if oldDomain * Chart.Y_AXIS_SHRINK_FACTOR < newDomain < oldDomain
@@ -640,10 +677,11 @@ two ticks, but d3 might put faulty ticks somewhere.
 
         @meter.classed 'fullscreen', @fullscreen
         @chartTitle.classed 'fullscreen', @fullscreen
+        d3.select('.chart-subtitle').classed 'fullscreen', @fullscreen
 
         unless @fullscreen
           @today.style 'opacity', 0
           @loadData()
-          d3.select('.chart-title').text 'Today’s electricity'
+          d3.select('.chart-title').text 'Today’s electricity usage'
 
 [1]: http://bl.ocks.org/mbostock/4149176
