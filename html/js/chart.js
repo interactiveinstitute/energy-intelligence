@@ -454,11 +454,12 @@
 
     Chart.prototype.showMeter = function() {
       var end, start;
+      this.meter.classed('hidden', false);
       if (this.nowInView()) {
-        this.meter.classed('hidden', false);
-        this.meter.select('.now').style('opacity', 0);
+        this.meter.select('.now').style('opacity', 1);
         return this.quickUpdate();
       } else {
+        this.meter.select('.now').style('opacity', 0);
         start = this.x.domain()[0];
         end = this.x.domain()[1];
         return Q.spread([this.energy(start), this.energy(end)], function(e0, e1) {

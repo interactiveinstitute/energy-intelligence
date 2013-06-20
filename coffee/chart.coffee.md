@@ -484,11 +484,12 @@ When visible, the energy meter shows the amount of Wh that is currently shown.
         @meter.classed 'hidden', true
 
       showMeter: ->
+        @meter.classed 'hidden', false
         if @nowInView()
-          @meter.classed 'hidden', false
-          @meter.select('.now').style 'opacity', 0
+          @meter.select('.now').style 'opacity', 1
           @quickUpdate()
         else
+          @meter.select('.now').style 'opacity', 0
           start = @x.domain()[0]
           end = @x.domain()[1]
           Q.spread [@energy(start), @energy(end)], (e0, e1) ->
