@@ -7,6 +7,11 @@
       return utils.json("" + this.design + "_show/unix_to_couchm_ts?feed=" + this.feed + "&timestamp=" + (+date));
     };
 
+    Chart.prototype.nowInView = function() {
+      var _ref;
+      return (+this.x.domain()[0] < (_ref = +(new Date)) && _ref < +this.x.domain()[1]);
+    };
+
     function Chart(config, db) {
       var formats,
         _this = this;
@@ -17,6 +22,7 @@
       this.touching = false;
       this.transforming = false;
       this.toDefaultView = false;
+      this.showLoading = false;
       this.display = [new TotalPower(this)];
       this.x = d3.time.scale();
       this.y = d3.scale.linear().domain([0, this.config.y_axis_minimum_size]);
@@ -81,6 +87,7 @@
       this.fullscreener = d3.select(fs);
       this.today = d3.select(today);
       this.loading = this.time.select('.loading');
+      this.setHeader(null, true);
       this.bubbleBath = new BubbleBath(this.time.select('.bubblebath'), this.db, this);
       this.zoom = d3.behavior.zoom().on('zoom', function() {
         return _this.transform();
@@ -128,7 +135,7 @@
               return _this.loadData();
             }), 500);
           }
-          return returnTimeout = setTimeout(function() {
+          returnTimeout = setTimeout(function() {
             _this.fullscreener.classed('hidden', false);
             return _this.toggleFullscreen(false, function() {
               _this.transform();
@@ -137,6 +144,7 @@
               return _this.loadData();
             });
           }, _this.config.default_view_after);
+          return _this.today.classed('active', false);
         }, true).on('mousewheel', function() {
           d3.event.stopPropagation();
           return d3.event.preventDefault();
@@ -145,11 +153,11 @@
       document.oncontextmenu = function() {
         return false;
       };
-      (function() {
-        var drag, offset, that;
-        that = _this;
+      (function(that) {
+        var offset;
         offset = 0;
-        drag = d3.behavior.drag().on('dragstart', function() {
+        _this.zoomer = d3.select('.zoomer');
+        return _this.zoomer.select('.handle').call(d3.behavior.drag().on('dragstart', function() {
           if (d3.touches(this).length) {
             return offset = -d3.touches(this)[0][0];
           }
@@ -169,10 +177,8 @@
           that.zoom.translate([translate, 0]);
           that.zoom.scale(scale);
           return that.transform();
-        });
-        _this.zoomer = d3.select('.zoomer');
-        return _this.zoomer.select('.handle').call(drag);
-      })();
+        }));
+      })(this);
       (function() {
         var button, overview;
         button = function(cls, handler, state) {
@@ -207,8 +213,7 @@
           return _this.today.classed('active', true);
         }).on('touchend', function() {
           _this.toDefaultView = true;
-          _this.autopan(_this.defaultDomain());
-          return _this.today.classed('active', false);
+          return _this.autopan(_this.defaultDomain());
         });
       })();
       (function() {
@@ -245,22 +250,22 @@
       this.fullscreener.on('touchstart', function() {
         return d3.select(this).classed('active', fullscreening = true);
       });
-      fullscreen = function() {
+      fullscreen = function(transition) {
         _this.fullscreener.classed('active', false).classed('hidden', true);
         return _this.toggleFullscreen(true, function() {
           _this.transform();
           _this.defaultView();
           return _this.loadData();
-        });
+        }, transition);
       };
       d3.select('body').on('touchend', function() {
         if (!fullscreening) {
           return;
         }
         fullscreening = false;
-        return fullscreen();
+        return fullscreen(true);
       });
-      return fullscreen();
+      return fullscreen(false);
     };
 
     Chart.prototype.energy = function(date) {
@@ -318,22 +323,20 @@
       return deferred.promise;
     };
 
-    Chart.prototype.valueAt = function(date) {
-      var deferred,
+    Chart.prototype.scheduleUpdate = function() {
+      var untilFull, untilQuick,
         _this = this;
-      deferred = Q.defer();
-      this.key(date).then(function(key) {
-        var endkey, startkey, url;
-        startkey = JSON.stringify([_this.feed]);
-        endkey = JSON.stringify(key);
-        url = ("" + _this.design + "_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
-        return utils.json(url).then(function(result) {
-          var value;
-          value = result.rows[0].value;
-          return deferred.resolve([+new Date(value[_this.config.at_idx]), value[_this.config.datastream_idx.ElectricPower], value[_this.config.datastream_idx.ElectricEnergy]]);
-        });
-      });
-      return deferred.promise;
+      untilQuick = this.lastQuickUpdate + this.config.quick_update - +(new Date);
+      untilFull = this.lastFullUpdate + this.config.full_update - +(new Date);
+      if (untilFull <= this.config.quick_update) {
+        return setTimeout((function() {
+          return _this.fullUpdate();
+        }), untilFull);
+      } else {
+        return setTimeout((function() {
+          return _this.quickUpdate();
+        }), untilQuick);
+      }
     };
 
     Chart.prototype.quickUpdate = function() {
@@ -368,36 +371,6 @@
       return this.loadData();
     };
 
-    Chart.prototype.scheduleUpdate = function() {
-      var untilFull, untilQuick,
-        _this = this;
-      untilQuick = this.lastQuickUpdate + this.config.quick_update - +(new Date);
-      untilFull = this.lastFullUpdate + this.config.full_update - +(new Date);
-      if (untilFull <= this.config.quick_update) {
-        return setTimeout((function() {
-          return _this.fullUpdate();
-        }), untilFull);
-      } else {
-        return setTimeout((function() {
-          return _this.quickUpdate();
-        }), untilQuick);
-      }
-    };
-
-    Chart.prototype.adjustToSize = function() {
-      this.x.range([0, this.width]);
-      this.y.range([this.height - this.config.padding_bottom, this.config.padding_top]);
-      this.xAxis.scale(this.x).tickSize(this.height);
-      this.yAxis.scale(this.y).tickSize(-this.width);
-      this.time.select('.x.axis').call(this.xAxis);
-      this.transformYAxis();
-      this.time.attr('width', this.width).attr('height', this.height);
-      this.time.select('.leftGradientBox').attr('height', this.height);
-      this.loading.select('rect').attr('width', this.width).attr('height', this.height);
-      this.loading.select('text').attr('dx', this.width / 2).attr('dy', this.height / 2);
-      return this.display[0].transform();
-    };
-
     Chart.prototype.defaultDomain = function() {
       var end, endH, n, start, startH;
       n = new Date;
@@ -416,50 +389,35 @@
     };
 
     Chart.prototype.defaultView = function() {
-      var defaultTimeInView, domain, maxScale, minScale,
-        _this = this;
-      domain = this.defaultDomain();
-      this.x.domain(domain);
+      var defaultTimeInView, domain;
+      this.x.domain(domain = this.defaultDomain());
       defaultTimeInView = domain[1] - domain[0];
-      minScale = defaultTimeInView / this.config.max_time_in_view;
-      maxScale = defaultTimeInView / this.config.min_time_in_view;
-      this.zoom.x(this.x).scaleExtent([minScale, maxScale]);
+      this.zoom.x(this.x).scaleExtent([defaultTimeInView / this.config.max_time_in_view, defaultTimeInView / this.config.min_time_in_view]);
       this.today.style('opacity', 0);
-      return setTimeout((function() {
-        return _this.transform();
-      }), 0);
+      return this.transform();
     };
 
     Chart.prototype.autopan = function(domain) {
-      var end, format, start, text,
+      var zooms,
         _this = this;
       if (!this.toDefaultView) {
         this.today.style('opacity', 1);
       }
-      this.showLoading = true;
       d3.transition().duration(1000).tween('zoom', function() {
-        var interpolate, oldEnd, oldStart;
-        oldStart = _this.x.domain()[0];
-        oldEnd = _this.x.domain()[1];
-        interpolate = d3.interpolate([+oldStart, +oldEnd], [+domain[0], +domain[1]]);
+        var inter;
+        inter = d3.interpolate(_this.x.domain().map(Number), domain.map(Number));
         return function(t) {
-          _this.x.domain(interpolate(t));
+          _this.x.domain(inter(t));
           _this.zoom.x(_this.x);
-          _this.transform();
-          return _this.bubbleBath.position();
+          return _this.transform();
         };
-      }).each('end', function() {
-        _this.showLoading = true;
-        return _this.loadData(true, domain).then(function() {
-          return _this.time.select('.zooms').style('opacity', 1);
-        });
       });
-      this.time.select('.zooms').style('opacity', 0);
-      format = d3.time.format('%b %d, %H:%M');
-      start = format(domain[0]);
-      end = format(domain[1]);
-      text = "Electricity usage: " + start + " – " + end;
-      return d3.select('.chart-title').text(text);
+      zooms = this.time.select('.zooms').style('opacity', 0);
+      this.showLoading = false;
+      this.loadData(true, domain).then(function() {
+        return zooms.style('opacity', 1);
+      });
+      return this.setHeader(domain);
     };
 
     Chart.prototype.bringIntoView = function(time) {
@@ -478,31 +436,16 @@
       return this.autopan([new Date(start + add), new Date(end + add)]);
     };
 
-    Chart.prototype.transform = function() {
-      var end, format, handle, scale, start, text, width, zmax, zmin, _base, _ref;
-      this.transformXAxis();
-      this.time.select('.zooms').attr('transform', "translate(" + (this.zoom.translate()[0]) + ", 0) scale(" + (this.zoom.scale()) + ", 1)");
-      handle = this.zoomer.select('.handle').node();
-      scale = this.zoom.scale();
-      _ref = this.zoom.scaleExtent(), zmin = _ref[0], zmax = _ref[1];
-      width = this.zoomer.node().clientWidth - handle.clientWidth;
-      handle.style.left = Math.pow((scale - zmin) / (zmax - zmin), 1 / 4) * width + 'px';
-      this.bubbleBath.position();
-      if (typeof (_base = this.display[0]).transformExtras === "function") {
-        _base.transformExtras();
+    Chart.prototype.setHeader = function(domain, today) {
+      var end, format, start, text;
+      if (domain == null) {
+        domain = this.x.domain();
       }
-      if (this.toDefaultView) {
-        d3.select('.chart-title').text('Today’s electricity usage');
-        this.toDefaultView = false;
-        return this.today.style('opacity', 0);
-      } else if (this.transforming) {
-        format = d3.time.format('%b %d, %H:%M');
-        start = format(this.x.domain()[0]);
-        end = format(this.x.domain()[1]);
-        text = "Electricity usage: " + start + " – " + end;
-        d3.select('.chart-title').text(text);
-        return this.today.style('opacity', 1);
+      if (today == null) {
+        today = false;
       }
+      text = today ? 'Today’s electricity usage' : (format = d3.time.format('%b %d, %H:%M'), start = format(domain[0]), end = format(domain[1]), "Electricity usage: " + start + " – " + end);
+      return d3.select('.chart-title').text(text);
     };
 
     Chart.prototype.hideMeter = function() {
@@ -527,52 +470,6 @@
           return this.meter.select('.now').style('opacity', 0);
         });
       }
-    };
-
-    Chart.prototype.nowInView = function() {
-      var _ref;
-      return (+this.x.domain()[0] < (_ref = +(new Date)) && _ref < +this.x.domain()[1]);
-    };
-
-    Chart.prototype.transformXAxis = function() {
-      var axis, left1, left2, oi, tickDistance, ticks, _ref;
-      axis = this.time.select('.x.axis').call(this.xAxis);
-      oi = 0;
-      axis.selectAll('.tick').sort(function(a, b) {
-        return +a - +b;
-      }).each(function(_, i) {
-        if (oi === 0 && d3.select(this).classed('odd')) {
-          return oi = i;
-        }
-      }).each(function(_, i) {
-        return d3.select(this).classed('odd', oi % 2 === i % 2);
-      });
-      axis.selectAll('text').attr('x', 16).attr('y', this.height - 32);
-      ticks = axis.selectAll('.tick');
-      if (((_ref = ticks[0]) != null ? _ref.length : void 0) >= 2) {
-        left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e;
-        left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e;
-        tickDistance = left2 - left1;
-        return axis.selectAll('line').attr('stroke-width', tickDistance).attr('x1', tickDistance / 2).attr('x2', tickDistance / 2);
-      }
-    };
-
-    Chart.prototype.transformYAxis = function(transition) {
-      var axis;
-      if (transition == null) {
-        transition = false;
-      }
-      axis = this.time.select('.y.axis');
-      if (transition) {
-        axis = axis.transition().duration(1000);
-      }
-      axis.call(this.yAxis);
-      axis = this.time.select('.yText.axis');
-      if (transition) {
-        axis = axis.transition().duration(1000);
-      }
-      axis.call(this.yAxis);
-      return axis.selectAll('text').attr('x', 5).attr('y', -16);
     };
 
     Chart.prototype.getTickInfo = function() {
@@ -683,10 +580,76 @@
       return this.loading.attr('opacity', 0);
     };
 
-    Chart.prototype.toggleFullscreen = function(fullscreen, callback) {
-      var change, height, resize, transition, width,
+    Chart.prototype.transform = function() {
+      var handle, scale, width, zmax, zmin, _base, _ref;
+      this.transformXAxis();
+      this.time.select('.zooms').attr('transform', "translate(" + (this.zoom.translate()[0]) + ", 0) scale(" + (this.zoom.scale()) + ", 1)");
+      handle = this.zoomer.select('.handle').node();
+      scale = this.zoom.scale();
+      _ref = this.zoom.scaleExtent(), zmin = _ref[0], zmax = _ref[1];
+      width = this.zoomer.node().clientWidth - handle.clientWidth;
+      handle.style.left = Math.pow((scale - zmin) / (zmax - zmin), 1 / 4) * width + 'px';
+      this.bubbleBath.position();
+      if (typeof (_base = this.display[0]).transformExtras === "function") {
+        _base.transformExtras();
+      }
+      if (this.toDefaultView) {
+        this.setHeader(null, true);
+        this.toDefaultView = false;
+        return this.today.style('opacity', 0);
+      } else if (this.transforming) {
+        this.setHeader();
+        return this.today.style('opacity', 1);
+      }
+    };
+
+    Chart.prototype.transformXAxis = function() {
+      var axis, left1, left2, oi, tickDistance, ticks, _ref;
+      axis = this.time.select('.x.axis').call(this.xAxis);
+      oi = 0;
+      axis.selectAll('.tick').sort(function(a, b) {
+        return +a - +b;
+      }).each(function(_, i) {
+        if (oi === 0 && d3.select(this).classed('odd')) {
+          return oi = i;
+        }
+      }).each(function(_, i) {
+        return d3.select(this).classed('odd', oi % 2 === i % 2);
+      });
+      axis.selectAll('text').attr('x', 16).attr('y', this.height - 32);
+      ticks = axis.selectAll('.tick');
+      if (((_ref = ticks[0]) != null ? _ref.length : void 0) >= 2) {
+        left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e;
+        left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e;
+        tickDistance = left2 - left1;
+        return axis.selectAll('line').attr('stroke-width', tickDistance).attr('x1', tickDistance / 2).attr('x2', tickDistance / 2);
+      }
+    };
+
+    Chart.prototype.transformYAxis = function(transition) {
+      var axis;
+      if (transition == null) {
+        transition = false;
+      }
+      axis = this.time.select('.y.axis');
+      if (transition) {
+        axis = axis.transition().duration(1000);
+      }
+      axis.call(this.yAxis);
+      axis = this.time.select('.yText.axis');
+      if (transition) {
+        axis = axis.transition().duration(1000);
+      }
+      axis.call(this.yAxis);
+      return axis.selectAll('text').attr('x', 5).attr('y', -16);
+    };
+
+    Chart.prototype.toggleFullscreen = function(fullscreen, callback, transition) {
+      var change, height, resize, width,
         _this = this;
-      transition = fullscreen == null;
+      if (transition == null) {
+        transition = true;
+      }
       this.fullscreen = fullscreen != null ? fullscreen : !this.fullscreen;
       change = function(x, y, width, height, bubbleOpacity) {
         _this.width = width;
@@ -725,8 +688,22 @@
       if (!this.fullscreen) {
         this.today.style('opacity', 0);
         this.loadData();
-        return d3.select('.chart-title').text('Today’s electricity usage');
+        return this.setHeader(null, true);
       }
+    };
+
+    Chart.prototype.adjustToSize = function() {
+      this.x.range([0, this.width]);
+      this.y.range([this.height - this.config.padding_bottom, this.config.padding_top]);
+      this.xAxis.scale(this.x).tickSize(this.height);
+      this.yAxis.scale(this.y).tickSize(-this.width);
+      this.time.select('.x.axis').call(this.xAxis);
+      this.transformYAxis();
+      this.time.attr('width', this.width).attr('height', this.height);
+      this.time.select('.leftGradientBox').attr('height', this.height);
+      this.loading.select('rect').attr('width', this.width).attr('height', this.height);
+      this.loading.select('text').attr('dx', this.width / 2).attr('dy', this.height / 2);
+      return this.display[0].transform();
     };
 
     return Chart;

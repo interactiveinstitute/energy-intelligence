@@ -11,6 +11,10 @@ Use `key()` to get the Couchm key for a certain date.
       key: (date) -> utils.json(
           "#{@design}_show/unix_to_couchm_ts?feed=#{@feed}&timestamp=#{+date}")
 
+Use `nowInView()` to check if the user is looking at the current time.
+
+      nowInView: -> +@x.domain()[0] < +new Date < +@x.domain()[1]
+
 ## Initialisation
 
 Initialisation goes as follows:
@@ -32,6 +36,7 @@ Application state:
         @touching = false
         @transforming = false
         @toDefaultView = false
+        @showLoading = false
 
 The currently displayed charts are in the `display` array. Currently only one
 chart is supported, but this should be extendable.
@@ -86,6 +91,8 @@ In `init()`, d3 objects are created for the most-used elements and cached.
         @today = d3.select today
 
         @loading = @time.select '.loading'
+
+        @setHeader null, true
 
 The `bubbleBath` object takes care of bubbles on the power chart.
 
@@ -149,6 +156,7 @@ Multitouch events are ignored as they are difficult to debug.
                     @autopan @defaultDomain()
                     @loadData()
                 @config.default_view_after)
+                @today.classed 'active', false
               true)
               .on('mousewheel', ->
                 d3.event.stopPropagation()
@@ -159,10 +167,13 @@ Multitouch events are ignored as they are difficult to debug.
 
 ### Zoom slider
 
-        do =>
-          that = @
+The slider on the button right controls the `zoom` object and calls
+`translate()`.
+
+        do (that = @) =>
           offset = 0
-          drag = d3.behavior.drag()
+          @zoomer = d3.select '.zoomer'
+          @zoomer.select('.handle').call d3.behavior.drag()
               .on('dragstart', ->
                 offset = -d3.touches(@)[0][0] if d3.touches(@).length)
               .on('drag', ->
@@ -179,12 +190,11 @@ Multitouch events are ignored as they are difficult to debug.
                   scale / that.zoom.scale()
                 that.zoom.translate [translate, 0]
                 that.zoom.scale scale
-                that.transform()
-              )
-          @zoomer = d3.select '.zoomer'
-          @zoomer.select('.handle').call drag
+                that.transform())
 
 ### Control buttons
+
+These are the buttons on the bottom of the page.
 
         do =>
           button = (cls, handler, state) =>
@@ -218,12 +228,10 @@ Multitouch events are ignored as they are difficult to debug.
           true)
 
           @today
-              .on('touchstart', =>
-                @today.classed('active', true))
+              .on('touchstart', => @today.classed('active', true))
               .on('touchend', =>
                 @toDefaultView = true
-                @autopan @defaultDomain()
-                @today.classed('active', false))
+                @autopan @defaultDomain())
 
 ### Keeping track of current values
 
@@ -254,13 +262,13 @@ Always keep current power and energy values in memory.
         @lastFullUpdate = @lastQuickUpdate = +new Date
         @scheduleUpdate()
 
-### Initialising the chart
+### Initialise the chart
 
 This will not load the data yet, but set up the DOM.
 
         @display[0].init()
 
-### Showing the chart in fullscreen
+### Show the chart in fullscreen
 
 Click on `div.fullscreener` to switch to fullscreen. This is the default mode
 to start in as well. As soon as the mode is set, data is loaded.
@@ -268,31 +276,49 @@ to start in as well. As soon as the mode is set, data is loaded.
         fullscreening = false
         @fullscreener.on('touchstart', ->
             d3.select(@).classed 'active', fullscreening = true)
-        fullscreen = =>
+        fullscreen = (transition) =>
           @fullscreener
             .classed('active', false)
             .classed('hidden', true)
-          @toggleFullscreen true, =>
+          @toggleFullscreen(true, =>
             @transform()
             @defaultView()
             @loadData()
+          transition)
         d3.select('body').on('touchend', =>
             return unless fullscreening
             fullscreening = false
-            fullscreen()
+            fullscreen true
         )
-        fullscreen()
+        fullscreen false
+
+## Getting the total energy at a point in time
+
+Call `energy(date)` to get the interpolated amount of energy in kWh. This
+amount only makes sense after subtracting an earlier amount of energy.
+Interpolation is done by taking both the ElectricEnergy and the ElectricPower
+fields into account.
+
+Values are either fetched from the `doc` property (see _Keeping track of
+current values_) or directly from the database. If no date is specified, the
+current value is extrapolated.
+
+A limited amount of historical values is buffered, so that other functions
+don’t have to worry too much about performance.
+
+Note that no extrapolation is done into the future. This allows for calling
+`energy()` on both endpoints of the current display, without getting a higher
+amount than is shown in the chart.
 
       energy: (date) ->
         @energyBufferTime ?= []
         @energyBufferValue ?= []
 
         deferred = Q.defer()
-        # TODO do the index check only if we were planning to do a request (?)
+
         index = @energyBufferTime.indexOf +date
         date = null if +date > +new Date # Handle future as now
-        if index isnt -1
-          deferred.resolve @energyBufferValue[index]
+        if index isnt -1 then deferred.resolve @energyBufferValue[index]
         else
           process = (timestamp, power, energy) =>
             kW = power / 1000
@@ -320,25 +346,18 @@ to start in as well. As soon as the mode is set, data is loaded.
           else
             date = +new Date
             process @doc.timestamp, @doc.ElectricPower, @doc.ElectricEnergy
-        deferred.promise
 
-      valueAt: (date) ->
-        deferred = Q.defer()
-        @key(date).then (key) =>
-          startkey = JSON.stringify([@feed])
-          endkey = JSON.stringify(key)
-          url = "#{@design}_view/by_source_and_time" +
-            "?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
-          utils.json(url).then (result) =>
-            value = result.rows[0].value
-            deferred.resolve([
-              +new Date(value[@config.at_idx])
-              value[@config.datastream_idx.ElectricPower]
-              value[@config.datastream_idx.ElectricEnergy]
-            ])
         deferred.promise
 
 ## Periodic updates
+
+      scheduleUpdate: ->
+        untilQuick = @lastQuickUpdate + @config.quick_update - +new Date
+        untilFull = @lastFullUpdate + @config.full_update - +new Date
+        if untilFull <= @config.quick_update
+          setTimeout (=> @fullUpdate()), untilFull
+        else
+          setTimeout (=> @quickUpdate()), untilQuick
 
 A quick update updates the display with extrapolated cached information.
 
@@ -372,38 +391,10 @@ get consistent with the database.
         @scheduleUpdate()
         @loadData()
 
-      scheduleUpdate: ->
-        untilQuick = @lastQuickUpdate + @config.quick_update - +new Date
-        untilFull = @lastFullUpdate + @config.full_update - +new Date
-        if untilFull <= @config.quick_update
-          setTimeout (=> @fullUpdate()), untilFull
-        else
-          setTimeout (=> @quickUpdate()), untilQuick
+## The ‘today’ view
 
-      adjustToSize: ->
-        @x.range [0, @width]
-        @y.range [@height - @config.padding_bottom, @config.padding_top]
-
-        @xAxis.scale(@x).tickSize(@height)
-        @yAxis.scale(@y).tickSize(-@width)
-
-        @time.select('.x.axis').call(@xAxis)
-        @transformYAxis()
-
-        @time
-            .attr('width', @width)
-            .attr('height', @height)
-        @time.select('.leftGradientBox')
-            .attr('height', @height)
-
-        @loading.select('rect')
-            .attr('width', @width)
-            .attr('height', @height)
-        @loading.select('text')
-            .attr('dx', @width / 2)
-            .attr('dy', @height / 2)
-
-        @display[0].transform()
+The default domain should always be a sensible day view containing the current
+moment.
 
       defaultDomain: ->
         n = new Date
@@ -422,47 +413,48 @@ get consistent with the database.
         end = new Date n.getFullYear(), n.getMonth(), n.getDate(), endH
         [start, end]
 
+To go to the default view, the time domain is changed. This requires resetting
+the extents of the zoom scale as well.
+
       defaultView: ->
-        domain = @defaultDomain()
-        @x.domain domain
+        @x.domain domain = @defaultDomain()
 
         defaultTimeInView = domain[1] - domain[0]
-        minScale = defaultTimeInView / @config.max_time_in_view
-        maxScale = defaultTimeInView / @config.min_time_in_view
-        @zoom.x(@x).scaleExtent [minScale, maxScale]
+        @zoom.x(@x).scaleExtent [
+          defaultTimeInView / @config.max_time_in_view
+          defaultTimeInView / @config.min_time_in_view
+        ]
 
         @today.style 'opacity', 0
 
-        setTimeout((=> @transform()), 0)
+        @transform()
+
+## Automatic panning
+
+Use autopan to bring a specific domain into view. The transition should make
+clear to the user what exactly is going on.
+
+Note: right now the chart is hidden during autopan, as it doesn’t pan along
+nicely. This can be improved.
 
       autopan: (domain) ->
         @today.style 'opacity', 1 unless @toDefaultView
-        @showLoading = true
-        d3.transition().duration(1000).tween('zoom', =>
-          oldStart = @x.domain()[0]
-          oldEnd = @x.domain()[1]
-          interpolate = d3.interpolate(
-            [+oldStart, +oldEnd]
-            [+domain[0], +domain[1]]
-          )
+        d3.transition().duration(1000).tween 'zoom', =>
+          inter = d3.interpolate @x.domain().map(Number), domain.map(Number)
           (t) =>
-            @x.domain interpolate t
+            @x.domain inter t
             @zoom.x @x
             @transform()
             # TODO translate and zoom display, don't recalculate
-            @bubbleBath.position()
-        ).each('end', =>
-          @showLoading = true
-          @loadData(true, domain).then =>
-            @time.select('.zooms').style 'opacity', 1
-        )
-        @time.select('.zooms').style 'opacity', 0
+        zooms = @time.select('.zooms').style 'opacity', 0
+        @showLoading = false
+        @loadData(true, domain).then => zooms.style 'opacity', 1
 
-        format = d3.time.format '%b %d, %H:%M'
-        start = format domain[0]
-        end = format domain[1]
-        text = "Electricity usage: #{start} – #{end}"
-        d3.select('.chart-title').text text
+        @setHeader domain
+
+Use this method to bring a certain time into view, by navigating in steps
+using the same interval as was displayed. This is for example used to browse
+between days using the offscreen bubbles.
 
       bringIntoView: (time) ->
         [start, end] = @x.domain().map (d) -> +d
@@ -472,36 +464,21 @@ get consistent with the database.
         add += interval while +time > end + add
         @autopan [new Date(start + add), new Date(end + add)]
 
-      transform: ->
-        @transformXAxis()
+## The chart header
 
-        @time.select('.zooms')
-            .attr('transform'
-              "translate(#{@zoom.translate()[0]}, 0) scale(#{@zoom.scale()}, 1)"
-            )
+The header is kept up to date with the current view.
 
-        handle = @zoomer.select('.handle').node()
-        scale = @zoom.scale()
-        [zmin, zmax] = @zoom.scaleExtent()
-        width = @zoomer.node().clientWidth - handle.clientWidth
-        handle.style.left =
-          Math.pow((scale - zmin) / (zmax - zmin), 1/4) * width + 'px'
-
-        @bubbleBath.position()
-
-        @display[0].transformExtras?()
-
-        if @toDefaultView
-          d3.select('.chart-title').text 'Today’s electricity usage'
-          @toDefaultView = false
-          @today.style 'opacity', 0
-        else if @transforming
+      setHeader: (domain = @x.domain(), today = false) ->
+        text = if today then 'Today’s electricity usage' else
           format = d3.time.format '%b %d, %H:%M'
-          start = format @x.domain()[0]
-          end = format @x.domain()[1]
-          text = "Electricity usage: #{start} – #{end}"
-          d3.select('.chart-title').text text
-          @today.style 'opacity', 1
+          start = format domain[0]
+          end = format domain[1]
+          "Electricity usage: #{start} – #{end}"
+        d3.select('.chart-title').text text
+
+## The energy meter
+
+When visible, the energy meter shows the amount of Wh that is currently shown.
 
       hideMeter: ->
         @meter.classed 'hidden', true
@@ -521,47 +498,11 @@ get consistent with the database.
             @meter.classed 'hidden', false
             @meter.select('.now').style 'opacity', 0
 
-      nowInView: -> +@x.domain()[0] < +new Date < +@x.domain()[1]
+## Getting time axis tick info
 
-      transformXAxis: ->
-        axis = @time.select('.x.axis')
-            .call(@xAxis)
-        oi = 0 # odd index
-        axis.selectAll('.tick')
-            .sort((a, b) -> +a - +b)
-            .each((_, i) -> oi = i if oi is 0 and d3.select(@).classed 'odd')
-            .each((_, i) -> d3.select(@).classed 'odd', oi % 2 is i % 2)
-        axis.selectAll('text')
-            .attr('x', 16)
-            .attr('y', @height - 32)
-
-        # Set x axis line width
-        ticks = axis.selectAll '.tick'
-        if ticks[0]?.length >= 2
-          left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e
-          left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e
-          tickDistance = left2 - left1
-          axis.selectAll('line')
-              .attr('stroke-width', tickDistance)
-              .attr('x1', tickDistance / 2)
-              .attr('x2', tickDistance / 2)
-
-      transformYAxis: (transition = false) ->
-        axis = @time.select '.y.axis'
-        axis = axis.transition().duration 1000 if transition
-        axis.call @yAxis
-        axis = @time.select '.yText.axis'
-        axis = axis.transition().duration 1000 if transition
-        axis.call @yAxis
-        axis.selectAll('text')
-            .attr('x', 5)
-            .attr('y', -16)
-
-**getTickInfo()** tells about the first x axis tick in the DOM, and the
-smallest distance (duration) between two ticks.
-
-We could assume that this duration equals the distance between the first
-two ticks, but d3 might put faulty ticks somewhere.
+The `getTickInfo()` method tells about the first x axis tick in the DOM, and the
+smallest distance (duration) between two ticks. This is useful for drawing bar
+charts with bars that correspond to the visible lines.
 
       getTickInfo: ->
         ticks = @time.selectAll('.x.axis .tick')
@@ -579,6 +520,10 @@ two ticks, but d3 might put faulty ticks somewhere.
           { duration: smallest, first: dts[0] } if smallest < Infinity
 
 ## Fetching and showing the data
+
+URL parameters are set by the currently displayed chart. Once the data and
+corresponding bubbles are loaded, the promise is resolved and
+`updateWithData()` is called.
 
       loadData: (first, domain = @x.domain()) ->
         deferred = Q.defer()
@@ -603,7 +548,13 @@ two ticks, but d3 might put faulty ticks somewhere.
           deferred.resolve()
         deferred.promise
 
+In `updateWithData()`, the new data is visualised and positioned.
+
       updateWithData: (stay = false, @data = @data, @bubbles = @bubbles) ->
+
+If the y axis domain should be larger or significantly smaller, it will be
+animated to a recalculated domain.
+
         # Make transition to new domain on y axis
         oldDomain = @y.domain()[1]
         newDomain = d3.max(@data.map (d) -> d.value)
@@ -640,8 +591,86 @@ two ticks, but d3 might put faulty ticks somewhere.
 
         @loading.attr 'opacity', 0 
 
-      toggleFullscreen: (fullscreen, callback) ->
-        transition = not fullscreen?
+## Transformations
+
+These methods update the SVG elements using the current zoom setting. They are
+called on a high frequency, so optimising these will improve animations.
+
+If it exists, `transformExtras()` is called on the currently displayed chart.
+This transforms for example the ‘now’ dot and line.
+
+      transform: ->
+        @transformXAxis()
+
+        @time.select('.zooms')
+            .attr('transform'
+              "translate(#{@zoom.translate()[0]}, 0) scale(#{@zoom.scale()}, 1)"
+            )
+
+        handle = @zoomer.select('.handle').node()
+        scale = @zoom.scale()
+        [zmin, zmax] = @zoom.scaleExtent()
+        width = @zoomer.node().clientWidth - handle.clientWidth
+        handle.style.left =
+          Math.pow((scale - zmin) / (zmax - zmin), 1/4) * width + 'px'
+
+        @bubbleBath.position()
+
+        @display[0].transformExtras?()
+
+        if @toDefaultView
+          @setHeader null, true
+          @toDefaultView = false
+          @today.style 'opacity', 0
+        else if @transforming
+          @setHeader()
+          @today.style 'opacity', 1
+
+      transformXAxis: ->
+        axis = @time.select('.x.axis')
+            .call(@xAxis)
+        oi = 0 # odd index
+        axis.selectAll('.tick')
+            .sort((a, b) -> +a - +b)
+            .each((_, i) -> oi = i if oi is 0 and d3.select(@).classed 'odd')
+            .each((_, i) -> d3.select(@).classed 'odd', oi % 2 is i % 2)
+        axis.selectAll('text')
+            .attr('x', 16)
+            .attr('y', @height - 32)
+
+        # Set x axis line width
+        ticks = axis.selectAll '.tick'
+        if ticks[0]?.length >= 2
+          left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e
+          left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e
+          tickDistance = left2 - left1
+          axis.selectAll('line')
+              .attr('stroke-width', tickDistance)
+              .attr('x1', tickDistance / 2)
+              .attr('x2', tickDistance / 2)
+
+      transformYAxis: (transition = false) ->
+        axis = @time.select '.y.axis'
+        axis = axis.transition().duration 1000 if transition
+        axis.call @yAxis
+        axis = @time.select '.yText.axis'
+        axis = axis.transition().duration 1000 if transition
+        axis.call @yAxis
+        axis.selectAll('text')
+            .attr('x', 5)
+            .attr('y', -16)
+
+## Sizing
+
+Call `toggleFullscreen(true, callback)` to show the chart on the full screen and
+get a notification after the animation.
+
+If a falsey third argument is not provided, the function doesn’t animate.
+
+The animation is rather sloppy: it hides the axis labels and stretches or
+squeezes the graphic. Play it fast and people hopefully won’t notice.
+
+      toggleFullscreen: (fullscreen, callback, transition = true) ->
         @fullscreen = fullscreen ? !@fullscreen
 
         change = (x, y, @width, @height, bubbleOpacity) =>
@@ -686,6 +715,34 @@ two ticks, but d3 might put faulty ticks somewhere.
         unless @fullscreen
           @today.style 'opacity', 0
           @loadData()
-          d3.select('.chart-title').text 'Today’s electricity usage'
+          @setHeader null, true
+
+Call `adjustToSize()` each time the chart’s root element changes in size. The
+method adjusts ranges, scales and dimensions accordingly.
+
+      adjustToSize: ->
+        @x.range [0, @width]
+        @y.range [@height - @config.padding_bottom, @config.padding_top]
+
+        @xAxis.scale(@x).tickSize(@height)
+        @yAxis.scale(@y).tickSize(-@width)
+
+        @time.select('.x.axis').call(@xAxis)
+        @transformYAxis()
+
+        @time
+            .attr('width', @width)
+            .attr('height', @height)
+        @time.select('.leftGradientBox')
+            .attr('height', @height)
+
+        @loading.select('rect')
+            .attr('width', @width)
+            .attr('height', @height)
+        @loading.select('text')
+            .attr('dx', @width / 2)
+            .attr('dy', @height / 2)
+
+        @display[0].transform()
 
 [1]: http://bl.ocks.org/mbostock/4149176
