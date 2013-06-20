@@ -1,8 +1,20 @@
+# Data stream visualisations
+
+These are classes that will be instantiated when their respective data streams
+should be displayed. They correspond to specific datastreams in Couchm.
+
+## Total power
+
+This data stream is visualised using two paths with the same shape: one for a
+semi-transparent area and one for a line on top.
+
     class @TotalPower
       type: 'TotalPower'
       unit: 'W'
       feed: 'allRooms'
       datastream: 'ElectricPower'
+
+During construction, initiate all non-DOM objects.
 
       constructor: (@chart) ->
         @area = d3.svg.area()
@@ -12,6 +24,10 @@
         @line = d3.svg.line()
             .x((d) => @chart.x d.resampledAt)
             .y((d) => @chart.y d.value)
+
+When the DOM is ready, `init()` is called to set up common SVG elements.
+The main elements that a data stream should edit are `g.container` and
+`g.extras`.
 
       init: ->
         container = @chart.time.select('.container')
@@ -37,12 +53,16 @@
             .attr('fill', 'url(#now-dot-gradient)')
             .attr('r', @chart.config.now_bar_width)
 
+This method is called as soon as a response to the data request is received.
+
       getDataFromRequest: (params, result) ->
         resample = +new Date params.start
         result.datapoints.map (d, i) ->
           at: new Date d.at
           resampledAt: new Date resample + i * params.interval * 1000
           value: parseFloat d.value ? 0
+
+The chart will call this method frequently to update the ‘now’ indicator.
 
       transformExtras: () ->
         return unless @chart.doc?
@@ -56,6 +76,8 @@
         @chart.time.select('.nowDot')
             .attr('cx', @chart.x new Date)
             .attr('cy', y);
+
+This method is called when new data comes in, or when the y axis is changing.
 
       setDataAndTransform: (data, from, to, transition = true) ->
         if transition
@@ -84,10 +106,13 @@
               .attr('d', @line)
               .attr('transform', to)
 
+This method is currently only called by the chart when its size changes.
+
       transform: ->
-        # TODO not used?
         @chart.time.select('.area').attr 'd', @area
         @chart.time.select('.line').attr 'd', @line
+
+Use this method to prepare an URL for `Chart` to request data.
 
       getParameters: (domain) ->
         start = domain[0]
@@ -106,6 +131,11 @@
         interval: interval
         duration: "#{parseInt actualDuration / 1000}seconds"
         start: new Date(actualStart).toJSON()
+
+## Total energy
+
+This datastream is visualised as a set of bars, aligned with the visible
+lines (ticks) on the time axis.
 
     class @TotalEnergy
       type: 'TotalEnergy'
@@ -153,18 +183,6 @@
             .attr('y', (d) => @chart.y d.value)
             .attr('height', (d) =>
               @chart.height - @chart.config.padding_bottom - @chart.y(d.value))
-        # TODO only for debugging
-        g.append('text')
-            .text((d) -> d.start.toLocaleDateString() + '|' +
-              d.start.toLocaleTimeString() + '>' + d.end.toLocaleTimeString())
-            .attr('text-anchor', 'left')
-            .attr('alignment-baseline', 'bottom')
-            .attr('dy', @chart.height - @chart.config.padding_bottom)
-        g.append('text')
-            .text((d) -> d.value)
-            .attr('text-anchor', 'left')
-            .attr('alignment-baseline', 'bottom')
-            .attr('dy', @chart.height - @chart.config.padding_bottom - 20)
 
         bar.exit().remove()
 

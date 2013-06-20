@@ -168,12 +168,6 @@
       }).attr('height', function(d) {
         return _this.chart.height - _this.chart.config.padding_bottom - _this.chart.y(d.value);
       });
-      g.append('text').text(function(d) {
-        return d.start.toLocaleDateString() + '|' + d.start.toLocaleTimeString() + '>' + d.end.toLocaleTimeString();
-      }).attr('text-anchor', 'left').attr('alignment-baseline', 'bottom').attr('dy', this.chart.height - this.chart.config.padding_bottom);
-      g.append('text').text(function(d) {
-        return d.value;
-      }).attr('text-anchor', 'left').attr('alignment-baseline', 'bottom').attr('dy', this.chart.height - this.chart.config.padding_bottom - 20);
       bar.exit().remove();
       return this.transform();
     };

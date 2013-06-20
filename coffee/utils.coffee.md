@@ -1,5 +1,14 @@
+# Utility functions
+
     @utils =
+
+Use `array()` to convert anything that acts like an array to a real array.
+
       array: (arrayLike) -> Array.prototype.slice.call arrayLike
+
+Use `extent(object, properties)` to add a dictionary of properties to the
+object.
+
       extend: (obj, props) ->
         obj[key] = value if props.hasOwnProperty key for key, value of props
         obj
