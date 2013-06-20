@@ -3,33 +3,9 @@
   var __slice = [].slice;
 
   this.Chart = (function() {
-    Chart.SAMPLE_SIZE = 2;
-
-    Chart.EXTRA_UNITS_ABOVE = 50;
-
-    Chart.Y_AXIS_FACTOR = 1.2;
-
-    Chart.Y_AXIS_MINIMUM_SIZE = 100;
-
-    Chart.Y_AXIS_SHRINK_FACTOR = .05;
-
-    Chart.PADDING_BOTTOM = 48;
-
-    Chart.PADDING_TOP = 48;
-
-    Chart.BAR_SPACING = 4;
-
-    Chart.NOW_BAR_WIDTH = 8;
-
-    Chart.MIN_TIME_IN_VIEW = 60 * 60 * 1000;
-
-    Chart.MAX_TIME_IN_VIEW = 2 * 7 * 24 * 60 * 60 * 1000;
-
-    Chart.QUICK_UPDATE = 1000;
-
-    Chart.FULL_UPDATE = 30000;
-
-    Chart.ENERGY_BUFFER_SIZE = 10;
+    Chart.prototype.key = function(date) {
+      return utils.json("" + this.design + "_show/unix_to_couchm_ts?feed=" + this.feed + "&timestamp=" + (+date));
+    };
 
     function Chart(config, db) {
       var formats,
@@ -37,15 +13,13 @@
       this.config = config;
       this.db = db;
       this.design = "" + this.db + "/_design/energy_data/";
-      this.feed = 'allRooms';
+      this.feed = this.config.feed;
       this.touching = false;
       this.transforming = false;
       this.toDefaultView = false;
-      this.energyBufferTime = [];
-      this.energyBufferValue = [];
       this.display = [new TotalPower(this)];
       this.x = d3.time.scale();
-      this.y = d3.scale.linear().domain([0, Chart.Y_AXIS_MINIMUM_SIZE]);
+      this.y = d3.scale.linear().domain([0, this.config.y_axis_minimum_size]);
       formats = [
         [
           d3.time.format('%Y'), function() {
@@ -93,27 +67,10 @@
       this.yAxis = d3.svg.axis().scale(this.y).orient('left').ticks(5).tickPadding(6).tickFormat(function(d) {
         return "" + d + " " + _this.display[0].unit;
       });
-      this.tickDistance = 0;
-      this.zoom = d3.behavior.zoom().on('zoom', function() {
-        return _this.transform();
-      });
     }
 
-    Chart.prototype.getJSON = function(url) {
-      var deferred, request;
-      deferred = Q.defer();
-      request = new XMLHttpRequest;
-      request.open('GET', url, true);
-      request.withCredentials = true;
-      request.onload = function() {
-        return deferred.resolve(JSON.parse(request.response));
-      };
-      request.send();
-      return deferred.promise;
-    };
-
     Chart.prototype.init = function(title, chartTitle, time, zoomer, meter, buttons, fs, today) {
-      var button, cancel, drag, endkey, fullscreening, loadTimeout, offset, preventMultitouch, process, returnTimeout, startkey, that, url, zoom,
+      var fullscreen, fullscreening,
         _this = this;
       this.title = d3.select(title);
       this.chartTitle = d3.select(chartTitle);
@@ -124,179 +81,197 @@
       this.fullscreener = d3.select(fs);
       this.today = d3.select(today);
       this.loading = this.time.select('.loading');
+      this.bubbleBath = new BubbleBath(this.time.select('.bubblebath'), this.db, this);
+      this.zoom = d3.behavior.zoom().on('zoom', function() {
+        return _this.transform();
+      });
       this.time.call(this.zoom);
-      this.toggleFullscreen(false);
-      this.defaultView();
-      this.display[0].init();
-      returnTimeout = null;
-      loadTimeout = null;
-      zoom = [];
-      cancel = function(timeout) {
-        if (timeout != null) {
-          clearTimeout(timeout);
-          return timeout = null;
-        }
+      (function() {
+        var cancel, loadTimeout, preventMultitouch, returnTimeout, zoom;
+        returnTimeout = null;
+        loadTimeout = null;
+        zoom = [];
+        cancel = function(timeout) {
+          if (timeout != null) {
+            return clearTimeout(timeout);
+          }
+        };
+        preventMultitouch = function() {
+          if (d3.touches(document.body).length > 1) {
+            d3.event.preventDefault();
+            return d3.event.stopPropagation();
+          }
+        };
+        return d3.select(window).on('touchstart', function() {
+          preventMultitouch();
+          _this.touching = true;
+          zoom = [_this.zoom.translate()[0], _this.zoom.scale()];
+          return returnTimeout = cancel(returnTimeout);
+        }, true).on('touchmove', function() {
+          preventMultitouch();
+          if (!_this.transforming) {
+            _this.hideMeter();
+            _this.transforming = true;
+          }
+          return returnTimeout = cancel(returnTimeout);
+        }, true).on('touchend', function() {
+          var timeout;
+          preventMultitouch();
+          _this.touching = false;
+          if (_this.transforming) {
+            _this.showMeter();
+            _this.transforming = false;
+          }
+          loadTimeout = cancel(loadTimeout);
+          if (zoom[0] !== _this.zoom.translate()[0] || zoom[1] !== _this.zoom.scale()) {
+            timeout = setTimeout((function() {
+              return _this.loadData();
+            }), 500);
+          }
+          return returnTimeout = setTimeout(function() {
+            _this.fullscreener.classed('hidden', false);
+            return _this.toggleFullscreen(false, function() {
+              _this.transform();
+              _this.toDefaultView = true;
+              _this.autopan(_this.defaultDomain());
+              return _this.loadData();
+            });
+          }, _this.config.default_view_after);
+        }, true).on('mousewheel', function() {
+          d3.event.stopPropagation();
+          return d3.event.preventDefault();
+        }, true);
+      })();
+      document.oncontextmenu = function() {
+        return false;
       };
-      preventMultitouch = function() {
-        if (d3.touches(document.body).length > 1) {
-          d3.event.preventDefault();
-          return d3.event.stopPropagation();
-        }
-      };
-      d3.select(window).on('touchstart', function() {
-        preventMultitouch();
-        _this.touching = true;
-        zoom = [_this.zoom.translate()[0], _this.zoom.scale()];
-        return cancel(returnTimeout);
-      }, true).on('touchmove', function() {
-        preventMultitouch();
-        if (!_this.transforming) {
-          _this.hideMeter();
-          _this.transforming = true;
-        }
-        return cancel(returnTimeout);
-      }, true).on('touchend', function() {
-        var timeout;
-        preventMultitouch();
-        _this.touching = false;
-        if (_this.transforming) {
-          _this.showMeter();
-          _this.transforming = false;
-        }
-        cancel(loadTimeout);
-        if (zoom[0] !== _this.zoom.translate()[0] || zoom[1] !== _this.zoom.scale()) {
-          timeout = setTimeout((function() {
-            return _this.loadData();
-          }), 500);
-        }
-        return returnTimeout = setTimeout(function() {
+      (function() {
+        var drag, offset, that;
+        that = _this;
+        offset = 0;
+        drag = d3.behavior.drag().on('dragstart', function() {
+          if (d3.touches(this).length) {
+            return offset = -d3.touches(this)[0][0];
+          }
+        }).on('drag', function() {
+          var ext, origin, position, scale, translate;
+          position = (d3.event.x + offset) / (that.zoomer.node().clientWidth - this.clientWidth);
+          if (position < 0) {
+            position = 0;
+          }
+          if (position > 1) {
+            position = 1;
+          }
+          ext = that.zoom.scaleExtent();
+          scale = ext[0] + Math.pow(position, 4) * (ext[1] - ext[0]);
+          origin = that.width / 2;
+          translate = origin - (origin - that.zoom.translate()[0]) * scale / that.zoom.scale();
+          that.zoom.translate([translate, 0]);
+          that.zoom.scale(scale);
+          return that.transform();
+        });
+        _this.zoomer = d3.select('.zoomer');
+        return _this.zoomer.select('.handle').call(drag);
+      })();
+      (function() {
+        var button, overview;
+        button = function(cls, handler, state) {
+          var that;
+          that = _this;
+          return _this.buttons.append('div').classed(cls, true).classed('button', true).classed('active', state).on('touchstart', function() {
+            var el;
+            el = d3.select(this);
+            state = !el.classed('active');
+            el.classed('active', state);
+            return handler.bind(that)(state, this);
+          });
+        };
+        overview = button('overview', function() {
           _this.fullscreener.classed('hidden', false);
-          return _this.toggleFullscreen(false, function() {
+          _this.toggleFullscreen(false, function() {
             _this.transform();
-            _this.toDefaultView = true;
-            _this.autopan(_this.defaultDomain());
+            _this.defaultView();
             return _this.loadData();
           });
-        }, _this.config.default_view_after);
-      }, true).on('mousewheel', function() {
-        d3.event.stopPropagation();
-        return d3.event.preventDefault();
-      }, true);
-      BubbleBath.db = this.db;
-      BubbleBath.chart = this;
-      BubbleBath.container = this.time.select('.bubblebath');
-      that = this;
-      offset = 0;
-      drag = d3.behavior.drag().on('dragstart', function() {
-        if (d3.touches(this).length) {
-          return offset = -d3.touches(this)[0][0];
-        }
-      }).on('drag', function() {
-        var ext, origin, position, scale, translate;
-        position = (d3.event.x + offset) / (that.zoomer.node().clientWidth - this.clientWidth);
-        if (position < 0) {
-          position = 0;
-        }
-        if (position > 1) {
-          position = 1;
-        }
-        ext = that.zoom.scaleExtent();
-        scale = ext[0] + Math.pow(position, 4) * (ext[1] - ext[0]);
-        origin = that.width / 2;
-        translate = origin - (origin - that.zoom.translate()[0]) * scale / that.zoom.scale();
-        that.zoom.translate([translate, 0]);
-        that.zoom.scale(scale);
-        return that.transform();
-      });
-      this.zoomer = d3.select('.zoomer');
-      this.zoomer.select('.handle').call(drag);
-      this.transform();
-      this.loadData(true);
-      button = this.button('overview', function() {
-        _this.fullscreener.classed('hidden', false);
-        _this.toggleFullscreen(false, function() {
-          _this.transform();
-          _this.defaultView();
+          return overview.classed('active', true);
+        }, true);
+        button('watt-hours', function(showWh) {
+          _this.display[0] = new (showWh ? TotalEnergy : TotalPower)(_this);
+          _this.display[0].init();
           return _this.loadData();
+        }, false);
+        button('highlights', function(showHighlights) {
+          return d3.select('.bubblebath').classed('withHighlights', showHighlights);
+        }, true);
+        return _this.today.on('touchstart', function() {
+          return _this.today.classed('active', true);
+        }).on('touchend', function() {
+          _this.toDefaultView = true;
+          _this.autopan(_this.defaultDomain());
+          return _this.today.classed('active', false);
         });
-        return button.classed('active', true);
-      }, true);
-      this.button('watt-hours', function(showWh) {
-        _this.display[0] = new (showWh ? TotalEnergy : TotalPower)(_this);
-        _this.display[0].init();
-        return _this.loadData();
-      }, false);
-      this.button('highlights', function(showHighlights) {
-        return d3.select('.bubblebath').classed('withHighlights', showHighlights);
-      }, true);
-      this.meter.on('touchstart', function() {
-        return _this.autopan(_this.defaultDomain());
-      });
+      })();
+      (function() {
+        var endkey, process, startkey, url;
+        process = function(doc) {
+          _this.doc = doc;
+          return console.log('', doc);
+        };
+        startkey = JSON.stringify([_this.feed]);
+        endkey = JSON.stringify([_this.feed, {}]);
+        url = ("" + _this.db + "/_design/energy_data/_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
+        return utils.json(url).then(function(result) {
+          var source, value;
+          value = result.rows[0].value;
+          process({
+            timestamp: +new Date(value[_this.config.at_idx]),
+            ElectricPower: value[_this.config.datastream_idx.ElectricPower],
+            ElectricEnergy: value[_this.config.datastream_idx.ElectricEnergy]
+          });
+          url = ("" + _this.db + "/_changes?filter=energy_data/") + ("measurements&include_docs=true&source=" + _this.feed);
+          url = "" + url + "&feed=eventsource&since=now";
+          source = new EventSource(url, {
+            withCredentials: true
+          });
+          return source.onmessage = function(e) {
+            return process(JSON.parse(e.data).doc);
+          };
+        });
+      })();
+      this.lastFullUpdate = this.lastQuickUpdate = +(new Date);
+      this.scheduleUpdate();
+      this.display[0].init();
       fullscreening = false;
       this.fullscreener.on('touchstart', function() {
         return d3.select(this).classed('active', fullscreening = true);
       });
-      d3.select('body').on('touchend', function() {
-        if (!fullscreening) {
-          return;
-        }
-        fullscreening = false;
+      fullscreen = function() {
         _this.fullscreener.classed('active', false).classed('hidden', true);
         return _this.toggleFullscreen(true, function() {
           _this.transform();
           _this.defaultView();
           return _this.loadData();
         });
-      });
-      this.today.on('touchstart', function() {
-        return _this.today.classed('active', true);
-      }).on('touchend', function() {
-        _this.toDefaultView = true;
-        _this.autopan(_this.defaultDomain());
-        return _this.today.classed('active', false);
-      });
-      process = function(doc) {
-        _this.doc = doc;
-        return console.log('got update', doc);
       };
-      startkey = JSON.stringify([this.feed]);
-      endkey = JSON.stringify([this.feed, {}]);
-      url = ("" + this.db + "/_design/energy_data/_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
-      this.getJSON(url).then(function(result) {
-        var source, value;
-        value = result.rows[0].value;
-        process({
-          timestamp: +new Date(value[_this.config.at_idx]),
-          ElectricPower: value[_this.config.datastream_idx.ElectricPower],
-          ElectricEnergy: value[_this.config.datastream_idx.ElectricEnergy]
-        });
-        url = ("" + _this.db + "/_changes?filter=energy_data/") + ("measurements&include_docs=true&source=" + _this.feed);
-        url = "" + url + "&feed=eventsource&since=now";
-        source = new EventSource(url, {
-          withCredentials: true
-        });
-        return source.onmessage = function(e) {
-          return process(JSON.parse(e.data).doc);
-        };
+      d3.select('body').on('touchend', function() {
+        if (!fullscreening) {
+          return;
+        }
+        fullscreening = false;
+        return fullscreen();
       });
-      this.lastFullUpdate = this.lastQuickUpdate = +(new Date);
-      this.scheduleUpdate();
-      setTimeout(function() {
-        _this.toggleFullscreen(true, function() {
-          _this.transform();
-          _this.defaultView();
-          return _this.loadData();
-        });
-        return _this.fullscreener.classed('hidden', true);
-      }, 0);
-      return document.oncontextmenu = function() {
-        return false;
-      };
+      return fullscreen();
     };
 
     Chart.prototype.energy = function(date) {
-      var deferred, index, process, url,
+      var deferred, index, process,
         _this = this;
+      if (this.energyBufferTime == null) {
+        this.energyBufferTime = [];
+      }
+      if (this.energyBufferValue == null) {
+        this.energyBufferValue = [];
+      }
       deferred = Q.defer();
       index = this.energyBufferTime.indexOf(+date);
       if (+date > +(new Date)) {
@@ -314,7 +289,7 @@
           }
           _this.energyBufferTime.push(+date);
           _this.energyBufferValue.push(+energy);
-          if (_this.energyBufferTime.length > Chart.ENERGY_BUFFER_SIZE) {
+          if (_this.energyBufferTime.length > _this.config.energy_buffer_size) {
             _this.energyBufferTime.shift();
             _this.energyBufferValue.shift();
           }
@@ -324,13 +299,12 @@
           date = +(new Date);
         }
         if (date) {
-          url = ("" + this.design + "_show/unix_to_couchm_ts") + ("?feed=" + this.feed + "&timestamp=" + (+date));
-          this.getJSON(url).then(function(key) {
-            var endkey, startkey;
+          this.key(date).then(function(key) {
+            var endkey, startkey, url;
             startkey = JSON.stringify([_this.feed]);
             endkey = JSON.stringify(key);
             url = ("" + _this.design + "_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
-            return _this.getJSON(url).then(function(result) {
+            return utils.json(url).then(function(result) {
               var value;
               value = result.rows[0].value;
               return process(+new Date(value[_this.config.at_idx]), value[_this.config.datastream_idx.ElectricPower], value[_this.config.datastream_idx.ElectricEnergy]);
@@ -345,16 +319,15 @@
     };
 
     Chart.prototype.valueAt = function(date) {
-      var deferred, url,
+      var deferred,
         _this = this;
       deferred = Q.defer();
-      url = ("" + this.design + "_show/unix_to_couchm_ts") + ("?feed=" + this.feed + "&timestamp=" + (+date));
-      this.getJSON(url).then(function(key) {
-        var endkey, startkey;
+      this.key(date).then(function(key) {
+        var endkey, startkey, url;
         startkey = JSON.stringify([_this.feed]);
         endkey = JSON.stringify(key);
         url = ("" + _this.design + "_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
-        return _this.getJSON(url).then(function(result) {
+        return utils.json(url).then(function(result) {
           var value;
           value = result.rows[0].value;
           return deferred.resolve([+new Date(value[_this.config.at_idx]), value[_this.config.datastream_idx.ElectricPower], value[_this.config.datastream_idx.ElectricEnergy]]);
@@ -398,9 +371,9 @@
     Chart.prototype.scheduleUpdate = function() {
       var untilFull, untilQuick,
         _this = this;
-      untilQuick = this.lastQuickUpdate + Chart.QUICK_UPDATE - +(new Date);
-      untilFull = this.lastFullUpdate + Chart.FULL_UPDATE - +(new Date);
-      if (untilFull <= Chart.QUICK_UPDATE) {
+      untilQuick = this.lastQuickUpdate + this.config.quick_update - +(new Date);
+      untilFull = this.lastFullUpdate + this.config.full_update - +(new Date);
+      if (untilFull <= this.config.quick_update) {
         return setTimeout((function() {
           return _this.fullUpdate();
         }), untilFull);
@@ -413,7 +386,7 @@
 
     Chart.prototype.adjustToSize = function() {
       this.x.range([0, this.width]);
-      this.y.range([this.height - Chart.PADDING_BOTTOM, Chart.PADDING_TOP]);
+      this.y.range([this.height - this.config.padding_bottom, this.config.padding_top]);
       this.xAxis.scale(this.x).tickSize(this.height);
       this.yAxis.scale(this.y).tickSize(-this.width);
       this.time.select('.x.axis').call(this.xAxis);
@@ -423,18 +396,6 @@
       this.loading.select('rect').attr('width', this.width).attr('height', this.height);
       this.loading.select('text').attr('dx', this.width / 2).attr('dy', this.height / 2);
       return this.display[0].transform();
-    };
-
-    Chart.prototype.button = function(cls, handler, state) {
-      var that;
-      that = this;
-      return this.buttons.append('div').classed(cls, true).classed('button', true).classed('active', state).on('touchstart', function() {
-        var el;
-        el = d3.select(this);
-        state = !el.classed('active');
-        el.classed('active', state);
-        return handler.bind(that)(state, this);
-      });
     };
 
     Chart.prototype.defaultDomain = function() {
@@ -460,8 +421,8 @@
       domain = this.defaultDomain();
       this.x.domain(domain);
       defaultTimeInView = domain[1] - domain[0];
-      minScale = defaultTimeInView / Chart.MAX_TIME_IN_VIEW;
-      maxScale = defaultTimeInView / Chart.MIN_TIME_IN_VIEW;
+      minScale = defaultTimeInView / this.config.max_time_in_view;
+      maxScale = defaultTimeInView / this.config.min_time_in_view;
       this.zoom.x(this.x).scaleExtent([minScale, maxScale]);
       this.today.style('opacity', 0);
       return setTimeout((function() {
@@ -485,7 +446,7 @@
           _this.x.domain(interpolate(t));
           _this.zoom.x(_this.x);
           _this.transform();
-          return BubbleBath.position();
+          return _this.bubbleBath.position();
         };
       }).each('end', function() {
         _this.showLoading = true;
@@ -526,12 +487,11 @@
       _ref = this.zoom.scaleExtent(), zmin = _ref[0], zmax = _ref[1];
       width = this.zoomer.node().clientWidth - handle.clientWidth;
       handle.style.left = Math.pow((scale - zmin) / (zmax - zmin), 1 / 4) * width + 'px';
-      BubbleBath.position();
+      this.bubbleBath.position();
       if (typeof (_base = this.display[0]).transformExtras === "function") {
         _base.transformExtras();
       }
       if (this.toDefaultView) {
-        console.log('todefview');
         d3.select('.chart-title').text('Today’s electricity usage');
         this.toDefaultView = false;
         return this.today.style('opacity', 0);
@@ -558,10 +518,8 @@
       } else {
         start = this.x.domain()[0];
         end = this.x.domain()[1];
-        console.log('getting');
         return Q.spread([this.energy(start), this.energy(end)], function(e0, e1) {
           var energy, value;
-          console.log('test', e0, e1);
           energy = (e1 - e0) * 1000;
           value = Math.round(energy);
           this.meter.select('text').text("" + value + " Wh");
@@ -577,7 +535,7 @@
     };
 
     Chart.prototype.transformXAxis = function() {
-      var axis, left1, left2, oi, ticks;
+      var axis, left1, left2, oi, tickDistance, ticks, _ref;
       axis = this.time.select('.x.axis').call(this.xAxis);
       oi = 0;
       axis.selectAll('.tick').sort(function(a, b) {
@@ -591,10 +549,12 @@
       });
       axis.selectAll('text').attr('x', 16).attr('y', this.height - 32);
       ticks = axis.selectAll('.tick');
-      left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e;
-      left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e;
-      this.tickDistance = left2 - left1;
-      return axis.selectAll('line').attr('stroke-width', this.tickDistance).attr('x1', this.tickDistance / 2).attr('x2', this.tickDistance / 2);
+      if (((_ref = ticks[0]) != null ? _ref.length : void 0) >= 2) {
+        left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e;
+        left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e;
+        tickDistance = left2 - left1;
+        return axis.selectAll('line').attr('stroke-width', tickDistance).attr('x1', tickDistance / 2).attr('x2', tickDistance / 2);
+      }
     };
 
     Chart.prototype.transformYAxis = function(transition) {
@@ -646,7 +606,7 @@
     };
 
     Chart.prototype.loadData = function(first, domain) {
-      var deferred, k, params, url, v,
+      var deferred, k, params, url, v, _ref,
         _this = this;
       if (domain == null) {
         domain = this.x.domain();
@@ -664,7 +624,7 @@
         }
         return _results;
       })()).join('&');
-      Q.spread([this.getJSON(url), BubbleBath.load.apply(BubbleBath, [[this.display[0].feed]].concat(__slice.call(this.x.domain())))], function(result, bubbles) {
+      Q.spread([utils.json(url), (_ref = this.bubbleBath).load.apply(_ref, [[this.display[0].feed]].concat(__slice.call(this.x.domain())))], function(result, bubbles) {
         _this.bubbles = bubbles;
         _this.data = _this.display[0].getDataFromRequest(params, result);
         _this.updateWithData(true);
@@ -673,6 +633,7 @@
       if (this.showLoading) {
         this.loading.attr('opacity', .6);
         this.showLoading = false;
+        deferred.resolve();
       }
       return deferred.promise;
     };
@@ -694,12 +655,12 @@
         });
       }
       if (newDomain === 0) {
-        newDomain = Chart.Y_AXIS_MINIMUM_SIZE;
+        newDomain = this.config.y_axis_minimum_size;
       }
-      if ((oldDomain * Chart.Y_AXIS_SHRINK_FACTOR < newDomain && newDomain < oldDomain)) {
+      if ((oldDomain * this.config.y_axis_shrink_factor < newDomain && newDomain < oldDomain)) {
         newDomain = oldDomain;
       } else {
-        newDomain *= Chart.Y_AXIS_FACTOR;
+        newDomain *= this.config.y_axis_factor;
       }
       tempScale = newDomain / oldDomain;
       if (newDomain !== oldDomain) {
@@ -718,7 +679,7 @@
       if (typeof (_base = this.display[0]).transformExtras === "function") {
         _base.transformExtras();
       }
-      BubbleBath.position();
+      this.bubbleBath.position();
       return this.loading.attr('opacity', 0);
     };
 
@@ -754,7 +715,7 @@
       } else {
         resize(64 + 512, 192, width - 2 * (64 + 512), height - 192 - 32, 0);
       }
-      Cardboard.toggleVisible(!this.fullscreen);
+      cardboard.toggleVisible(!this.fullscreen);
       this.title.classed('visible', !this.fullscreen);
       this.buttons.classed('visible', this.fullscreen);
       this.zoomer.classed('visible', this.fullscreen);

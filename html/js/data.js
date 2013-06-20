@@ -15,7 +15,7 @@
       this.area = d3.svg.area().x(function(d) {
         return _this.chart.x(d.resampledAt);
       }).y0(function(d) {
-        return _this.chart.height - Chart.PADDING_BOTTOM;
+        return _this.chart.height - _this.chart.config.padding_bottom;
       }).y1(function(d) {
         return _this.chart.y(d.value);
       });
@@ -32,8 +32,8 @@
       container.selectAll('*').remove();
       container.append('path').attr('class', 'area').datum([]).attr('d', this.area);
       container.append('path').attr('class', 'line').datum([]).attr('d', this.line);
-      this.chart.time.select('.extras').append('rect').attr('class', 'nowLine').attr('fill', 'url(#now-line-gradient)').attr('width', Chart.NOW_BAR_WIDTH);
-      return this.chart.time.select('.extras').append('circle').attr('class', 'nowDot').attr('fill', 'url(#now-dot-gradient)').attr('r', Chart.NOW_BAR_WIDTH);
+      this.chart.time.select('.extras').append('rect').attr('class', 'nowLine').attr('fill', 'url(#now-line-gradient)').attr('width', this.chart.config.now_bar_width);
+      return this.chart.time.select('.extras').append('circle').attr('class', 'nowDot').attr('fill', 'url(#now-dot-gradient)').attr('r', this.chart.config.now_bar_width);
     };
 
     TotalPower.prototype.getDataFromRequest = function(params, result) {
@@ -55,7 +55,7 @@
         return;
       }
       y = this.chart.y(this.chart.doc.ElectricPower);
-      this.chart.time.select('.nowLine').attr('x', this.chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2).attr('y', y).attr('height', this.chart.height - Chart.PADDING_BOTTOM - y);
+      this.chart.time.select('.nowLine').attr('x', this.chart.x(new Date) - this.chart.config.now_bar_width / 2).attr('y', y).attr('height', this.chart.height - this.chart.config.padding_bottom - y);
       return this.chart.time.select('.nowDot').attr('cx', this.chart.x(new Date)).attr('cy', y);
     };
 
@@ -84,7 +84,7 @@
       actualStart = +start - duration;
       actualEnd = Math.min(+start + 2 * duration, +(new Date));
       actualDuration = Math.max(+actualStart, actualEnd) - +actualStart;
-      n = this.chart.width / Chart.SAMPLE_SIZE;
+      n = this.chart.width / this.chart.config.sample_size;
       _ref = this.chart.config.intervals;
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         interval = _ref[i];
@@ -166,14 +166,14 @@
       g.append('rect').attr('y', function(d) {
         return _this.chart.y(d.value);
       }).attr('height', function(d) {
-        return _this.chart.height - Chart.PADDING_BOTTOM - _this.chart.y(d.value);
+        return _this.chart.height - _this.chart.config.padding_bottom - _this.chart.y(d.value);
       });
       g.append('text').text(function(d) {
         return d.start.toLocaleDateString() + '|' + d.start.toLocaleTimeString() + '>' + d.end.toLocaleTimeString();
-      }).attr('text-anchor', 'left').attr('alignment-baseline', 'bottom').attr('dy', this.chart.height - Chart.PADDING_BOTTOM);
+      }).attr('text-anchor', 'left').attr('alignment-baseline', 'bottom').attr('dy', this.chart.height - this.chart.config.padding_bottom);
       g.append('text').text(function(d) {
         return d.value;
-      }).attr('text-anchor', 'left').attr('alignment-baseline', 'bottom').attr('dy', this.chart.height - Chart.PADDING_BOTTOM - 20);
+      }).attr('text-anchor', 'left').attr('alignment-baseline', 'bottom').attr('dy', this.chart.height - this.chart.config.padding_bottom - 20);
       bar.exit().remove();
       return this.transform();
     };
@@ -183,7 +183,7 @@
       info = this.chart.getTickInfo();
       start = this.chart.x.domain()[0];
       duration = +this.chart.x.domain()[1] - +this.chart.x.domain()[0];
-      n = this.chart.width / Chart.SAMPLE_SIZE;
+      n = this.chart.width / this.chart.config.sample_size;
       _ref = this.chart.config.intervals;
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         interval = _ref[i];

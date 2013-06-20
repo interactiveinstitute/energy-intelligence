@@ -2,6 +2,8 @@
       constructor: (node) ->
         return node.bubble if node.bubble?
 
+        @chart = window.chart
+
         @container = d3.select node
         d = @container.datum()
 
@@ -101,7 +103,7 @@
       position: (transition, x, y) ->
         return unless @mobile
         fixed = x? and y?
-        unless x? and y?
+        unless fixed
           x = @chart.x @at ? @middle
           y = @chart.y @value
         if transition
@@ -121,7 +123,7 @@
               .attr('x', @chart.x @interval[0])
               .attr('width', @chart.x(@interval[1]) - @chart.x(@interval[0]))
               .attr('y', y)
-              .attr('height', @chart.height - Chart.PADDING_BOTTOM - y)
+              .attr('height', @chart.height - @chart.config.padding_bottom - y)
         @
 
       toggleSeeThrough: (bool) ->

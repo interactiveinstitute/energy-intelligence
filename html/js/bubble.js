@@ -6,6 +6,7 @@
       if (node.bubble != null) {
         return node.bubble;
       }
+      this.chart = window.chart;
       this.container = d3.select(node);
       d = this.container.datum();
       node.bubble = this;
@@ -95,7 +96,7 @@
         return;
       }
       fixed = (x != null) && (y != null);
-      if (!((x != null) && (y != null))) {
+      if (!fixed) {
         x = this.chart.x((_ref = this.at) != null ? _ref : this.middle);
         y = this.chart.y(this.value);
       }
@@ -114,7 +115,7 @@
       obj.attr('transform', "translate(" + x + ", " + y + ")");
       if (this.Wh) {
         y = this.chart.y(this.value);
-        this._ival.attr('x', this.chart.x(this.interval[0])).attr('width', this.chart.x(this.interval[1]) - this.chart.x(this.interval[0])).attr('y', y).attr('height', this.chart.height - Chart.PADDING_BOTTOM - y);
+        this._ival.attr('x', this.chart.x(this.interval[0])).attr('width', this.chart.x(this.interval[1]) - this.chart.x(this.interval[0])).attr('y', y).attr('height', this.chart.height - this.chart.config.padding_bottom - y);
       }
       return this;
     };

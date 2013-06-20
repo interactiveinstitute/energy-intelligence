@@ -7,7 +7,7 @@
       constructor: (@chart) ->
         @area = d3.svg.area()
             .x((d) => @chart.x d.resampledAt)
-            .y0((d) => @chart.height - Chart.PADDING_BOTTOM)
+            .y0((d) => @chart.height - @chart.config.padding_bottom)
             .y1((d) => @chart.y d.value)
         @line = d3.svg.line()
             .x((d) => @chart.x d.resampledAt)
@@ -30,12 +30,12 @@
           .append('rect')
             .attr('class', 'nowLine')
             .attr('fill', 'url(#now-line-gradient)')
-            .attr('width', Chart.NOW_BAR_WIDTH)
+            .attr('width', @chart.config.now_bar_width)
         @chart.time.select('.extras')
           .append('circle')
             .attr('class', 'nowDot')
             .attr('fill', 'url(#now-dot-gradient)')
-            .attr('r', Chart.NOW_BAR_WIDTH)
+            .attr('r', @chart.config.now_bar_width)
 
       getDataFromRequest: (params, result) ->
         resample = +new Date params.start
@@ -48,10 +48,10 @@
         return unless @chart.doc?
         y = @chart.y @chart.doc.ElectricPower
         @chart.time.select('.nowLine')
-            .attr('x', @chart.x(new Date) - Chart.NOW_BAR_WIDTH / 2)
+            .attr('x', @chart.x(new Date) - @chart.config.now_bar_width/ 2)
             .attr('y', y)
             .attr('height',
-              @chart.height - Chart.PADDING_BOTTOM - y);
+              @chart.height - @chart.config.padding_bottom - y)
 
         @chart.time.select('.nowDot')
             .attr('cx', @chart.x new Date)
@@ -97,7 +97,7 @@
         actualEnd = Math.min(+start + 2 * duration, +new Date)
         actualDuration = Math.max(+actualStart, actualEnd) - +actualStart
 
-        n = @chart.width / Chart.SAMPLE_SIZE
+        n = @chart.width / @chart.config.sample_size
         for interval, i in @chart.config.intervals
           break if interval > duration / n / 1000
         interval = @chart.config.intervals[i - 1] ? 1
@@ -152,19 +152,19 @@
         g.append('rect')
             .attr('y', (d) => @chart.y d.value)
             .attr('height', (d) =>
-              @chart.height - Chart.PADDING_BOTTOM - @chart.y(d.value))
+              @chart.height - @chart.config.padding_bottom - @chart.y(d.value))
         # TODO only for debugging
         g.append('text')
             .text((d) -> d.start.toLocaleDateString() + '|' +
               d.start.toLocaleTimeString() + '>' + d.end.toLocaleTimeString())
             .attr('text-anchor', 'left')
             .attr('alignment-baseline', 'bottom')
-            .attr('dy', @chart.height - Chart.PADDING_BOTTOM)
+            .attr('dy', @chart.height - @chart.config.padding_bottom)
         g.append('text')
             .text((d) -> d.value)
             .attr('text-anchor', 'left')
             .attr('alignment-baseline', 'bottom')
-            .attr('dy', @chart.height - Chart.PADDING_BOTTOM - 20)
+            .attr('dy', @chart.height - @chart.config.padding_bottom - 20)
 
         bar.exit().remove()
 
@@ -175,7 +175,7 @@
         start = @chart.x.domain()[0]
         duration = +@chart.x.domain()[1] - + @chart.x.domain()[0]
 
-        n = @chart.width / Chart.SAMPLE_SIZE
+        n = @chart.width / @chart.config.sample_size
         for interval, i in @chart.config.intervals
           break if interval > duration / n / 1000
         interval = @chart.config.intervals[i - 1] ? 1

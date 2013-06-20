@@ -2,42 +2,48 @@
 
 On the visualisation page, a single **Chart** instance is used.
 
-All datastream-specific code happens in `data.coffee.md`.
-
     class @Chart
-      @SAMPLE_SIZE = 2
-      @EXTRA_UNITS_ABOVE = 50
-      @Y_AXIS_FACTOR = 1.2
-      @Y_AXIS_MINIMUM_SIZE = 100
-      @Y_AXIS_SHRINK_FACTOR = .05
-      @PADDING_BOTTOM = 48
-      @PADDING_TOP = 48
-      @BAR_SPACING = 4
-      @NOW_BAR_WIDTH = 8
-      @MIN_TIME_IN_VIEW = 60 * 60 * 1000
-      @MAX_TIME_IN_VIEW = 2 * 7 * 24 * 60 * 60 * 1000
-      @QUICK_UPDATE = 1000
-      @FULL_UPDATE = 30000
-      @ENERGY_BUFFER_SIZE = 10
+
+## Utilities
+
+Use `key()` to get the Couchm key for a certain date.
+
+      key: (date) -> utils.json(
+          "#{@design}_show/unix_to_couchm_ts?feed=#{@feed}&timestamp=#{+date}")
+
+## Initialisation
+
+Initialisation goes as follows:
+
+1. Call the constructor as early as possible (in `main.coffee.md`).
+2. As soon as the DOM is complete, run `init()`.
 
       constructor: (@config, @db) ->
+
+### Variable setup
+
+Constants for fetching data:
+
         @design = "#{@db}/_design/energy_data/"
-        @feed = 'allRooms'
+        @feed = @config.feed
+
+Application state:
 
         @touching = false
         @transforming = false
         @toDefaultView = false
 
-        @energyBufferTime = []
-        @energyBufferValue = []
+The currently displayed charts are in the `display` array. Currently only one
+chart is supported, but this should be extendable.
 
-        @display = [new TotalPower this]
+        @display = [new TotalPower @]
+
+The same x (time) and y (W or Wh) axes are used for all charts. Time formats
+are implemented as in [Custom Time Format] [1].
 
         @x = d3.time.scale()
         @y = d3.scale.linear()
-            .domain [0, Chart.Y_AXIS_MINIMUM_SIZE]
-
-Time formats are implemented as in [Custom Time Format] [1].
+            .domain [0, @config.y_axis_minimum_size]
 
         formats = [
           [d3.time.format('%Y'), -> true]
@@ -60,9 +66,6 @@ Time formats are implemented as in [Custom Time Format] [1].
               f = formats[i]
               f = formats[--i] until f[1](date)
               f[0](date))
-
-        # TODO add another axis for global labels?
-
         @yAxis = d3.svg.axis()
             .scale(@y)
             .orient('left')
@@ -70,21 +73,7 @@ Time formats are implemented as in [Custom Time Format] [1].
             .tickPadding(6)
             .tickFormat((d) => "#{d} #{@display[0].unit}")
 
-        # Used to determine x axis stroke width
-        @tickDistance = 0
-
-        @zoom = d3.behavior.zoom().on 'zoom', => @transform()
-        # TODO need to reset @zoom.scaleExtent on feed change
-
-      getJSON: (url) ->
-        deferred = Q.defer()
-        request = new XMLHttpRequest
-        request.open 'GET', url, true
-        request.withCredentials = true
-        request.onload = ->
-          deferred.resolve JSON.parse request.response
-        request.send()
-        deferred.promise
+In `init()`, d3 objects are created for the most-used elements and cached.
 
       init: (title, chartTitle, time, zoomer, meter, buttons, fs, today) ->
         @title = d3.select title
@@ -98,176 +87,206 @@ Time formats are implemented as in [Custom Time Format] [1].
 
         @loading = @time.select '.loading'
 
+The `bubbleBath` object takes care of bubbles on the power chart.
+
+        @bubbleBath = new BubbleBath @time.select('.bubblebath'), @db, @
+
+### General touch responses
+
+We set global overriding touch event listeners with three purposes:
+
+1. The built-in d3 zoom behavior is used for panning and zooming. Its behavior
+   is adapted to use the zoom slider instead of built-in scrolling callbacks.
+   This is more visible and reliable.
+2. Return to the default overview after not having registered touches for a
+   while. The amount of milliseconds to wait is configurable.
+3. The application state should be changed based on touch events. This also
+   affects visibility of the energy meter.
+
+Multitouch events are ignored as they are difficult to debug.
+
+        @zoom = d3.behavior.zoom().on 'zoom', => @transform()
+        # TODO need to reset @zoom.scaleExtent on feed change
         @time.call @zoom
 
-        @toggleFullscreen false
-        @defaultView()
-
-        @display[0].init()
-
-Return to the default overview after inactivity. The amount of milliseconds
-to wait is set in the config value `default_view_after`.
-
-        returnTimeout = null
-        loadTimeout = null
-        zoom = []
-        cancel = (timeout) =>
-          if timeout?
-            clearTimeout timeout
-            timeout = null
-        preventMultitouch = ->
-          if d3.touches(document.body).length > 1
-            d3.event.preventDefault()
-            d3.event.stopPropagation()
-        d3.select(window)
-            .on('touchstart', =>
-              preventMultitouch()
-              @touching = true
-              zoom = [@zoom.translate()[0], @zoom.scale()]
-              cancel returnTimeout
-            true)
-            .on('touchmove', =>
-              preventMultitouch()
-              unless @transforming
-                @hideMeter()
-                @transforming = true
-              cancel returnTimeout
-            true)
-            .on('touchend', =>
-              preventMultitouch()
-              @touching = false
-              if @transforming
-                @showMeter()
-                @transforming = false
-              cancel loadTimeout
-              if zoom[0] != @zoom.translate()[0] or zoom[1] != @zoom.scale()
-                timeout = setTimeout (=> @loadData()), 500
-              returnTimeout = setTimeout(=>
-                @fullscreener.classed 'hidden', false
-                @toggleFullscreen false, =>
-                  @transform()
-                  @toDefaultView = true
-                  @autopan @defaultDomain()
-                  @loadData()
-              @config.default_view_after)
-            true)
-            .on('mousewheel', ->
-              d3.event.stopPropagation()
+        do =>
+          returnTimeout = null
+          loadTimeout = null
+          zoom = []
+          cancel = (timeout) -> clearTimeout timeout if timeout?
+          preventMultitouch = ->
+            if d3.touches(document.body).length > 1
               d3.event.preventDefault()
-            true)
+              d3.event.stopPropagation()
+          d3.select(window)
+              .on('touchstart', =>
+                preventMultitouch()
+                @touching = true
+                zoom = [@zoom.translate()[0], @zoom.scale()]
+                returnTimeout = cancel returnTimeout
+              true)
+              .on('touchmove', =>
+                preventMultitouch()
+                unless @transforming
+                  @hideMeter()
+                  @transforming = true
+                returnTimeout = cancel returnTimeout
+              true)
+              .on('touchend', =>
+                preventMultitouch()
+                @touching = false
+                if @transforming
+                  @showMeter()
+                  @transforming = false
+                loadTimeout = cancel loadTimeout
+                if zoom[0] != @zoom.translate()[0] or zoom[1] != @zoom.scale()
+                  timeout = setTimeout (=> @loadData()), 500
+                returnTimeout = setTimeout(=>
+                  @fullscreener.classed 'hidden', false
+                  @toggleFullscreen false, =>
+                    @transform()
+                    @toDefaultView = true
+                    @autopan @defaultDomain()
+                    @loadData()
+                @config.default_view_after)
+              true)
+              .on('mousewheel', ->
+                d3.event.stopPropagation()
+                d3.event.preventDefault()
+              true)
 
-        BubbleBath.db = @db
-        BubbleBath.chart = @
-        BubbleBath.container = @time.select '.bubblebath'
+        document.oncontextmenu = -> false
 
-        that = @
-        offset = 0
-        drag = d3.behavior.drag()
-            .on('dragstart', ->
-              offset = -d3.touches(@)[0][0] if d3.touches(@).length)
-            .on('drag', ->
-              position = (d3.event.x + offset) /
-                (that.zoomer.node().clientWidth - @clientWidth)
-              position = 0 if position < 0
-              position = 1 if position > 1
+### Zoom slider
 
-              ext = that.zoom.scaleExtent()
-              scale = ext[0] + Math.pow(position, 4) * (ext[1] - ext[0])
+        do =>
+          that = @
+          offset = 0
+          drag = d3.behavior.drag()
+              .on('dragstart', ->
+                offset = -d3.touches(@)[0][0] if d3.touches(@).length)
+              .on('drag', ->
+                position = (d3.event.x + offset) /
+                  (that.zoomer.node().clientWidth - @clientWidth)
+                position = 0 if position < 0
+                position = 1 if position > 1
 
-              origin = that.width / 2
-              translate = origin - (origin - that.zoom.translate()[0]) *
-                scale / that.zoom.scale()
-              that.zoom.translate [translate, 0]
-              that.zoom.scale scale
-              that.transform()
-            )
-        @zoomer = d3.select '.zoomer'
-        @zoomer.select('.handle').call drag
+                ext = that.zoom.scaleExtent()
+                scale = ext[0] + Math.pow(position, 4) * (ext[1] - ext[0])
 
-        @transform()
-        @loadData true
+                origin = that.width / 2
+                translate = origin - (origin - that.zoom.translate()[0]) *
+                  scale / that.zoom.scale()
+                that.zoom.translate [translate, 0]
+                that.zoom.scale scale
+                that.transform()
+              )
+          @zoomer = d3.select '.zoomer'
+          @zoomer.select('.handle').call drag
 
-        button = @button('overview', =>
-          @fullscreener.classed 'hidden', false
-          @toggleFullscreen false, =>
-            @transform()
-            @defaultView()
-            @loadData()
-          button.classed 'active', true
-        true)
-        @button('watt-hours', (showWh) =>
-          @display[0] = new (if showWh then TotalEnergy else TotalPower)(@)
-          @display[0].init()
-          @loadData()
-        false)
-        @button('highlights', (showHighlights) =>
-          d3.select('.bubblebath').classed 'withHighlights', showHighlights
-          # TODO: not enough, can't get popup bubble now
-        true)
+### Control buttons
 
-        @meter.on('touchstart', => @autopan @defaultDomain())
+        do =>
+          button = (cls, handler, state) =>
+            that = @
+            @buttons.append('div')
+                .classed(cls, true)
+                .classed('button', true)
+                .classed('active', state)
+                .on('touchstart', ->
+                  el = d3.select @
+                  state = !el.classed 'active'
+                  el.classed 'active', state
+                  handler.bind(that)(state, @)
+                )
 
-        fullscreening = false
-        @fullscreener.on('touchstart', ->
-            d3.select(@).classed 'active', fullscreening = true)
-        d3.select('body').on('touchend', =>
-            return unless fullscreening
-            fullscreening = false
-            @fullscreener
-                .classed('active', false)
-                .classed('hidden', true)
-            @toggleFullscreen(true, =>
+          overview = button('overview', =>
+            @fullscreener.classed 'hidden', false
+            @toggleFullscreen false, =>
               @transform()
               @defaultView()
               @loadData()
-            )
-        )
+            overview.classed 'active', true
+          true)
+          button('watt-hours', (showWh) =>
+            @display[0] = new (if showWh then TotalEnergy else TotalPower)(@)
+            @display[0].init()
+            @loadData()
+          false)
+          button('highlights', (showHighlights) =>
+            d3.select('.bubblebath').classed 'withHighlights', showHighlights
+          true)
 
-        @today
-            .on('touchstart', =>
-              @today.classed('active', true))
-            .on('touchend', =>
-              @toDefaultView = true
-              @autopan @defaultDomain()
-              @today.classed('active', false))
+          @today
+              .on('touchstart', =>
+                @today.classed('active', true))
+              .on('touchend', =>
+                @toDefaultView = true
+                @autopan @defaultDomain()
+                @today.classed('active', false))
+
+### Keeping track of current values
 
 Always keep current power and energy values in memory.
 
-        process = (doc) =>
-          @doc = doc
-          console.log 'got update', doc
-        startkey = JSON.stringify([@feed])
-        endkey = JSON.stringify([@feed, {}])
-        url = "#{@db}/_design/energy_data/_view/by_source_and_time" +
-          "?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
-        @getJSON(url).then (result) =>
-          value = result.rows[0].value
-          process
-            timestamp: +new Date(value[@config.at_idx])
-            ElectricPower: value[@config.datastream_idx.ElectricPower]
-            ElectricEnergy: value[@config.datastream_idx.ElectricEnergy]
-          url = "#{@db}/_changes?filter=energy_data/" +
-              "measurements&include_docs=true&source=#{@feed}"
-          url = "#{url}&feed=eventsource&since=now"
-          source = new EventSource(url, withCredentials: true)
-          source.onmessage = (e) => process JSON.parse(e.data).doc
+        do =>
+          process = (doc) =>
+            @doc = doc
+            console.log '', doc
+          startkey = JSON.stringify([@feed])
+          endkey = JSON.stringify([@feed, {}])
+          url = "#{@db}/_design/energy_data/_view/by_source_and_time" +
+            "?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
+          utils.json(url).then (result) =>
+            value = result.rows[0].value
+            process
+              timestamp: +new Date(value[@config.at_idx])
+              ElectricPower: value[@config.datastream_idx.ElectricPower]
+              ElectricEnergy: value[@config.datastream_idx.ElectricEnergy]
+            url = "#{@db}/_changes?filter=energy_data/" +
+                "measurements&include_docs=true&source=#{@feed}"
+            url = "#{url}&feed=eventsource&since=now"
+            source = new EventSource(url, withCredentials: true)
+            source.onmessage = (e) => process JSON.parse(e.data).doc
+
+### Set up updates
 
         @lastFullUpdate = @lastQuickUpdate = +new Date
         @scheduleUpdate()
 
-        # TODO for debugging
-        setTimeout(=>
-          @toggleFullscreen(true, =>
+### Initialising the chart
+
+This will not load the data yet, but set up the DOM.
+
+        @display[0].init()
+
+### Showing the chart in fullscreen
+
+Click on `div.fullscreener` to switch to fullscreen. This is the default mode
+to start in as well. As soon as the mode is set, data is loaded.
+
+        fullscreening = false
+        @fullscreener.on('touchstart', ->
+            d3.select(@).classed 'active', fullscreening = true)
+        fullscreen = =>
+          @fullscreener
+            .classed('active', false)
+            .classed('hidden', true)
+          @toggleFullscreen true, =>
             @transform()
             @defaultView()
             @loadData()
-          )
-          @fullscreener.classed 'hidden', true
-        0)
-
-        document.oncontextmenu = -> false
+        d3.select('body').on('touchend', =>
+            return unless fullscreening
+            fullscreening = false
+            fullscreen()
+        )
+        fullscreen()
 
       energy: (date) ->
+        @energyBufferTime ?= []
+        @energyBufferValue ?= []
+
         deferred = Q.defer()
         # TODO do the index check only if we were planning to do a request (?)
         index = @energyBufferTime.indexOf +date
@@ -281,20 +300,18 @@ Always keep current power and energy values in memory.
             energy += kW * h if h > 0
             @energyBufferTime.push +date
             @energyBufferValue.push +energy
-            if @energyBufferTime.length > Chart.ENERGY_BUFFER_SIZE
+            if @energyBufferTime.length > @config.energy_buffer_size
               @energyBufferTime.shift()
               @energyBufferValue.shift()
             deferred.resolve(energy)
           date = +new Date unless date? or @doc
           if date
-            url = "#{@design}_show/unix_to_couchm_ts" +
-              "?feed=#{@feed}&timestamp=#{+date}"
-            @getJSON(url).then (key) =>
+            @key(date).then (key) =>
               startkey = JSON.stringify([@feed])
               endkey = JSON.stringify(key)
               url = "#{@design}_view/by_source_and_time" +
                 "?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
-              @getJSON(url).then (result) =>
+              utils.json(url).then (result) =>
                 value = result.rows[0].value
                 process(
                   +new Date(value[@config.at_idx])
@@ -307,14 +324,12 @@ Always keep current power and energy values in memory.
 
       valueAt: (date) ->
         deferred = Q.defer()
-        url = "#{@design}_show/unix_to_couchm_ts" +
-          "?feed=#{@feed}&timestamp=#{+date}"
-        @getJSON(url).then (key) =>
+        @key(date).then (key) =>
           startkey = JSON.stringify([@feed])
           endkey = JSON.stringify(key)
           url = "#{@design}_view/by_source_and_time" +
             "?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
-          @getJSON(url).then (result) =>
+          utils.json(url).then (result) =>
             value = result.rows[0].value
             deferred.resolve([
               +new Date(value[@config.at_idx])
@@ -322,6 +337,8 @@ Always keep current power and energy values in memory.
               value[@config.datastream_idx.ElectricEnergy]
             ])
         deferred.promise
+
+## Periodic updates
 
 A quick update updates the display with extrapolated cached information.
 
@@ -356,16 +373,16 @@ get consistent with the database.
         @loadData()
 
       scheduleUpdate: ->
-        untilQuick = @lastQuickUpdate + Chart.QUICK_UPDATE - +new Date
-        untilFull = @lastFullUpdate + Chart.FULL_UPDATE - +new Date
-        if untilFull <= Chart.QUICK_UPDATE
+        untilQuick = @lastQuickUpdate + @config.quick_update - +new Date
+        untilFull = @lastFullUpdate + @config.full_update - +new Date
+        if untilFull <= @config.quick_update
           setTimeout (=> @fullUpdate()), untilFull
         else
           setTimeout (=> @quickUpdate()), untilQuick
 
       adjustToSize: ->
         @x.range [0, @width]
-        @y.range [@height - Chart.PADDING_BOTTOM, Chart.PADDING_TOP]
+        @y.range [@height - @config.padding_bottom, @config.padding_top]
 
         @xAxis.scale(@x).tickSize(@height)
         @yAxis.scale(@y).tickSize(-@width)
@@ -387,19 +404,6 @@ get consistent with the database.
             .attr('dy', @height / 2)
 
         @display[0].transform()
-
-      button: (cls, handler, state) ->
-        that = @
-        @buttons.append('div')
-            .classed(cls, true)
-            .classed('button', true)
-            .classed('active', state)
-            .on('touchstart', ->
-              el = d3.select @
-              state = !el.classed 'active'
-              el.classed 'active', state
-              handler.bind(that)(state, @)
-            )
 
       defaultDomain: ->
         n = new Date
@@ -423,8 +427,8 @@ get consistent with the database.
         @x.domain domain
 
         defaultTimeInView = domain[1] - domain[0]
-        minScale = defaultTimeInView / Chart.MAX_TIME_IN_VIEW
-        maxScale = defaultTimeInView / Chart.MIN_TIME_IN_VIEW
+        minScale = defaultTimeInView / @config.max_time_in_view
+        maxScale = defaultTimeInView / @config.min_time_in_view
         @zoom.x(@x).scaleExtent [minScale, maxScale]
 
         @today.style 'opacity', 0
@@ -446,7 +450,7 @@ get consistent with the database.
             @zoom.x @x
             @transform()
             # TODO translate and zoom display, don't recalculate
-            BubbleBath.position()
+            @bubbleBath.position()
         ).each('end', =>
           @showLoading = true
           @loadData(true, domain).then =>
@@ -483,12 +487,11 @@ get consistent with the database.
         handle.style.left =
           Math.pow((scale - zmin) / (zmax - zmin), 1/4) * width + 'px'
 
-        BubbleBath.position()
+        @bubbleBath.position()
 
         @display[0].transformExtras?()
 
         if @toDefaultView
-          console.log 'todefview'
           d3.select('.chart-title').text 'Today’s electricity usage'
           @toDefaultView = false
           @today.style 'opacity', 0
@@ -511,9 +514,7 @@ get consistent with the database.
         else
           start = @x.domain()[0]
           end = @x.domain()[1]
-          console.log 'getting'
           Q.spread [@energy(start), @energy(end)], (e0, e1) ->
-            console.log 'test', e0, e1
             energy = (e1 - e0) * 1000
             value = Math.round(energy)
             @meter.select('text').text("#{value} Wh")
@@ -536,13 +537,14 @@ get consistent with the database.
 
         # Set x axis line width
         ticks = axis.selectAll '.tick'
-        left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e
-        left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e
-        @tickDistance = left2 - left1
-        axis.selectAll('line')
-            .attr('stroke-width', @tickDistance)
-            .attr('x1', @tickDistance / 2)
-            .attr('x2', @tickDistance / 2)
+        if ticks[0]?.length >= 2
+          left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e
+          left2 = ticks[0][1].transform.baseVal.getItem(0).matrix.e
+          tickDistance = left2 - left1
+          axis.selectAll('line')
+              .attr('stroke-width', tickDistance)
+              .attr('x1', tickDistance / 2)
+              .attr('x2', tickDistance / 2)
 
       transformYAxis: (transition = false) ->
         axis = @time.select '.y.axis'
@@ -576,6 +578,8 @@ two ticks, but d3 might put faulty ticks somewhere.
 
           { duration: smallest, first: dts[0] } if smallest < Infinity
 
+## Fetching and showing the data
+
       loadData: (first, domain = @x.domain()) ->
         deferred = Q.defer()
 
@@ -586,8 +590,8 @@ two ticks, but d3 might put faulty ticks somewhere.
           ("#{k}=#{encodeURIComponent(v)}" for k, v of params).join '&'
 
         Q.spread [
-          @getJSON url
-          BubbleBath.load [@display[0].feed], @x.domain()...
+          utils.json url
+          @bubbleBath.load [@display[0].feed], @x.domain()...
         ], (result, @bubbles) =>
           @data = @display[0].getDataFromRequest params, result
           @updateWithData true
@@ -596,7 +600,7 @@ two ticks, but d3 might put faulty ticks somewhere.
         if @showLoading
           @loading.attr 'opacity', .6
           @showLoading = false
-
+          deferred.resolve()
         deferred.promise
 
       updateWithData: (stay = false, @data = @data, @bubbles = @bubbles) ->
@@ -605,11 +609,11 @@ two ticks, but d3 might put faulty ticks somewhere.
         newDomain = d3.max(@data.map (d) -> d.value)
         if @bubbles? then @bubbles.each (d) ->
           newDomain = d3.max [newDomain, parseFloat(d.value)]
-        newDomain = Chart.Y_AXIS_MINIMUM_SIZE if newDomain is 0
-        if oldDomain * Chart.Y_AXIS_SHRINK_FACTOR < newDomain < oldDomain
+        newDomain = @config.y_axis_minimum_size if newDomain is 0
+        if oldDomain * @config.y_axis_shrink_factor < newDomain < oldDomain
           newDomain = oldDomain
         else
-          newDomain *= Chart.Y_AXIS_FACTOR
+          newDomain *= @config.y_axis_factor
         tempScale = newDomain / oldDomain
 
         unless newDomain is oldDomain
@@ -632,7 +636,7 @@ two ticks, but d3 might put faulty ticks somewhere.
 
         @display[0].transformExtras?()
 
-        BubbleBath.position()
+        @bubbleBath.position()
 
         @loading.attr 'opacity', 0 
 
@@ -669,7 +673,7 @@ two ticks, but d3 might put faulty ticks somewhere.
         else
           resize 64 + 512, 192, width - 2 * (64 + 512), height - 192 - 32, 0
 
-        Cardboard.toggleVisible not @fullscreen
+        cardboard.toggleVisible not @fullscreen
         @title.classed 'visible', not @fullscreen
 
         @buttons.classed 'visible', @fullscreen
