@@ -1,18 +1,32 @@
+# Bubbles
+
+The class `Bubble` helps performing transformations on `g.bubble` and
+`g.highlight` SVG groups.
+
+Create an instance using `bubble()`. On instantiation, the object is stored as
+a DOM property, making it safe to call `bubble(node)` multiple times on the same
+DOM node.
+
+    @bubble = (node) -> new Bubble node
+
     class @Bubble
       constructor: (node) ->
         return node.bubble if node.bubble?
+        node.bubble = @
 
         @chart = window.chart
 
+Set properties using the d3 data.
+
         @container = d3.select node
         d = @container.datum()
-
-        node.bubble = @
         @[k] = v for k, v of d
 
         @id = if @at? then +@at else JSON.stringify @interval
 
         @middle = new Date((+@interval[0] + +@interval[1]) / 2) if @interval?
+
+Set visible labels.
 
         if @value_type is 'W'
           @str = if @value < 1000
@@ -28,16 +42,20 @@
           @value = @value / @hours
           @Wh = true
 
-        @mobile = true
-
         if not @note? and @at
           time = "#{@at.getHours()}:"
           time += '0' if @at.getMinutes() < 10
           time += @at.getMinutes()
-          @note = "measured at #{time}"
+          @note = "at #{time}"
+
+If `@mobile` is true, the bubble will respond to the `position()` method.
+
+        @mobile = true
 
         @createDom()
         @position()
+
+Allow other classes to listen to the ‘close’ event using the ‘on()’ method.
 
         @_dispatch = d3.dispatch 'close'
         @publish @_dispatch, ['on']
@@ -45,14 +63,20 @@
       publish: (obj, methods) ->
         methods.map (name) => @[name] = obj[name].bind obj
 
+      close: ->
+        @_el.remove()
+        @_dispatch.close()
+        @
+
+## The Bubble DOM structure
+
       createDom: ->
-        if @interval?
-          @_ival = @container.append('rect')
-              .classed('interval', true)
-              .attr('x', 0)
-              .attr('y', 0)
-              .attr('width', 0)
-              .attr('height', 0)
+        if @interval? then @_ival = @container.append('rect')
+            .classed('interval', true)
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', 0)
+            .attr('height', 0)
         @_el = @container.append('g')
             .attr('class', 'popup')
             .classed('energy', @value_type is 'Wh')
@@ -95,10 +119,10 @@
         labelBackground.attr('width', 76 + labelText.node().getBBox().width)
         @
 
-      close: ->
-        @_el.remove()
-        @_dispatch.close()
-        @
+## Positioning
+
+Call the `position()` method with optional arguments to position the bubble.
+If no arguments are specified, the chart’s coordinate system is used.
 
       position: (transition, x, y) ->
         return unless @mobile
@@ -126,9 +150,11 @@
               .attr('height', @chart.height - @chart.config.padding_bottom - y)
         @
 
+## See through bubbles
+
+In `g.popup`, touch event listeners are set up that call `toggleSeeThrough()`.
+
       toggleSeeThrough: (bool) ->
         @_seeThrough = if bool? then bool else not @_seeThrough
         @_el.attr 'opacity', if @_seeThrough then .2 else 1
         @
-
-    @bubble = (node) -> new Bubble node

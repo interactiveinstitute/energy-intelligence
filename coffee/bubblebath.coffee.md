@@ -1,8 +1,14 @@
+# Bubble management
+
+The `BubbleBath` instance manages bubbles.
+
     class @BubbleBath
       bubbles: []
 
       constructor: (@container, @db, @chart) ->
         @container = d3.select @container unless @container.length?
+
+## Opening bubbles on a long press.
 
         CANCEL_DISTANCE = 10
         opening = false
@@ -69,10 +75,16 @@
               .on('touchend', () -> cancel() if opening
               true)
 
+## Doing JSON requests
+
       json: (path, params) ->
         utils.json("#{@db}#{path}?" + Object.keys(params).map((k) ->
           k + '=' + encodeURIComponent JSON.stringify params[k]
         ).join '&')
+
+## Positioning the bubbles
+
+Bubbles outside of the current view get a `past` or `future` class.
 
       position: ->
         startts = @chart.x.domain()[0]
@@ -95,6 +107,11 @@
             s.attr 'class', 'bubble current'
             b.position trans
 
+## Loading bubbles
+
+When the visible time interval changes or after a timeout, the chart calls the
+`load` method to get the currently visible bubbles.
+
       load: (feeds, start, end) ->
         startts = +start
         endts = +end
@@ -105,6 +122,10 @@
           startkey: [feeds[0], startts - timespan],
           endkey: [feeds[0], endts + timespan]
         }).then (result) =>
+
+Bubbles are added and removed as needed, and `bubble()` is called on each new
+one.
+
           bubbles = @container.selectAll('.bubble')
               .data((result.rows.map (row) =>
                 extra =
