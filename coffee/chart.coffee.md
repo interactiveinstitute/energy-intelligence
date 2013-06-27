@@ -44,7 +44,7 @@ chart is supported, but this should be extendable.
         @display = [new TotalPower @]
 
 The same x (time) and y (W or Wh) axes are used for all charts. Time formats
-are implemented as in [Custom Time Format] [1].
+are implemented as in [Custom Time Format] [ctf].
 
         @x = d3.time.scale()
         @y = d3.scale.linear()
@@ -597,9 +597,6 @@ animated to a recalculated domain.
 These methods update the SVG elements using the current zoom setting. They are
 called on a high frequency, so optimising these will improve animations.
 
-If it exists, `transformExtras()` is called on the currently displayed chart.
-This transforms for example the ‘now’ dot and line.
-
       transform: ->
         @transformXAxis()
 
@@ -617,6 +614,9 @@ This transforms for example the ‘now’ dot and line.
 
         @bubbleBath.position()
 
+If it exists, `transformExtras()` is called on the currently displayed chart.
+This transforms for example the ‘now’ dot and line.
+
         @display[0].transformExtras?()
 
         if @toDefaultView
@@ -626,6 +626,11 @@ This transforms for example the ‘now’ dot and line.
         else if @transforming
           @setHeader()
           @today.style 'opacity', 1
+
+On the time axis, the ‘odd’ class is added to create an altering line effect.
+Note that d3 doesn’t add new ticks at the right place in the DOM if you look
+from left to right. Currently `sort()` is run on them to compensate, but this
+is probably not the fastest.
 
       transformXAxis: ->
         axis = @time.select('.x.axis')
@@ -639,7 +644,9 @@ This transforms for example the ‘now’ dot and line.
             .attr('x', 16)
             .attr('y', @height - 32)
 
-        # Set x axis line width
+Ticks were originally meant as lines between intervals, but we widen them to
+cover the whole interval.
+
         ticks = axis.selectAll '.tick'
         if ticks[0]?.length >= 2
           left1 = ticks[0][0].transform.baseVal.getItem(0).matrix.e
@@ -746,4 +753,4 @@ method adjusts ranges, scales and dimensions accordingly.
 
         @display[0].transform()
 
-[1]: http://bl.ocks.org/mbostock/4149176
+[ctf]: http://bl.ocks.org/mbostock/4149176
