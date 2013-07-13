@@ -240,7 +240,6 @@ Always keep current power and energy values in memory.
         do =>
           process = (doc) =>
             @doc = doc
-            console.log '', doc
           startkey = JSON.stringify([@feed])
           endkey = JSON.stringify([@feed, {}])
           url = "#{@db}/_design/energy_data/_view/by_source_and_time" +

@@ -219,8 +219,7 @@
       (function() {
         var endkey, process, startkey, url;
         process = function(doc) {
-          _this.doc = doc;
-          return console.log('', doc);
+          return _this.doc = doc;
         };
         startkey = JSON.stringify([_this.feed]);
         endkey = JSON.stringify([_this.feed, {}]);
