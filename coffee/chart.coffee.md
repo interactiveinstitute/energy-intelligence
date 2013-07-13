@@ -398,18 +398,13 @@ moment.
 
       defaultDomain: ->
         n = new Date
-        startH = if n.getHours() > @config.work_day_hours[0]
-          @config.work_day_hours[0]
+        if @config.work_day_hours[0] < n.getHours() < @config.work_day_hours
+          startH = @config.work_day_hours[0]
+          endH = @config.work_day_hours[1]
         else
-          @config.work_day_hours[0] - 24
+          startH = 0
+          endH = 24
         start = new Date n.getFullYear(), n.getMonth(), n.getDate(), startH
-        ###
-        endH = if n.getHours() < @config.work_day_hours[0] - 1
-          @config.work_day_hours[1]
-        else
-          startH + 24
-          ###
-        endH = @config.work_day_hours[1]
         end = new Date n.getFullYear(), n.getMonth(), n.getDate(), endH
         [start, end]
 

@@ -372,18 +372,16 @@
     };
 
     Chart.prototype.defaultDomain = function() {
-      var end, endH, n, start, startH;
+      var end, endH, n, start, startH, _ref;
       n = new Date;
-      startH = n.getHours() > this.config.work_day_hours[0] ? this.config.work_day_hours[0] : this.config.work_day_hours[0] - 24;
+      if ((this.config.work_day_hours[0] < (_ref = n.getHours()) && _ref < this.config.work_day_hours)) {
+        startH = this.config.work_day_hours[0];
+        endH = this.config.work_day_hours[1];
+      } else {
+        startH = 0;
+        endH = 24;
+      }
       start = new Date(n.getFullYear(), n.getMonth(), n.getDate(), startH);
-      /*
-      endH = if n.getHours() < @config.work_day_hours[0] - 1
-        @config.work_day_hours[1]
-      else
-        startH + 24
-      */
-
-      endH = this.config.work_day_hours[1];
       end = new Date(n.getFullYear(), n.getMonth(), n.getDate(), endH);
       return [start, end];
     };
