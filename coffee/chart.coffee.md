@@ -433,6 +433,8 @@ Note: right now the chart is hidden during autopan, as it doesn’t pan along
 nicely. This can be improved.
 
       autopan: (domain) ->
+        # TODO use @zoom.translate instead of resetting @x.domain in order to
+        # keep @zoom.scale constant (and not let it turn to 1)
         @today.style 'opacity', 1 unless @toDefaultView
         d3.transition().duration(1000).tween 'zoom', =>
           inter = d3.interpolate @x.domain().map(Number), domain.map(Number)
