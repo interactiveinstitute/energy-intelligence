@@ -204,8 +204,11 @@ svg.time .loading text {
   -webkit-animation: popup-start-path .2s ease-in-out;
   transition: -webkit-transform .2s;
 }
+.past .popup path {
+  -webkit-transform: rotate(0deg) !important;
+}
 .future .popup path {
-  -webkit-transform: rotate(-180deg);
+  -webkit-transform: rotate(-180deg) !important;
 }
 .popup.energy path {
   -webkit-transform: rotate(-60deg);
@@ -225,12 +228,12 @@ svg.time .loading text {
 .popup.energy .back { display: none; }
 .popup.energy .note { fill: #000; }
 
-.future + .future .popup path { -webkit-transform: rotate(-175deg); }
-.future + .future + .future .popup path { -webkit-transform: rotate(-172deg); }
-.future + .future + .future + .future .popup path { -webkit-transform: rotate(-169deg); }
-.past + .past .popup path { -webkit-transform: rotate(-5deg); }
-.past + .past + .past .popup path { -webkit-transform: rotate(-8deg); }
-.past + .past + .past + .past .popup path { -webkit-transform: rotate(-11deg); }
+.future + .future .popup path { -webkit-transform: rotate(-175deg) !important; }
+.future + .future + .future .popup path { -webkit-transform: rotate(-172deg) !important; }
+.future + .future + .future + .future .popup path { -webkit-transform: rotate(-169deg) !important; }
+.past + .past .popup path { -webkit-transform: rotate(-5deg) !important; }
+.past + .past + .past .popup path { -webkit-transform: rotate(-8deg) !important; }
+.past + .past + .past + .past .popup path { -webkit-transform: rotate(-11deg) !important; }
 
 .popup rect {
   fill: #aee0ff;
