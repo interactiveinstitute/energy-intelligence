@@ -41,6 +41,7 @@
         _this.container.append('g').attr('class', 'highlight current').datum({
           chart: _this.chart,
           at: datum.resampledAt,
+          measuredAt: datum.measuredAt,
           value: datum.value,
           value_type: 'W',
           closesOnTouch: true

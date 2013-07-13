@@ -42,11 +42,11 @@ Set visible labels.
           @value = @value / @hours
           @Wh = true
 
-        if not @note? and @at
-          time = "#{@at.getHours()}:"
-          time += '0' if @at.getMinutes() < 10
-          time += @at.getMinutes()
-          @note = "at #{time}"
+        if not @note? and @measuredAt
+          time = "#{@measuredAt.getHours()}:"
+          time += '0' if @measuredAt.getMinutes() < 10
+          time += @measuredAt.getMinutes()
+          @note = "measured at #{time}"
 
 If `@mobile` is true, the bubble will respond to the `position()` method.
 

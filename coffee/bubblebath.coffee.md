@@ -31,6 +31,7 @@ The `BubbleBath` instance manages bubbles.
               .datum(
                 chart: @chart
                 at: datum.resampledAt
+                measuredAt: datum.measuredAt
                 value: datum.value
                 value_type: 'W'
                 closesOnTouch: true

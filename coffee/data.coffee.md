@@ -61,6 +61,7 @@ This method is called as soon as a response to the data request is received.
           at: new Date d.at
           resampledAt: new Date resample + i * params.interval * 1000
           value: parseFloat d.value ? 0
+          measuredAt: new Date d.debug[2]
 
 The chart will call this method frequently to update the ‘now’ indicator.
 

@@ -44,7 +44,8 @@
         return {
           at: new Date(d.at),
           resampledAt: new Date(resample + i * params.interval * 1000),
-          value: parseFloat((_ref = d.value) != null ? _ref : 0)
+          value: parseFloat((_ref = d.value) != null ? _ref : 0),
+          measuredAt: new Date(d.debug[2])
         };
       });
     };

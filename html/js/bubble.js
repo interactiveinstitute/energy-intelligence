@@ -33,13 +33,13 @@
         this.value = this.value / this.hours;
         this.Wh = true;
       }
-      if ((this.note == null) && this.at) {
-        time = "" + (this.at.getHours()) + ":";
-        if (this.at.getMinutes() < 10) {
+      if ((this.note == null) && this.measuredAt) {
+        time = "" + (this.measuredAt.getHours()) + ":";
+        if (this.measuredAt.getMinutes() < 10) {
           time += '0';
         }
-        time += this.at.getMinutes();
-        this.note = "at " + time;
+        time += this.measuredAt.getMinutes();
+        this.note = "measured at " + time;
       }
       this.mobile = true;
       this.createDom();
