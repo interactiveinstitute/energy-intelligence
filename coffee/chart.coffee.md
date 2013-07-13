@@ -492,7 +492,7 @@ When visible, the energy meter shows the amount of Wh that is currently shown.
           @meter.select('.now').style 'opacity', 0
           start = @x.domain()[0]
           end = @x.domain()[1]
-          Q.spread [@energy(start), @energy(end)], (e0, e1) ->
+          Q.spread [@energy(start), @energy(end)], (e0, e1) =>
             energy = (e1 - e0) * 1000
             value = Math.round(energy)
             @meter.select('text').text("#{value} Wh")

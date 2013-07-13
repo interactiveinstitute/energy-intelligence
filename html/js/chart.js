@@ -453,7 +453,8 @@
     };
 
     Chart.prototype.showMeter = function() {
-      var end, start;
+      var end, start,
+        _this = this;
       this.meter.classed('hidden', false);
       if (this.nowInView()) {
         this.meter.select('.now').style('opacity', 1);
@@ -466,9 +467,9 @@
           var energy, value;
           energy = (e1 - e0) * 1000;
           value = Math.round(energy);
-          this.meter.select('text').text("" + value + " Wh");
-          this.meter.classed('hidden', false);
-          return this.meter.select('.now').style('opacity', 0);
+          _this.meter.select('text').text("" + value + " Wh");
+          _this.meter.classed('hidden', false);
+          return _this.meter.select('.now').style('opacity', 0);
         });
       }
     };
