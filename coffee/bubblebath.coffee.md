@@ -94,11 +94,11 @@ Bubbles outside of the current view get a `past` or `future` class.
         @container.selectAll('.bubble').each (d) ->
           s = d3.select @
           b = bubble @
-          if d.timestamp <= startts or d.timestamp_start <= startts
+          if d.timestamp <= startts
             trans = not @classList.contains 'past'
             s.attr 'class', 'bubble past'
             b.position trans, 10, chart.height - chart.config.padding_bottom
-          else if d.timestamp >= endts or d.timestamp_end >= endts
+          else if d.timestamp >= endts
             trans = not @classList.contains 'future'
             s.attr 'class', 'bubble future'
             b.position trans, chart.width - 10,

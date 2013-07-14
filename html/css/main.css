@@ -214,6 +214,7 @@ svg.time .loading text {
   -webkit-transform: rotate(-60deg);
   fill: #aee0ff;
 }
+.past .popup.energy, .future .popup.energy { display: none; } /* TODO #27 */
 .popup.energy text.value {
   fill: #000;
   -webkit-transform: translate(-24px, -12px);

@@ -112,11 +112,11 @@
         var b, s, trans;
         s = d3.select(this);
         b = bubble(this);
-        if (d.timestamp <= startts || d.timestamp_start <= startts) {
+        if (d.timestamp <= startts) {
           trans = !this.classList.contains('past');
           s.attr('class', 'bubble past');
           return b.position(trans, 10, chart.height - chart.config.padding_bottom);
-        } else if (d.timestamp >= endts || d.timestamp_end >= endts) {
+        } else if (d.timestamp >= endts) {
           trans = !this.classList.contains('future');
           s.attr('class', 'bubble future');
           return b.position(trans, chart.width - 10, chart.height - chart.config.padding_bottom);

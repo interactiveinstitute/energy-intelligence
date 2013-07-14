@@ -87,8 +87,8 @@
       });
       labelBackground = this._el.append('rect').classed('back', true).attr('x', 63).attr('y', -20).attr('height', 40).attr('rx', 20).attr('ry', 20);
       this._el.append('path').attr('d', 'M 16 -8 A 48 48 340 1 1 16 8 L 0 0 L 16 -8');
-      this._el.append('text').attr('class', 'value').text(this.str).attr('text-anchor', 'middle').attr('alignment-baseline', 'central').attr('dx', this.W != null ? 63 : 49).attr('dy', this.W != null ? 0 : -45);
-      labelText = this._el.append('text').attr('class', 'note').text(this.note).attr('text-anchor', this.W != null ? 'start' : 'middle').attr('alignment-baseline', 'central').attr('dx', this.W != null ? 120 : 33).attr('dy', this.W != null ? 0 : -80);
+      this._el.append('text').attr('class', 'value').text(this.str).attr('text-anchor', 'middle').attr('alignment-baseline', 'central').attr('dx', this.W != null ? 63 : 44).attr('dy', this.W != null ? 0 : -45);
+      labelText = this._el.append('text').attr('class', 'note').text(this.note).attr('text-anchor', this.W != null ? 'start' : 'middle').attr('alignment-baseline', 'central').attr('dx', this.W != null ? 120 : 32).attr('dy', this.W != null ? 0 : -80);
       labelBackground.attr('width', 76 + labelText.node().getBBox().width);
       return this;
     };
