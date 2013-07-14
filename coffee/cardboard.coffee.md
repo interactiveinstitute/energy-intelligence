@@ -1,11 +1,9 @@
     class @Cardboard
       parameters: (p) -> Object.keys(p).map((k) -> "#{k}=#{p[k]}").join '&'
-      constructor: (config) ->
-        @width = config.card_width
+      constructor: (@config) ->
         @db = config.database
-        @feed = config.feed
       init: (containers) ->
-        width = @width
+        width = @config.card_width
         @containers = d3.selectAll(containers)
             .each ->
               d3.select(@)
@@ -14,33 +12,41 @@
 
         @toggleVisible false
 
+        ###
+        # TODO add new cards instantly instead of the 30s reload
         params = @parameters
           filter: 'event/cards'
           feed: 'eventsource'
           include_docs: true
           since: 'now'
-          source: @feed
+          source: @config.feed
         @source = new EventSource "#{@db}/_changes?#{params}",
           withCredentials: true
         @source.onmessage = (e) =>
           doc = JSON.parse(e.data).doc
           if doc.output
             for key, value of doc.output
-              if value.sp_card? and value.feed is @feed
+              if value.sp_card? and value.feed is @config.feed
                 @_add doc._id, key, value.sp_card
+        ###
 
+        @load()
+        setInterval (=> @load()), @config.full_update
+      load: ->
         params = @parameters
-          startkey: JSON.stringify [@feed]
-          endkey: JSON.stringify [@feed, {}]
+          startkey: JSON.stringify [@config.feed]
+          endkey: JSON.stringify [@config.feed, {}]
         url =
           "#{@db}/_design/events/_view/cards_by_feed_and_time?#{params}"
         utils.json(url).then (result) =>
+          @containers.html ''
+          result.rows.sort (a, b) -> if a.id < b.id then 1 else -1
           @_add row.id, row.key[2], row.value for row in result.rows
       toggleVisible: (visible) ->
         @containers.classed 'visible', visible if @containers
       _add: (_id, key, card) ->
         console.log 'adding', _id, key
-        width = @width
+        width = @config.card_width
         @containers.each () ->
           container = d3.select @
           return unless card.height is container.attr 'data-height'

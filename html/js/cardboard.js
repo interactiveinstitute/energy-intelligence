@@ -8,53 +8,60 @@
     };
 
     function Cardboard(config) {
-      this.width = config.card_width;
+      this.config = config;
       this.db = config.database;
-      this.feed = config.feed;
     }
 
     Cardboard.prototype.init = function(containers) {
-      var params, url, width,
+      var width,
         _this = this;
-      width = this.width;
+      width = this.config.card_width;
       this.containers = d3.selectAll(containers).each(function() {
         return d3.select(this).style('width', width + 'px').style('height', this.dataset.height + 'px');
       });
       this.toggleVisible(false);
-      params = this.parameters({
-        filter: 'event/cards',
-        feed: 'eventsource',
-        include_docs: true,
-        since: 'now',
-        source: this.feed
-      });
-      this.source = new EventSource("" + this.db + "/_changes?" + params, {
+      /*
+      # TODO add new cards instantly instead of the 30s reload
+      params = @parameters
+        filter: 'event/cards'
+        feed: 'eventsource'
+        include_docs: true
+        since: 'now'
+        source: @config.feed
+      @source = new EventSource "#{@db}/_changes?#{params}",
         withCredentials: true
-      });
-      this.source.onmessage = function(e) {
-        var doc, key, value, _ref, _results;
-        doc = JSON.parse(e.data).doc;
-        if (doc.output) {
-          _ref = doc.output;
-          _results = [];
-          for (key in _ref) {
-            value = _ref[key];
-            if ((value.sp_card != null) && value.feed === _this.feed) {
-              _results.push(_this._add(doc._id, key, value.sp_card));
-            } else {
-              _results.push(void 0);
-            }
-          }
-          return _results;
-        }
-      };
+      @source.onmessage = (e) =>
+        doc = JSON.parse(e.data).doc
+        if doc.output
+          for key, value of doc.output
+            if value.sp_card? and value.feed is @config.feed
+              @_add doc._id, key, value.sp_card
+      */
+
+      this.load();
+      return setInterval((function() {
+        return _this.load();
+      }), this.config.full_update);
+    };
+
+    Cardboard.prototype.load = function() {
+      var params, url,
+        _this = this;
       params = this.parameters({
-        startkey: JSON.stringify([this.feed]),
-        endkey: JSON.stringify([this.feed, {}])
+        startkey: JSON.stringify([this.config.feed]),
+        endkey: JSON.stringify([this.config.feed, {}])
       });
       url = "" + this.db + "/_design/events/_view/cards_by_feed_and_time?" + params;
       return utils.json(url).then(function(result) {
         var row, _i, _len, _ref, _results;
+        _this.containers.html('');
+        result.rows.sort(function(a, b) {
+          if (a.id < b.id) {
+            return 1;
+          } else {
+            return -1;
+          }
+        });
         _ref = result.rows;
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -74,7 +81,7 @@
     Cardboard.prototype._add = function(_id, key, card) {
       var width;
       console.log('adding', _id, key);
-      width = this.width;
+      width = this.config.card_width;
       return this.containers.each(function() {
         var cards, container, data;
         container = d3.select(this);
