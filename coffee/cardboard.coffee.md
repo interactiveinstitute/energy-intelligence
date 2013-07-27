@@ -1,7 +1,10 @@
+# Card management
+
+The `Cardboard` instance manages the cards displayed in the dashboard view.
+
     class @Cardboard
       parameters: (p) -> Object.keys(p).map((k) -> "#{k}=#{p[k]}").join '&'
-      constructor: (@config) ->
-        @db = config.database
+      constructor: (@config) -> @db = config.database
       init: (containers) ->
         width = @config.card_width
         @containers = d3.selectAll(containers)
@@ -40,32 +43,40 @@
           "#{@db}/_design/events/_view/cards_by_feed_and_time?#{params}"
         utils.json(url).then (result) =>
           @containers.html ''
-          result.rows.sort (a, b) -> if a.id < b.id then 1 else -1
+          result.rows.sort (a, b) ->
+            if a.value.priority < b.value.priority then 1
+            else if a.value.priority > b.value.priority then -1
+            else if a.id < b.id then 1
+            else -1
           @_add row.id, row.key[2], row.value for row in result.rows
       toggleVisible: (visible) ->
         @containers.classed 'visible', visible if @containers
       _add: (_id, key, card) ->
-        console.log 'adding', _id, key
         width = @config.card_width
-        @containers.each () ->
-          container = d3.select @
-          return unless card.height is container.attr 'data-height'
-          data = container.data()
-          data = [] unless data[0]?
-          if data.every((datum) ->
-            if datum._id is _id and datum.key is key
-              datum.card = card
-              false
-            else true)
-            data.push
-              _id: _id
-              key: key
-              card: card
-          cards = container.selectAll('.card').data data
-          cards.enter().append('div')
-              .classed('card', true)
-              .classed(card['class'], true)
-              .style('width', width + 'px')
-              .style('height', "#{container.attr 'data-height'}px")
-              .html card.content
-          cards.exit().remove()
+        for element in @containers[0]
+          container = d3.select element
+          if card.height <= container.attr 'data-height'
+            data = container.data()
+            data = [] unless data[0]?
+            fits = data.length * 512 < container.attr 'data-height'
+            is_this_card = (datum) ->
+              if datum._id is _id and datum.key is key
+                datum.card = card
+                true 
+              else
+                false
+            if fits and not data.some is_this_card
+              data.push _id: _id, key: key, card: card
+              container.data data
+            else if data.some is_this_card
+            else
+              continue
+            cards = container.selectAll('.card').data data
+            cards.enter().append('div')
+                .classed('card', true)
+                .classed(card['class'], true)
+                .style('width', width + 'px')
+                .style('height', "#{container.attr 'data-height'}px")
+                .html card.content
+            cards.exit().remove()
+            break

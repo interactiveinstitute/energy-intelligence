@@ -366,14 +366,14 @@ svg.time .loading text {
   bottom: 32px;
   left: 32px;
   -webkit-transform: translate(-544px, 0);
-  background-image: url(../img/left-side.png);
 }
-.cards.left * { display: none; }
 .cards.right {
   top: 32px;
   right: 32px;
   -webkit-transform: translate(544px, 0);
-  background-image: url(../img/right-side.png);
+}
+.cards.bottom.right {
+  top: 544px;
 }
 .cards.visible {
   -webkit-transform: none;

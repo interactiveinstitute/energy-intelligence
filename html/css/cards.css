@@ -15,7 +15,7 @@
   padding: 0;
 }
 
-.card.weeklyExtrema {
+.card {
   border-top: 4px solid;
 }
 
@@ -50,22 +50,86 @@
   display: block;
 }
 
+.card.weeklyExtrema {
+}
 .card.weeklyExtrema p {
-  height: 192px;
-  width: 256px;
-  padding: 64px 0;
-  margin: 0 32px;
+  margin: 0;
+}
+.card.weeklyExtrema .week {
+  background: #232323;
+  position: absolute;
+  top: 96px;
+  left: 14px;
+  right: 14px;
+  bottom: 66px;
+  padding: 32px;
+  font: bold 48px/80px 'HelveticaNeueLT Std Cn', 'HelveticaNeue-CondensedBold', sans-serif;
+  color: #3b3b3b;
 }
 .card.weeklyExtrema .time {
   display: block;
   width: 256px;
   text-align: center;
+  position: absolute;
 }
 .card.weeklyExtrema .min {
   color: #30ad23;
   margin-top: 192px;
+  position: absolute;
+  top: 100px;
+  left: 206px;
+}
+.card.weeklyExtrema .min .value {
+  color: #30ad23;
+  border-color: #30ad23;
 }
 .card.weeklyExtrema .max {
   color: #f96e6e;
   float: right;
+  position: absolute;
+  left: 206px;
+  top: 136px;
+}
+.card.weeklyExtrema .max .value {
+  color: #f96e6e;
+  border-color: #f96e6e;
+}
+
+.card.competition {
+  background-image: url(../img/competition-top3.png);
+}
+.card.competition ul {
+  list-style: none;
+}
+.card.competition li {
+  text-align: center;
+  width: 168px;
+  position: absolute;
+  top: 360px;
+  left: 256px;
+  margin-left: -84px;
+}
+.card.competition li + li {
+  left: 0;
+  margin-left: 0;
+}
+.card.competition li + li + li {
+  left: auto;
+  right: 0;
+}
+.card.competition .value {
+  background-color: #f7db0f;
+  font-size: 28px;
+  line-height: 32px;
+  height: 32px;
+  width: 128px;
+  margin: 16px auto 0 auto;
+}
+.card.competition h2 {
+  font-size: 28px;
+  position: absolute;
+  bottom: 0;
+  text-align: center;
+  left: 0;
+  right: 0;
 }

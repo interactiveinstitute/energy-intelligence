@@ -56,7 +56,11 @@
         var row, _i, _len, _ref, _results;
         _this.containers.html('');
         result.rows.sort(function(a, b) {
-          if (a.id < b.id) {
+          if (a.value.priority < b.value.priority) {
+            return 1;
+          } else if (a.value.priority > b.value.priority) {
+            return -1;
+          } else if (a.id < b.id) {
             return 1;
           } else {
             return -1;
@@ -79,37 +83,48 @@
     };
 
     Cardboard.prototype._add = function(_id, key, card) {
-      var width;
-      console.log('adding', _id, key);
+      var cards, container, data, element, fits, is_this_card, width, _i, _len, _ref, _results;
       width = this.config.card_width;
-      return this.containers.each(function() {
-        var cards, container, data;
-        container = d3.select(this);
-        if (card.height !== container.attr('data-height')) {
-          return;
-        }
-        data = container.data();
-        if (data[0] == null) {
-          data = [];
-        }
-        if (data.every(function(datum) {
-          if (datum._id === _id && datum.key === key) {
-            datum.card = card;
-            return false;
-          } else {
-            return true;
+      _ref = this.containers[0];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        element = _ref[_i];
+        container = d3.select(element);
+        if (card.height <= container.attr('data-height')) {
+          data = container.data();
+          if (data[0] == null) {
+            data = [];
           }
-        })) {
-          data.push({
-            _id: _id,
-            key: key,
-            card: card
-          });
+          fits = data.length * 512 < container.attr('data-height');
+          is_this_card = function(datum) {
+            if (datum._id === _id && datum.key === key) {
+              datum.card = card;
+              return true;
+            } else {
+              return false;
+            }
+          };
+          if (fits && !data.some(is_this_card)) {
+            data.push({
+              _id: _id,
+              key: key,
+              card: card
+            });
+            container.data(data);
+          } else if (data.some(is_this_card)) {
+
+          } else {
+            continue;
+          }
+          cards = container.selectAll('.card').data(data);
+          cards.enter().append('div').classed('card', true).classed(card['class'], true).style('width', width + 'px').style('height', "" + (container.attr('data-height')) + "px").html(card.content);
+          cards.exit().remove();
+          break;
+        } else {
+          _results.push(void 0);
         }
-        cards = container.selectAll('.card').data(data);
-        cards.enter().append('div').classed('card', true).classed(card['class'], true).style('width', width + 'px').style('height', "" + (container.attr('data-height')) + "px").html(card.content);
-        return cards.exit().remove();
-      });
+      }
+      return _results;
     };
 
     return Cardboard;
