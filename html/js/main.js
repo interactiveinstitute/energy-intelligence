@@ -28,8 +28,8 @@
     quick_update: 1000,
     full_update: 30000,
     energy_buffer_size: 10,
-    remote_url: 'http://localhost:8002/',
-    database: 'http://localhost:5984/sp',
+    remote_url: 'http://livinglab.powerprojects.se:8002/',
+    database: 'https://livinglab.powerprojects.se:6984/sp',
     card_width: 512,
     feed: 'allRooms'
   };
