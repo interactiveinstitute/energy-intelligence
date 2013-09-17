@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "data.js",
-  "sourceRoot": "..\\..\\coffee",
+  "sourceRoot": "coffee",
   "sources": [
     "data.coffee.md"
   ],

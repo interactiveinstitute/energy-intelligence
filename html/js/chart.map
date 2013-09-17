@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "chart.js",
-  "sourceRoot": "..\\..\\coffee",
+  "sourceRoot": "coffee",
   "sources": [
     "chart.coffee.md"
   ],

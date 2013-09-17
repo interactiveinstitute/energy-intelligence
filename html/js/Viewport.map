@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "Viewport.js",
+  "sourceRoot": "coffee",
+  "sources": [
+    "Viewport.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA,CAAO,EAAO,GAAR;CAAQ,CACb,GAAA;CADa,CAEb,EAAA;CAFa,CAGb,IAAA;CAHa,CAIb,KAAA;CAJD;;AAOM,CAPN,CAOQ,GAAM;CACA,CAAA,CAAA,eAAA;CACZ,EAAU,CAAV,EAAA;CADD,EAAa;;CAAb;;CARD"
+}

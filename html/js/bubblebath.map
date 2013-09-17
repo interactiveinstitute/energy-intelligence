@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "bubblebath.js",
-  "sourceRoot": "..\\..\\coffee",
+  "sourceRoot": "coffee",
   "sources": [
     "bubblebath.coffee.md"
   ],
