@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "cardboard.js",
-  "sourceRoot": "coffee",
+  "sourceRoot": "..\\..\\coffee",
   "sources": [
     "cardboard.coffee.md"
   ],

@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "utils.js",
-  "sourceRoot": "coffee",
+  "sourceRoot": "..\\..\\coffee",
   "sources": [
     "utils.coffee.md"
   ],
