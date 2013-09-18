@@ -720,7 +720,7 @@ this.Chart = (function() {
     return d3.transition().duration(t).tween('zoom', function() {
       var xInterp,
         _this = this;
-      xInterp = d3.interpolateArray(x.domain(), [x.domain()[0] + dist, x.domain()[1] + dist]);
+      xInterp = d3.interpolateArray(x.domain(), [this.x.domain()[0] + dist, this.x.domain()[1] + dist]);
       return function(t) {
         _this.zoom.x(_this.x.domain(xInterp(t)));
         return _this.transform();

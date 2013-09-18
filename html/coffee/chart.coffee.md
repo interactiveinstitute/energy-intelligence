@@ -779,7 +779,7 @@ If this turns out too intense, it can be simplified to a fixed-duration momentum
         .tween('zoom', ->
           # Create interpolators for x domain
           xInterp = d3.interpolateArray(x.domain(), 
-            [x.domain()[0] + dist, x.domain()[1] + dist]
+            [@x.domain()[0] + dist, @x.domain()[1] + dist]
           )
           # Return a custom tweener (t=0..1), periodically run by d3
           return (t) =>
