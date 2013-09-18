@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "Viewport.js",
-  "sourceRoot": "..\\..\\coffee",
+  "sourceRoot": "..\\coffee",
   "sources": [
     "Viewport.coffee"
   ],

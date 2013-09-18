@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "bubble.js",
-  "sourceRoot": "..\\..\\coffee",
+  "sourceRoot": "..\\coffee",
   "sources": [
     "bubble.coffee.md"
   ],
