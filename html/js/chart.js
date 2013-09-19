@@ -25,7 +25,7 @@ this.Chart = (function() {
     this.momentum = {
       fallOff: 1.1,
       maxScrollTime: 2500,
-      stopThreshold: 25,
+      stopThreshold: 1,
       _speed: 0.0,
       _previousDragFrame: []
     };

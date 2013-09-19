@@ -44,7 +44,7 @@ Momentum scrolling:
           # Don't touch the _* properties!
           fallOff: 1.1,	# The 'friction coefficient'
           maxScrollTime: 2500,	# Stop after this many ms
-          stopThreshold: 25, 	# Used to cancel the animation to save cycles
+          stopThreshold: 1, 	# Used to cancel the animation to save cycles
           _speed: 0.0,	# Current scrolling _speed - should be reset after a touchEnd event!
           _previousDragFrame: []	# Used for _speed calculations
         )
