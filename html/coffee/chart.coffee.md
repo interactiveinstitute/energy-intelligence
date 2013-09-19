@@ -40,9 +40,13 @@ Application state:
 
 Momentum scrolling:
         
-        @momentumScrolling = (
-          friction: 1.0,
-          speed: 0.0
+        @momentum = (
+          # Don't touch the _* properties!
+          fallOff: 1.1,	# The 'friction coefficient'
+          maxScrollTime: 2500,	# Stop after this many ms
+          stopThreshold: 25, 	# Used to cancel the animation to save cycles
+          _speed: 0.0,	# Current scrolling _speed - should be reset after a touchEnd event!
+          _previousDragFrame: []	# Used for _speed calculations
         )
 
 The currently displayed charts are in the `display` array. Currently only one
@@ -127,7 +131,6 @@ Multitouch events are ignored as they are difficult to debug.
           returnTimeout = null
           loadTimeout = null
           zoom = []   # The starting zoom! Set on touchStart, compared to on touchEnd events
-          previousDragFrame = []
           cancel = (timeout) -> clearTimeout timeout if timeout?
           preventMultitouch = ->
             if d3.touches(document.body).length > 1
@@ -138,15 +141,14 @@ Multitouch events are ignored as they are difficult to debug.
                 preventMultitouch()
                 @touching = true
                 zoom = [@zoom.translate()[0], @zoom.scale()]
-                previousDragFrame = @zoom.translate()[0]  #Store the starting x position!
+                @momentum._previousDragFrame = @zoom.translate()[0]  #Store the starting x position!
                 returnTimeout = cancel returnTimeout
               true)
               .on('touchmove', =>
                 preventMultitouch()
-                #TESTING: MOMENTUM SCROLLING!!!
-                #This is where we update the current 'speed' of the scroll
-                @momentumScrolling.speed = @zoom.translate[0] - previousDragFrame;
-                previousDragFrame = @zoom.translate[0]
+                #This is where we update the current '_speed' of the scroll
+                @momentum._speed = @zoom.translate()[0] - @momentum._previousDragFrame;
+                @momentum._previousDragFrame = @zoom.translate()[0]
                 unless @transforming
                   @hideMeter()
                   @transforming = true
@@ -157,9 +159,9 @@ Multitouch events are ignored as they are difficult to debug.
                 @touching = false
                 if @transforming
                   @showMeter()
-                  #TESTING: MOMENTUM SCROLLING!!!
                   #This is where we trigger the momentum animation
                   @setScrollMomentumTransition();
+                  @momentum._previousDragFrame = []	#Reset! Will give null errors if called
                   @transforming = false
                 loadTimeout = cancel loadTimeout
                 if zoom[0] != @zoom.translate()[0] or zoom[1] != @zoom.scale()
@@ -766,25 +768,22 @@ method adjusts ranges, scales and dimensions accordingly.
         @display[0].transform()
 
 The following method is called when the users stops dragging. It calculates an end position to scroll to based on the current velocity,
-then transitions the .zooms transform attribute appropriately. The distance and time taken is based on Euler integration and friction.
+then transitions the .zooms transform attribute appropriately. The distance and time taken is based on a fallOff factor.
 If this turns out too intense, it can be simplified to a fixed-duration momentum scroll.
 
       setScrollMomentumTransition: ->
-        t = (0 - @momentumScrolling.speed) / -@momentumScrolling.friction    # Time to come to standstill from current speed
-        dist = ((@momentumScrolling.friction * Math.pow(t, 2)) / 2) + @momentumScrolling.speed * t    # Distance traveled in that time with constant acceleration
-        
         # Create a code-only transition that modifies the x domain
         d3.transition()
-        .duration(t)
-        .tween('zoom', ->
-          # Create interpolators for x domain
-          xInterp = d3.interpolateArray(x.domain(), 
-            [@x.domain()[0] + dist, @x.domain()[1] + dist]
-          )
+        .duration(@momentum.maxScrollTime)
+        .tween('zoom', =>
           # Return a custom tweener (t=0..1), periodically run by d3
           return (t) =>
+            # Don't do anything if _speed is under stopThreshold
+            return if Math.abs(@momentum._speed) < @momentum.stopThreshold
+            @momentum._speed /= @momentum.fallOff
+            newTranslate = [@zoom.translate()[0] + @momentum._speed, @zoom.translate()[1]]
             @zoom
-              .x(@x.domain(xInterp(t)))   # Reassign the x scale domain, using the previously created interpolator
+              .translate(newTranslate)
             @transform()  # Trigger a redraw/reassign of everything
           )
         .ease()

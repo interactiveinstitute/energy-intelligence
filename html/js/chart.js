@@ -22,9 +22,12 @@ this.Chart = (function() {
     this.transforming = false;
     this.toDefaultView = false;
     this.showLoading = false;
-    this.momentumScrolling = {
-      friction: 1.0,
-      speed: 0.0
+    this.momentum = {
+      fallOff: 1.1,
+      maxScrollTime: 2500,
+      stopThreshold: 25,
+      _speed: 0.0,
+      _previousDragFrame: []
     };
     this.display = [new TotalPower(this)];
     this.x = d3.time.scale();
@@ -97,11 +100,10 @@ this.Chart = (function() {
     });
     this.time.call(this.zoom);
     (function() {
-      var cancel, loadTimeout, preventMultitouch, previousDragFrame, returnTimeout, zoom;
+      var cancel, loadTimeout, preventMultitouch, returnTimeout, zoom;
       returnTimeout = null;
       loadTimeout = null;
       zoom = [];
-      previousDragFrame = [];
       cancel = function(timeout) {
         if (timeout != null) {
           return clearTimeout(timeout);
@@ -117,12 +119,12 @@ this.Chart = (function() {
         preventMultitouch();
         _this.touching = true;
         zoom = [_this.zoom.translate()[0], _this.zoom.scale()];
-        previousDragFrame = _this.zoom.translate()[0];
+        _this.momentum._previousDragFrame = _this.zoom.translate()[0];
         return returnTimeout = cancel(returnTimeout);
       }, true).on('touchmove', function() {
         preventMultitouch();
-        _this.momentumScrolling.speed = _this.zoom.translate[0] - previousDragFrame;
-        previousDragFrame = _this.zoom.translate[0];
+        _this.momentum._speed = _this.zoom.translate()[0] - _this.momentum._previousDragFrame;
+        _this.momentum._previousDragFrame = _this.zoom.translate()[0];
         if (!_this.transforming) {
           _this.hideMeter();
           _this.transforming = true;
@@ -135,6 +137,7 @@ this.Chart = (function() {
         if (_this.transforming) {
           _this.showMeter();
           _this.setScrollMomentumTransition();
+          _this.momentum._previousDragFrame = [];
           _this.transforming = false;
         }
         loadTimeout = cancel(loadTimeout);
@@ -714,15 +717,16 @@ this.Chart = (function() {
   };
 
   Chart.prototype.setScrollMomentumTransition = function() {
-    var dist, t;
-    t = (0 - this.momentumScrolling.speed) / -this.momentumScrolling.friction;
-    dist = ((this.momentumScrolling.friction * Math.pow(t, 2)) / 2) + this.momentumScrolling.speed * t;
-    return d3.transition().duration(t).tween('zoom', function() {
-      var xInterp,
-        _this = this;
-      xInterp = d3.interpolateArray(x.domain(), [this.x.domain()[0] + dist, this.x.domain()[1] + dist]);
+    var _this = this;
+    return d3.transition().duration(this.momentum.maxScrollTime).tween('zoom', function() {
       return function(t) {
-        _this.zoom.x(_this.x.domain(xInterp(t)));
+        var newTranslate;
+        if (Math.abs(_this.momentum._speed) < _this.momentum.stopThreshold) {
+          return;
+        }
+        _this.momentum._speed /= _this.momentum.fallOff;
+        newTranslate = [_this.zoom.translate()[0] + _this.momentum._speed, _this.zoom.translate()[1]];
+        _this.zoom.translate(newTranslate);
         return _this.transform();
       };
     }).ease();
