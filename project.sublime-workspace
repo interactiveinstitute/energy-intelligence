@@ -1,0 +1,319 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "coffee/chart.coffee.md",
+			"settings":
+			{
+				"buffer_size": 26116,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "html/js/chart.js",
+			"settings":
+			{
+				"buffer_size": 25134,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "Packages/Python/Python.sublime-build",
+	"command_palette":
+	{
+		"height": 77.0,
+		"selected_items":
+		[
+			[
+				"package remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"tabs",
+				"View: Toggle Tabs"
+			],
+			[
+				"ss coffee",
+				"Set Syntax: CoffeeScript (Literate)"
+			],
+			[
+				"package install",
+				"Package Control: Install Package"
+			],
+			[
+				"package",
+				"Package Control: Remove Package"
+			],
+			[
+				"rein",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"ss json",
+				"Set Syntax: JSON"
+			],
+			[
+				"mini",
+				"View: Toggle Minimap"
+			],
+			[
+				"ss python",
+				"Set Syntax: Python"
+			],
+			[
+				"pyth",
+				"Set Syntax: Python"
+			],
+			[
+				"ss pyth",
+				"Set Syntax: Python"
+			],
+			[
+				"spaces",
+				"Indentation: Convert to Spaces"
+			],
+			[
+				"ss",
+				"Set Syntax: Python"
+			],
+			[
+				"ss javas",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"minimap",
+				"View: Toggle Minimap"
+			]
+		],
+		"width": 527.0
+	},
+	"console":
+	{
+		"height": 176.0,
+		"history":
+		[
+			"import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); open(os.path.join(ipp, pf), 'wb').write(urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ','%20')).read())"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": false,
+		"show_minimap": true,
+		"show_open_files": false,
+		"show_tabs": true,
+		"side_bar_visible": true,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/project.sublime-project",
+		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/Better CoffeeScript/CoffeeScript.sublime-settings",
+		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/CoffeeScript.sublime-settings",
+		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/CoffeeCompile/CoffeeCompile.sublime-settings",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/chart.js",
+		"/C/Users/Thijs/Desktop/Internship/Week 6/SP meeting.txt",
+		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Thijs/Desktop/Programming/Python/astar.py",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/coffee/chart.coffee.md",
+		"/C/Users/Thijs/Desktop/Programming/Python/mergeSort.py",
+		"/C/Users/Thijs/Downloads/Luxology Modo v7.0.1 SP1 XFORCE/x-force.nfo"
+	],
+	"find":
+	{
+		"height": 30.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"list"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "coffee/chart.coffee.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 26116,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1212,
+								1212
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript_Literate.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 480.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 1,
+					"file": "html/js/chart.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 25134,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								428,
+								428
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 30.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			0.5,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.coffee_compile_output":
+	{
+		"height": 133.0
+	},
+	"output.exec":
+	{
+		"height": 112.0
+	},
+	"project": "project.sublime-project",
+	"replace":
+	{
+		"height": 56.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": false,
+	"side_bar_width": 225.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
