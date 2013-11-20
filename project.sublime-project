@@ -1,17 +1,25 @@
 {
-	"CoffeeScript": 
+	"CoffeeScript":
 	[
-	{
-		"compileDir": "../html/js",
-		"lintOnSave": true,
-		"compileOnSave": true
-	}
+		{
+			"compileDir": "../html/js",
+			"compileOnSave": true,
+			"lintOnSave": true
+		}
+	],
+	"CoffeeScript (Literate)":
+	[
+		{
+			"compileDir": "../html/js",
+			"compileOnSave": true,
+			"lintOnSave": true
+		}
 	],
 	"folders":
 	[
-	{
-		"follow_symlinks": true,
-		"path": "C:\\Users\\Thijs\\Documents\\GitHub\\energy-screen"
-	}
+		{
+			"follow_symlinks": true,
+			"path": "C:\\Users\\Thijs\\Documents\\GitHub\\energy-screen"
+		}
 	]
 }

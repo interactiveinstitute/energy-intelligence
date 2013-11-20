@@ -773,13 +773,14 @@ If this turns out too intense, it can be simplified to a fixed-duration momentum
 
       setScrollMomentumTransition: ->
         # Create a code-only transition that modifies the x domain
-        d3.transition()
+        # Assigned to @time so it can be cancelled/referenced again
+        @time.transition()
         .duration(@momentum.maxScrollTime)
         .tween('zoom', =>
           # Return a custom tweener (t=0..1), periodically run by d3
           return (t) =>
             # Don't do anything if _speed is under stopThreshold
-            return if Math.abs(@momentum._speed) < @momentum.stopThreshold
+            @time.transition() if Math.abs(@momentum._speed) < @momentum.stopThreshold
             @momentum._speed /= @momentum.fallOff
             newTranslate = [@zoom.translate()[0] + @momentum._speed, @zoom.translate()[1]]
             @zoom

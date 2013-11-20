@@ -1,0 +1,60 @@
+#####################
+## What I will build:
+#####################
+
+> Plot the absence energy against total energy consumption, as defined in the "Efficiency Graph" design.
+	>> A top line displaying "Energy Consumption" in red, behaving just as the current graph does.
+	>> A line negatively superimposed on this energy consumption, in blue, plotting the absence/waste/away energy. This new line (consumption - waste) will be called "Needed energy"/"Useful energy consumption".
+	>> The area under the top line to the x-axis will be shaded in blue.
+	>> The area between these two lines will be shaded in crosshatched red, with the blue from the underlying area still shining through
+> Smoother and more accurate touch momentum scrolling, as taken from Instant Energy app
+
+
+
+
+#####################
+## What I might build:
+#####################
+
+> Remake the 'heartbeat' animation to correspond to energy consumption rate
+	>> Either a fading pulse or the same animation path thing
+	>> The numbers inside show current energy consumption, not total energy on the screen
+> I might try to fix the scaling issues for different screen sizes. It currently 'works' on that one screen, but really needs an overhaul to be flexible in application.
+> Different bubble time overlays: The current white block does not make any sense, since it overlays a bar graph with 2 axes and a different unit system over the line graph without any indication that this is the case.
+	>> Instead, shade the area under the graph in a slightly lighter tone and outline it with orange (put orange in the bubbles as well!)
+
+
+
+
+
+#####################
+## What we keep:
+#####################
+
+> The present zoom slider
+	>> RECOMMENDATION:
+		Discrete zoom levels (Workday(9-5 + padding), Today and yesterday (24 hours, 0:00 to 0:00), whole week, month), with the currently displayed range prominently displayed below the graph and tick labels adjusted to a matching format. (E.g. In week mode: "Monday -> Morning, Afternoon, Night"; In day mode: "12:00, 15:00, ...")
+		>>> Slide the circle over the line to change zoom level.
+		>>> One main advantage is that we can customize the graph scaling, ticks and labels MUCH easier with separate discrete zoom levels. User testing shows that there is not one kind of labeling or ticks/grids that works for all zoom levels acceptably, and that the transitions between the existing zoom levels disoriented users.
+		Furthermore, there are very few reasons why you would ever want to display 3.75 weeks or something like that on the screen.
+> The data loading system
+	>> RECOMMENDATION: 
+		Chunked data, stored in a local tree store for fast processing and querying
+		>>> One tree level for every zoom level, with certain data preprocessed stored along with it
+		>>> B-tree or similar tree structure allows for quick data insertion (width and depth-wise!), deletion and processing of meta-data.
+> Current single-graph layout
+	>> RECOMMENDATION: Use the 3-button system I outlined in my preliminary designs, or the rose menu as found in the mockups. Rose menu is especially strong since it retains the "drag = affect data display" paradigm (as found in zooming, panning, etc).
+> The bubbles exactly as they are. They can still relate to the total energy graph. How they are generated is a completely opaque system and mostly undocumented.
+	>> RECOMMENDATION: 
+		Turn the "BubbleBath" into a more useful thing displaying how many bubbles are stored there (for a given time period! How many of these are stored and how far back and which ones needs some serious thought! Relevant factors: Current zoom level, relevance of the bubble on the long term, bubbles that override each other, etc...)
+		>>> It should display the amount of bubbles that are 'contained' in it.
+		>>> When you click it, it should expand to a simple horizontal scrolling list that displays them in the order they appear in the timeline. Clicking one of these zooms the view back so the bubble in question is centered on the screen.
+> The bottom bar. There are some features on there (bubbles on/off, jump to "now"). Pending a bigger redesign, there is no reason to move or change these otherwise.
+> The competition element. It is almost entirely undocumented in the code, existing infrastructure is lacking/non-existent and.
+	>> RECOMMENDATION: 
+		Its purpose is both unclear and, in my experience, unnecessary and counterproductive to good motivational properties of the Energy Screen. Competition is extrinsic motivation which only rarely leads to long-term behavioural change and tends to frustrate users.
+		Further, it is completely up in the air what users are actually competing on and how this is integrated into the rest of the SP ecosystem.
+> The look and feel of the screen. Color schemes and overall layout and style will remain unchanged.
+	>> RECOMMENDATION: 
+		Much lighter, less "90's techno sciencefiction" look. Go along with current design trends and match the feeling and associations of the break-room: friendlier, on break time so not as difficult as their work, fun to explore with others perhaps. The typical usecase of this screen will be a 15 second to 1 minute quick look at data, not an in-depth analysis. (That's what Instant Energy is for!).
+		We don't want energy awareness to be "serious business" - the engineers at SP already have spreadsheets and matlab for that sort of thing, and we can never match that functionality. The strength of the energy screen is in quick and fun 'reminders' - presence in mind.
