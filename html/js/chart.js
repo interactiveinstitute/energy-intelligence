@@ -65,7 +65,3 @@ this.xAxis = d3.svg.axis().orient('bottom').scale(this.x).ticks(10).tickPadding(
 this.yAxis = d3.svg.axis().scale(this.y).orient('left').ticks(5).tickPadding(6).tickFormat(function(d) {
   return "" + d + " " + _this.display[0].unit;
 });
-
-/*
-//@ sourceMappingURL=chart.map
-*/

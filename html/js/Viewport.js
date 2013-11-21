@@ -14,7 +14,3 @@ ES.Graph.Viewport = (function() {
   return Viewport;
 
 })();
-
-/*
-//@ sourceMappingURL=Viewport.map
-*/

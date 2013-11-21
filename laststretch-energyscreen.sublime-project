@@ -3,8 +3,7 @@
 	[
 		{
 			"compileDir": "../html/js",
-			"compileOnSave": true,
-			"lintOnSave": true
+			"compileOnSave": true
 		}
 	],
 	"folders":

@@ -7,13 +7,45 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "html/coffee/data.coffee.md",
+			"settings":
+			{
+				"buffer_size": 9368,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "html/coffee/chart.coffee.md",
+			"settings":
+			{
+				"buffer_size": 18508,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "html/index.html",
+			"settings":
+			{
+				"buffer_size": 3461,
+				"line_ending": "Windows"
+			}
+		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
 	{
-		"height": 109.0,
+		"height": 369.0,
 		"selected_items":
 		[
+			[
+				"ss co",
+				"Set Syntax: CoffeeScript"
+			],
+			[
+				"coffee",
+				"Coffee: Lint"
+			],
 			[
 				"ss coffee",
 				"Set Syntax: CoffeeScript"
@@ -116,12 +148,12 @@
 	},
 	"file_history":
 	[
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/Viewport.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/utils.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/remote.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/main.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee.md",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/cardboard.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubblebath.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubble.coffee.md",
@@ -141,13 +173,14 @@
 	],
 	"find":
 	{
-		"height": 30.0
+		"height": 46.0
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 120.0,
 		"where_history":
 		[
+			""
 		]
 	},
 	"find_state":
@@ -155,6 +188,17 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"1000",
+			".init",
+			"@time",
+			"time",
+			"time:",
+			"time =",
+			"time",
+			"Entaroadun",
+			"resampledAt",
+			"TODO",
+			"TotalEnergy",
 			"compileOnSave",
 			"list"
 		],
@@ -174,8 +218,95 @@
 	"groups":
 	[
 		{
+			"selected": 1,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "html/coffee/data.coffee.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 9368,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3299,
+								3299
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2815.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "html/coffee/chart.coffee.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 18508,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								566,
+								566
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "html/index.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3461,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1302,
+								1302
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1118.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
 			]
 		}
 	],
@@ -229,6 +360,10 @@
 		"height": 0.0,
 		"selected_items":
 		[
+			[
+				"index.html",
+				"html\\index.html"
+			]
 		],
 		"width": 0.0
 	},
