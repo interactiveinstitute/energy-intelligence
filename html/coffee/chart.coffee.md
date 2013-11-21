@@ -74,6 +74,7 @@ class @Chart
 					.on('touchstart', =>
 						preventMultitouch()
 						@touching = true
+						@time.transition()	# Reset any previous momentum scroll transitions
 						zoom = [@zoom.translate()[0], @zoom.scale()]
 						@momentum._previousDragFrame = @zoom.translate()[0]  #Store the starting x position!
 						returnTimeout = cancel returnTimeout
