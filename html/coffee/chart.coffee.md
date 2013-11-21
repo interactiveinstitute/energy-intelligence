@@ -253,6 +253,8 @@ class @Chart
 			setTimeout (=> @quickUpdate()), untilQuick
 	
 	quickUpdate: ->
+		# THIJSTODO: Figure out when this is called and what happens with the @data.push call below!
+		# Can this be tweaked to include wasted energy as well?
 		@lastQuickUpdate = +new Date
 		@scheduleUpdate()
 		unless @touching
