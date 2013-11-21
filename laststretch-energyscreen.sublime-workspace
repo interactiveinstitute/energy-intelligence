@@ -8,43 +8,27 @@
 	"buffers":
 	[
 		{
-			"file": "html/coffee/data.coffee.md",
+			"file": "html/js/data.js",
 			"settings":
 			{
-				"buffer_size": 9368,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "html/coffee/chart.coffee.md",
-			"settings":
-			{
-				"buffer_size": 18508,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "html/index.html",
-			"settings":
-			{
-				"buffer_size": 3461,
-				"line_ending": "Windows"
+				"buffer_size": 11190,
+				"line_ending": "Unix"
 			}
 		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
 	{
-		"height": 369.0,
+		"height": 77.0,
 		"selected_items":
 		[
 			[
-				"ss co",
-				"Set Syntax: CoffeeScript"
+				"package remove",
+				"Package Control: Remove Package"
 			],
 			[
-				"coffee",
-				"Coffee: Lint"
+				"packge list",
+				"Package Control: List Packages"
 			],
 			[
 				"ss coffee",
@@ -55,12 +39,24 @@
 				"Indentation: Convert to Tabs"
 			],
 			[
+				"indent tab",
+				"Indentation: Convert to Tabs"
+			],
+			[
 				"rein",
 				"Indentation: Reindent Lines"
 			],
 			[
-				"indent tab",
+				"conv tab",
 				"Indentation: Convert to Tabs"
+			],
+			[
+				"ss co",
+				"Set Syntax: CoffeeScript"
+			],
+			[
+				"coffee",
+				"Coffee: Lint"
 			],
 			[
 				"ss coc",
@@ -77,10 +73,6 @@
 			[
 				"mini",
 				"View: Toggle Minimap"
-			],
-			[
-				"package remove",
-				"Package Control: Remove Package"
 			],
 			[
 				"tabs",
@@ -127,7 +119,7 @@
 				"View: Toggle Minimap"
 			]
 		],
-		"width": 527.0
+		"width": 549.0
 	},
 	"console":
 	{
@@ -148,20 +140,26 @@
 	},
 	"file_history":
 	[
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee.md",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/Viewport.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/data.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/utils.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/utils.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/remote.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/remote.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/main.coffee.md",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/main.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/Viewport.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/cardboard.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubblebath.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubble.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/chart.js",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/CoffeeScript.sublime-settings",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/index.html",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/laststretch-energyscreen.sublime-project",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/project.sublime-project",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/Better CoffeeScript/CoffeeScript.sublime-settings",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/bubble.js",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/chart.js",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/Distraction Free.sublime-settings",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/coffee/chart.coffee.md",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/CoffeeCompile/CoffeeCompile.sublime-settings",
@@ -180,6 +178,7 @@
 		"height": 120.0,
 		"where_history":
 		[
+			"<open files>",
 			""
 		]
 	},
@@ -188,6 +187,9 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"Herpderp",
+			",\\n",
+			",",
 			"1000",
 			".init",
 			"@time",
@@ -205,9 +207,11 @@
 		"highlight": true,
 		"in_selection": false,
 		"preserve_case": false,
-		"regex": false,
+		"regex": true,
 		"replace_history":
 		[
+			"\\n",
+			","
 		],
 		"reverse": false,
 		"show_context": true,
@@ -218,91 +222,39 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"sheets":
+			[
+			]
+		},
+		{
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "html/coffee/data.coffee.md",
+					"file": "html/js/data.js",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 9368,
+						"buffer_size": 11190,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3299,
-								3299
+								1203,
+								1207
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
 							"tab_size": 2,
 							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 2815.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "html/coffee/chart.coffee.md",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 18508,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								566,
-								566
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "html/index.html",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3461,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1302,
-								1302
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/HTML/HTML.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1118.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -327,11 +279,18 @@
 				0,
 				1,
 				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
 			]
 		],
 		"cols":
 		[
 			0.0,
+			0.5,
 			1.0
 		],
 		"rows":
