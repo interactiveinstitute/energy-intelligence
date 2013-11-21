@@ -7,30 +7,6 @@
 	},
 	"buffers":
 	[
-		{
-			"file": "html/coffee/bubble.coffee.md",
-			"settings":
-			{
-				"buffer_size": 3800,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "html/js/bubble.js",
-			"settings":
-			{
-				"buffer_size": 4803,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "project.sublime-project",
-			"settings":
-			{
-				"buffer_size": 233,
-				"line_ending": "Unix"
-			}
-		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
@@ -43,16 +19,32 @@
 				"Set Syntax: CoffeeScript"
 			],
 			[
+				"indent tabs",
+				"Indentation: Convert to Tabs"
+			],
+			[
+				"rein",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"indent tab",
+				"Indentation: Convert to Tabs"
+			],
+			[
+				"ss coc",
+				"Set Syntax: CoffeeScript (Literate)"
+			],
+			[
+				"ss coff",
+				"Set Syntax: CoffeeScript"
+			],
+			[
 				"ss Coffee",
 				"Set Syntax: CoffeeScript"
 			],
 			[
 				"mini",
 				"View: Toggle Minimap"
-			],
-			[
-				"rein",
-				"Indentation: Reindent Lines"
 			],
 			[
 				"package remove",
@@ -124,14 +116,22 @@
 	},
 	"file_history":
 	[
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/project.sublime-project",
-		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/CoffeeScript.sublime-settings",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/bubble.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/Viewport.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/utils.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/remote.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/main.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/cardboard.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubblebath.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubble.coffee.md",
+		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/CoffeeScript.sublime-settings",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/project.sublime-project",
+		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/Better CoffeeScript/CoffeeScript.sublime-settings",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/bubble.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/chart.js",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/Distraction Free.sublime-settings",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/coffee/chart.coffee.md",
-		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/Better CoffeeScript/CoffeeScript.sublime-settings",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/CoffeeCompile/CoffeeCompile.sublime-settings",
 		"/C/Users/Thijs/Desktop/Internship/Week 6/SP meeting.txt",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
@@ -155,6 +155,7 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"compileOnSave",
 			"list"
 		],
 		"highlight": true,
@@ -173,101 +174,8 @@
 	"groups":
 	[
 		{
-			"selected": 0,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "html/coffee/bubble.coffee.md",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3800,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								135,
-								135
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 1,
-			"sheets":
-			[
-				{
-					"buffer": 1,
-					"file": "html/js/bubble.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 4803,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "project.sublime-project",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 233,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JSON.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				}
 			]
 		}
 	],
@@ -288,18 +196,11 @@
 				0,
 				1,
 				1
-			],
-			[
-				1,
-				0,
-				2,
-				1
 			]
 		],
 		"cols":
 		[
 			0.0,
-			0.5,
 			1.0
 		],
 		"rows":
@@ -317,7 +218,7 @@
 	{
 		"height": 112.0
 	},
-	"project": "project.sublime-project",
+	"project": "laststretch-energyscreen.sublime-project",
 	"replace":
 	{
 		"height": 56.0
