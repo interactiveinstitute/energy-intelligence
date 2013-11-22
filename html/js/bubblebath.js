@@ -65,9 +65,6 @@ this.BubbleBath = (function() {
       this.chart = chart;
       this.container = container;
       return chart.time.on('touchstart', function() {
-        if (chart.display[0].type !== 'TotalPower') {
-          return;
-        }
         if (d3.touches(this).length === 1) {
           opening = true;
           position = d3.touches(this)[0];

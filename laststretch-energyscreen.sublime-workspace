@@ -7,21 +7,21 @@
 	},
 	"buffers":
 	[
-		{
-			"file": "html/js/data.js",
-			"settings":
-			{
-				"buffer_size": 11190,
-				"line_ending": "Unix"
-			}
-		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
 	{
-		"height": 77.0,
+		"height": 109.0,
 		"selected_items":
 		[
+			[
+				"ss coffee",
+				"Set Syntax: CoffeeScript"
+			],
+			[
+				"package install",
+				"Package Control: Install Package"
+			],
 			[
 				"package remove",
 				"Package Control: Remove Package"
@@ -29,10 +29,6 @@
 			[
 				"packge list",
 				"Package Control: List Packages"
-			],
-			[
-				"ss coffee",
-				"Set Syntax: CoffeeScript"
 			],
 			[
 				"indent tabs",
@@ -79,10 +75,6 @@
 				"View: Toggle Tabs"
 			],
 			[
-				"package install",
-				"Package Control: Install Package"
-			],
-			[
 				"package",
 				"Package Control: Remove Package"
 			],
@@ -119,7 +111,7 @@
 				"View: Toggle Minimap"
 			]
 		],
-		"width": 549.0
+		"width": 527.0
 	},
 	"console":
 	{
@@ -140,15 +132,23 @@
 	},
 	"file_history":
 	[
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubblebath.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/cardboard.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/main.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/remote.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/utils.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/Viewport.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubble.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/data.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/utils.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/utils.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/remote.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/remote.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/main.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/main.js",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/Viewport.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/cardboard.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubblebath.coffee.md",
@@ -178,6 +178,7 @@
 		"height": 120.0,
 		"where_history":
 		[
+			"C:\\Users\\Thijs\\Documents\\GitHub\\energy-screen\\html\\coffee",
 			"<open files>",
 			""
 		]
@@ -187,6 +188,7 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"TotalPower",
 			"Herpderp",
 			",\\n",
 			",",
@@ -207,7 +209,7 @@
 		"highlight": true,
 		"in_selection": false,
 		"preserve_case": false,
-		"regex": true,
+		"regex": false,
 		"replace_history":
 		[
 			"\\n",
@@ -225,41 +227,6 @@
 			"sheets":
 			[
 			]
-		},
-		{
-			"selected": 0,
-			"sheets":
-			[
-				{
-					"buffer": 0,
-					"file": "html/js/data.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 11190,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1203,
-								1207
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				}
-			]
 		}
 	],
 	"incremental_find":
@@ -268,7 +235,7 @@
 	},
 	"input":
 	{
-		"height": 0.0
+		"height": 46.0
 	},
 	"layout":
 	{
@@ -279,18 +246,11 @@
 				0,
 				1,
 				1
-			],
-			[
-				1,
-				0,
-				2,
-				1
 			]
 		],
 		"cols":
 		[
 			0.0,
-			0.5,
 			1.0
 		],
 		"rows":
@@ -319,6 +279,10 @@
 		"height": 0.0,
 		"selected_items":
 		[
+			[
+				"data",
+				"html\\coffee\\data.coffee.md"
+			],
 			[
 				"index.html",
 				"html\\index.html"

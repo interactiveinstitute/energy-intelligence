@@ -16,7 +16,7 @@ class @Chart
 			_previousDragFrame: []	# Used for _speed calculations
 		}
 
-		@display = [new TotalPower @]
+		@display = [new EfficiencyPlot(@)]
 		@x = d3.time.scale()
 		@y = d3.scale.linear()
 				.domain [0, @config.y_axis_minimum_size]
@@ -157,7 +157,8 @@ class @Chart
 				overview.classed 'active', true
 			true)
 			button('watt-hours', (showWh) =>
-				@display[0] = new (if showWh then TotalEnergy else TotalPower)(@)
+				#FIXME: Conversion to EfficiencyPlot!
+				#@display[0] = new (if showWh then TotalEnergy else TotalPower)(@)
 				@display[0].init()
 				@loadData()
 			false)

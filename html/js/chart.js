@@ -20,7 +20,7 @@ this.Chart = (function() {
       _speed: 0.0,
       _previousDragFrame: []
     };
-    this.display = [new TotalPower(this)];
+    this.display = [new EfficiencyPlot(this)];
     this.x = d3.time.scale();
     this.y = d3.scale.linear().domain([0, this.config.y_axis_minimum_size]);
     formats = [
@@ -205,7 +205,6 @@ this.Chart = (function() {
         return overview.classed('active', true);
       }, true);
       button('watt-hours', function(showWh) {
-        _this.display[0] = new (showWh ? TotalEnergy : TotalPower)(_this);
         _this.display[0].init();
         return _this.loadData();
       }, false);

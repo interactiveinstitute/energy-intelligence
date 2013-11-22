@@ -49,7 +49,7 @@ class @BubbleBath
 		do (@chart, @container) ->
 			chart.time
 					.on('touchstart', () ->
-						return unless chart.display[0].type is 'TotalPower'
+						#return unless chart.display[0].type is 'TotalPower'
 						if d3.touches(@).length is 1
 							opening = true
 							position = d3.touches(@)[0]
