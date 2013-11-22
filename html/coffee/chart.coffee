@@ -16,7 +16,7 @@ class @Chart
 			_previousDragFrame: []	# Used for _speed calculations
 		}
 
-		@display = [new TotalEnergy(@)]
+		@display = [new TotalPower(@)]
 		@x = d3.time.scale()
 		@y = d3.scale.linear()
 				.domain [0, @config.y_axis_minimum_size]
