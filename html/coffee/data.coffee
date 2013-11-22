@@ -1,3 +1,140 @@
+class @EfficiencyPlot
+	type: 'EfficiencyPlot'
+	unit: 'Wh'
+	feed: 'allRooms',             #TODO
+	datastream: 'ElectricEnergy'  #TODO
+
+
+	constructor: (@chart)->
+		@energyLine = d3.svg.line()
+			.x((d) => @chart.x(d.resampledAt))
+			.y((d) => @chart.y(d.value))
+		@energyArea = d3.svg.area()
+			.x((d) => @chart.x(d.resampledAt))
+			.y0((d) => @chart.height - @chart.config.padding_bottom)
+			.y1((d) => @chart.y(d.value))
+		@wasteLine = d3.svg.line()
+			.x((d) => @chart.x(d.resampledAt))
+			.y((d) => @chart.y(d.value))
+		@wasteArea = d3.svg.area()
+			.x((d) => @chart.x(d.resampledAt))
+			.y0((d) => @chart.height - @chart.config.padding_bottom)
+			.y1((d) => @chart.y(d.value))
+
+	init: ()->
+		container = @chart.time.select('.container')
+			.attr('transform', '')
+		container.selectAll('*').remove()
+		# Energy Area
+		container.append('path')
+			.classed('area', true)
+			.classed('energy', true)
+			.datum([])
+			.attr('d', @energyArea)
+		# Waste Area
+		container.append('path')
+			.classed('area', true)
+			.classed('waste', true)
+			.datum([])
+			.attr('d', @wasteArea)
+		# Waste line
+		container.append('path')
+			.classed('line', true)
+			.classed('waste', true)
+			.datum([])
+			.attr('d', @wasteLine)
+		# Energy Line
+		container.append('path')
+			.classed('line', true)
+			.classed('energy', true)
+			.datum([])
+			.attr('d', @energyLine)
+	
+	getDataFromRequest: (params, result) ->
+		resample = +new Date params.start
+		result.datapoints.map (d, i) ->
+			at: new Date d.at
+			resampledAt: new Date resample + i * params.interval * 1000
+			value: parseFloat d.value ? 0
+			measuredAt: new Date d.debug[2]
+
+	transformExtras: () ->
+		if !@chart.doc?
+			return
+		y = @chart.y(@chart.doc.ElectricPower)
+		@chart.time.select('.nowLine')
+			.attr('x', @chart.x(new Date) - @chart.config.now_bar_width)
+			.attr('y', y)
+			.attr('height', @chart.height - @chart.config.padding_bottom - y)
+		@chart.time.select('.nowDot')
+			.attr('cx', @chart.x(new Date()))
+			.attr('cy', y)
+
+	setDataAndTransform: (data, from, to, transition = true) ->
+		transitionLength = if transition then 1000 else 1
+		# Assign new data and set a transition on all the .area elements
+		@chart.time.selectAll('.area')
+			.datum(data)
+			.attr('transform', from)
+			.transition()
+			.duration(transitionLength)
+			.attr('transform', to)
+		@chart.time.selectAll('.line')
+			.datum(data)
+			.attr('transform', from)
+			.transition()
+			.duration(transitionLength)
+			.attr('transform', to)
+		# Run the assigned data through the generators and set it as the path.d property
+		@transform()
+
+	transform: () ->
+		@chart.time.select('.area.energy')
+			.attr('d', @energyArea)
+		@chart.time.select('.area.waste')
+			.attr('d', @wasteArea)
+		@chart.time.select('.line.energy')
+			.attr('d', @energyLine)
+		@chart.time.select('.line.waste')
+			.attr('d', @wasteLine)
+
+	getParameters: (domain) ->
+		start = domain[0]
+		duration = +domain[1] - +domain[0]
+		actualStart = +start - duration
+		actualEnd = Math.min(+start + 2 * duration, +new Date)
+		actualDuration = Math.max(+actualStart, actualEnd) - +actualStart
+		n = @chart.width / @chart.config.sample_size
+		for interval, i in @chart.config.intervals
+			break if interval > duration / n / 1000
+		interval = @chart.config.intervals[i - 1] ? 1
+		n = Math.ceil duration * 3 / interval / 1000
+		interval: interval
+		duration: "#{parseInt actualDuration / 1000}seconds"
+		start: new Date(actualStart).toJSON()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class @TotalPower
 	type: 'TotalPower'
 	unit: 'W'
@@ -100,147 +237,6 @@ class @TotalPower
 		interval: interval
 		duration: "#{parseInt actualDuration / 1000}seconds"
 		start: new Date(actualStart).toJSON()
-
-
-class @EfficiencyPlot
-	type: 'EfficiencyPlot'
-	unit: 'Wh'
-	feed: 'allRooms',             #TODO
-	datastream: 'ElectricEnergy'  #TODO
-
-
-	constructor: (@chart)->
-		@energyLine = d3.svg.line()
-			.x((d) => @chart.x(d.resampledAt))
-			.y((d) => @chart.y(d.value))
-		@energyArea = d3.svg.area()
-			.x((d) => @chart.x(d.resampledAt))
-			.y0((d) => @chart.height - @chart.config.padding_bottom)
-			.y1((d) => @chart.y(d.value))
-		@wasteLine = d3.svg.line()
-			.x((d) => @chart.x(d.resampledAt))
-			.y((d) => @chart.y(d.value))
-		@wasteArea = d3.svg.area()
-			.x((d) => @chart.x(d.resampledAt))
-			.y0((d) => @chart.height - @chart.config.padding_bottom)
-			.y1((d) => @chart.y(d.value))
-
-	init: ()->
-		container = @chart.time.select('.container')
-			.attr('transform', '')
-		container.selectAll('*').remove()
-		# Energy Area
-		container.append('path')
-			.classed('area', true)
-			.classed('energy', true)
-			.datum([])
-			.attr('d', @energyArea)
-		# Waste Area
-		container.append('path')
-			.classed('area', true)
-			.classed('waste', true)
-			.datum([])
-			.attr('d', @wasteArea)
-		# Waste line
-		container.append('path')
-			.classed('line', true)
-			.classed('waste', true)
-			.datum([])
-			.attr('d', @wasteLine)
-		# Energy Line
-		container.append('path')
-			.classed('line', true)
-			.classed('energy', true)
-			.datum([])
-			.attr('d', @energyLine)
-	
-	getDataFromRequest: (params, result) ->
-		''' I guess this is where received data is sent and formatted? '''
-		resample = +new Date(params.start)
-		result.datapoints.map (d, i) ->
-			at: new Date(d.at)
-			resampledAt: new Date(resample + i * params.interval * 1000)
-			value: parseFloat(d.value ? 0)
-			measuredAt: new Date(d.debug[2])
-
-	transformExtras: () ->
-		if !@chart.doc?
-			return
-		y = @chart.y(@chart.doc.ElectricPower)
-		@chart.time.select('.nowLine')
-			.attr('x', @chart.x(new Date) - @chart.config.now_bar_width)
-			.attr('y', y)
-			.attr('height', @chart.height - @chart.config.padding_bottom - y)
-		@chart.time.select('.nowDot')
-			.attr('cx', @chart.x(new Date()))
-			.attr('cy', y)
-
-	setDataAndTransform: (data, from, to, transition = true) ->
-		transitionLength = if transition then 1000 else 1
-		# Assign new data and set a transition on all the .area elements
-		@chart.time.select('.area')
-			.datum(data)
-			.attr('transform', from)
-			.transition()
-			.duration(transitionLength)
-			.attr('transform', to)
-		@chart.time.select('.line')
-			.datum(data)
-			.attr('transform', from)
-			.transition()
-			.duration(transitionLength)
-			.attr('transform', to)
-		# Run the assigned data through the generators and set it as the path.d property
-		@transform()
-
-	transform: () ->
-		@chart.time.select('.area.energy')
-			.attr('d', @energyArea)
-		@chart.time.select('.area.waste')
-			.attr('d', @wasteArea)
-		@chart.time.select('.line.energy')
-			.attr('d', @energyLine)
-		@chart.time.select('.line.waste')
-			.attr('d', @wasteLine)
-
-	getParameters: (domain) ->
-		start = domain[0]
-		duration = +domain[1] - +domain[0]
-		actualStart = +start - duration
-		actualEnd = Math.min(+start + 2 * duration, +new Date)
-		actualDuration = Math.max(+actualStart, actualEnd) - +actualStart
-		n = @chart.width / @chart.config.sample_size
-		for interval, i in @chart.config.intervals
-			break if interval > duration / n / 1000
-		interval = @chart.config.intervals[i - 1] ? 1
-		n = Math.ceil duration * 3 / interval / 1000
-		interval: interval
-		duration: "#{parseInt actualDuration / 1000}seconds"
-		start: new Date(actualStart).toJSON()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
