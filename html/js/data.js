@@ -6,7 +6,7 @@ this.EfficiencyPlot = (function() {
 
   EfficiencyPlot.prototype.feed = 'allRooms';
 
-  EfficiencyPlot.prototype.datastream = 'ElectricEnergy';
+  EfficiencyPlot.prototype.datastream = 'ElectricPower';
 
   function EfficiencyPlot(chart) {
     var _this = this;
