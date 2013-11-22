@@ -20,7 +20,7 @@ this.Chart = (function() {
       _speed: 0.0,
       _previousDragFrame: []
     };
-    this.display = [new EfficiencyPlot(this)];
+    this.display = [new TotalEnergy(this)];
     this.x = d3.time.scale();
     this.y = d3.scale.linear().domain([0, this.config.y_axis_minimum_size]);
     formats = [

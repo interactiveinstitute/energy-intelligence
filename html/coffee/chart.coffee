@@ -11,12 +11,12 @@ class @Chart
 			# Don't touch the _* properties!
 			fallOff: 1.1,	# The 'friction coefficient'
 			maxScrollTime: 2500,	# Stop after this many ms
-			stopThreshold: 1, 	# Used to cancel the animation to save cycles
+			stopThreshold: 1, 	# Min speed after which to to cancel the animation.
 			_speed: 0.0,	# Current scrolling _speed - should be reset after a touchEnd event!
 			_previousDragFrame: []	# Used for _speed calculations
 		}
 
-		@display = [new EfficiencyPlot(@)]
+		@display = [new TotalEnergy(@)]
 		@x = d3.time.scale()
 		@y = d3.scale.linear()
 				.domain [0, @config.y_axis_minimum_size]
