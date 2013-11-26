@@ -7,16 +7,36 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "showfunction.js",
+			"settings":
+			{
+				"buffer_size": 1740,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "listfunction.js",
+			"settings":
+			{
+				"buffer_size": 2696,
+				"line_ending": "Windows"
+			}
+		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
 	{
-		"height": 109.0,
+		"height": 173.0,
 		"selected_items":
 		[
 			[
-				"ss coffee",
-				"Set Syntax: CoffeeScript"
+				"ss javas",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"rein",
+				"Indentation: Reindent Lines"
 			],
 			[
 				"package install",
@@ -25,6 +45,10 @@
 			[
 				"package remove",
 				"Package Control: Remove Package"
+			],
+			[
+				"ss coffee",
+				"Set Syntax: CoffeeScript"
 			],
 			[
 				"packge list",
@@ -37,10 +61,6 @@
 			[
 				"indent tab",
 				"Indentation: Convert to Tabs"
-			],
-			[
-				"rein",
-				"Indentation: Reindent Lines"
 			],
 			[
 				"conv tab",
@@ -103,15 +123,11 @@
 				"Set Syntax: Python"
 			],
 			[
-				"ss javas",
-				"Set Syntax: JavaScript"
-			],
-			[
 				"minimap",
 				"View: Toggle Minimap"
 			]
 		],
-		"width": 527.0
+		"width": 549.0
 	},
 	"console":
 	{
@@ -133,9 +149,10 @@
 	"file_history":
 	[
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/bubblebath.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubblebath.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/cardboard.coffee",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/main.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/remote.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/utils.coffee",
@@ -178,6 +195,8 @@
 		"height": 120.0,
 		"where_history":
 		[
+			"",
+			"C:\\Users\\Thijs\\Documents\\GitHub\\energy-screen\\",
 			"C:\\Users\\Thijs\\Documents\\GitHub\\energy-screen\\html\\coffee",
 			"<open files>",
 			""
@@ -188,6 +207,17 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"\\n",
+			"historical",
+			"url",
+			"URL",
+			"url",
+			"URI",
+			"db",
+			"encodeURIComponent",
+			"EfficiencyPlot",
+			"TotalPower",
+			"8002",
 			"TotalPower",
 			"Herpderp",
 			",\\n",
@@ -224,8 +254,63 @@
 	"groups":
 	[
 		{
+			"selected": 1,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "showfunction.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1740,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1141,
+								1141
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 450.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "listfunction.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2696,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2696,
+								2696
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+						},
+						"translation.x": 30033.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
 			]
 		}
 	],
@@ -281,7 +366,11 @@
 		[
 			[
 				"data",
-				"html\\coffee\\data.coffee.md"
+				"html\\coffee\\data.coffee"
+			],
+			[
+				"chart",
+				"html\\coffee\\chart.coffee"
 			],
 			[
 				"index.html",
