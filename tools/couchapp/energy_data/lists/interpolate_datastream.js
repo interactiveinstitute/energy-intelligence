@@ -35,8 +35,8 @@ function (head, req) {
   var sendValue = function(dbg, key) {
     var obj = {
       at: key,
-      value: meta.current_value || '0',
-      absence: meta.current_absence || '0'	// THIJS
+      value: meta.current_value || 0,
+      absence: meta.current_absence || 0	// THIJS
     };
     if (dbg) obj.debug = dbg;
     send((isFirst ? '' : ',\n') + '    ' + JSON.stringify(obj));
