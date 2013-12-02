@@ -270,6 +270,7 @@ class @Chart
 						at: new Date @doc.timestamp
 						resampledAt: new Date
 						value: parseFloat @doc.ElectricPower
+						absence: 0.0 #THIJS
 					@updateWithData()
 				@display[0].transformExtras?()
 	

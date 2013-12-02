@@ -15,10 +15,10 @@ class @EfficiencyPlot
 			.y1((d) => @chart.y(d.value))
 		@wasteLine = d3.svg.line()
 			.x((d) => @chart.x(d.resampledAt))
-			.y((d) => @chart.y(d.value - d.absence))
+			.y((d) => @chart.y(d.value - Math.abs(d.absence)))
 		@wasteArea = d3.svg.area()
 			.x((d) => @chart.x(d.resampledAt))
-			.y0((d) => @chart.y(d.value - d.absence))
+			.y0((d) => @chart.y(d.value - Math.abs(d.absence)))
 			.y1((d) => @chart.y(d.value))
 
 	init: ()->
