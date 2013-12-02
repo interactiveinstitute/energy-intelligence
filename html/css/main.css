@@ -103,6 +103,16 @@ svg.time .line {
   stroke: #3fa9f5;
   stroke-width: 3px;
 }
+/* testing double graph */
+svg.time .line.waste {
+  stroke: red;
+}
+
+svg.time .area.waste {
+  fill: rgba(255,0,0,0.5);
+}
+/*end testing */
+
 svg.time .y.axis .tick:first-child, .time .yText.axis .tick:first-child {
   display: none;
 }
