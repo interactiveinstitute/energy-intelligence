@@ -18,8 +18,8 @@ class @EfficiencyPlot
 			.y((d) => @chart.y(d.absence))
 		@wasteArea = d3.svg.area()
 			.x((d) => @chart.x(d.resampledAt))
-			.y0((d) => @chart.height - @chart.config.padding_bottom)
-			.y1((d) => @chart.y(d.absence))
+			.y0((d) => @chart.y(d.absence))
+			.y1((d) => @chart.y(d.value - d.absence))
 
 	init: ()->
 		container = @chart.time.select('.container')
