@@ -61,7 +61,7 @@ this.EfficiencyPlot = (function() {
           if (i === 0) {
             return 0.0;
           } else {
-            return parseFloat(d.absence) - parseFloat(cache.datapoints[i - 1].absence);
+            return parseFloat(d.absence) - parseFloat(cache[i - 1].absence);
           }
         })(),
         measuredAt: new Date(d.debug[2])
