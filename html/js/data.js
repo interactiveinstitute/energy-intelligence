@@ -48,15 +48,22 @@ this.EfficiencyPlot = (function() {
   };
 
   EfficiencyPlot.prototype.getDataFromRequest = function(params, result) {
-    var resample;
+    var cache, resample;
     resample = +new Date(params.start);
+    cache = results.datapoints.slice(0);
     return result.datapoints.map(function(d, i) {
-      var _ref, _ref1;
+      var _ref;
       return {
         at: new Date(d.at),
         resampledAt: new Date(resample + i * params.interval * 1000),
         value: (_ref = parseFloat(d.value)) != null ? _ref : 0,
-        absence: (_ref1 = parseFloat(d.absence)) != null ? _ref1 : 0,
+        absence: (function() {
+          if (i === 0) {
+            return 0.0;
+          } else {
+            return parseFloat(d.absence) - parseFloat(cache.datapoints[i - 1].absence);
+          }
+        })(),
         measuredAt: new Date(d.debug[2])
       };
     });

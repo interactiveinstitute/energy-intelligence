@@ -52,11 +52,17 @@ class @EfficiencyPlot
 	
 	getDataFromRequest: (params, result) ->
 		resample = +new Date params.start
+		# This is some next-level shit yo
+		cache = results.datapoints.slice(0)
 		return result.datapoints.map (d, i) ->
 			at: new Date(d.at)
 			resampledAt: new Date(resample + i * params.interval * 1000)
 			value: parseFloat(d.value) ? 0
-			absence: parseFloat(d.absence) ? 0
+			absence: do ->
+				if i == 0
+					return 0.0
+				else
+					return (parseFloat(d.absence) - parseFloat(cache.datapoints[i-1].absence))
 			measuredAt: new Date(d.debug[2])
 
 	transformExtras: () ->
