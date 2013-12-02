@@ -1,0 +1,100 @@
+html {
+  overflow: hidden;
+}
+
+body {
+  background: #000 url(app-mockup.png);
+  margin: 0;
+  cursor: none;
+  -ms-touch-action: none;
+}
+
+.time {
+  display: block;
+  position: absolute;
+  top: 200px;
+  overflow: hidden;
+}
+.time .x.axis line.major {
+  stroke: transparent;
+}
+.time .x.axis line.minor {
+  stroke: #232323;
+}
+.time .axis .line {
+  shape-rendering: crispEdges;
+}
+.time .axis text {
+  fill: #ddd;
+  font-size: 28px;
+  font-weight: bold;
+  font-family: sans-serif;
+  text-anchor: start !important;
+}
+.time .x.axis .domain {
+  display: none;
+}
+.time .area {
+  fill: rgba(63, 169, 245, .8);
+}
+.time .line {
+  fill: transparent;
+  stroke: #3fa9f5;
+  stroke-width: 3px;
+}
+.time .y.axis .tick:first-child, .time .yText.axis .tick:first-child {
+  display: none;
+}
+.time .y.axis line {
+  stroke: #6a7072;
+}
+.time .y.axis text {
+  display: none;
+}
+.time .y.axis .domain, .time .yText.axis .domain {
+  display: none;
+}
+
+.time .bar rect {
+  fill: rgba(63, 169, 245, .8);
+}
+
+.zoomer {
+  position: absolute;
+  bottom: 56px;
+  right: 56px;
+  /*background: -webkit-linear-gradient(top, #000 50%, #333 100%);*/
+  background: url(zoomer.png);
+  width: 361px;
+  height: 45px;
+  /*box-shadow: 0 0 40px 40px #000;*/
+}
+.zoomer .handle {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: url(zoomer-handle.png);
+  position: absolute;
+}
+
+.watt-hour-button {
+  background: url(button-wh.png);
+  position: absolute;
+  bottom: 0;
+  left: 600px;
+  width: 144px;
+  height: 120px;
+  font-weight: bold;
+  -webkit-filter: grayscale(100%);
+  opacity: .5;
+  -webkit-transition: -webkit-filter .5s, opacity .5s;
+}
+.watt-hour-button.active {
+  -webkit-filter: none;
+  opacity: 1;
+}
+
+.popup circle {
+  stroke: #aee0ff;
+  stroke-width: 2;
+}

@@ -1,0 +1,100 @@
+html {
+  -ms-touch-action: none;
+}
+
+body {
+  font: 12px HelveticaNeue, 'HelveticaNeue-CondensedBold', sans-serif;
+  background: #000;
+  color: #fff;
+}
+
+/*
+.chart rect {
+  stroke: white;
+  stroke-width: 0;
+  fill: steelblue;
+  -webkit-transition: fill .1s;
+}
+.chart rect.highlight {
+  opacity: .8;
+}
+.chart .popup {
+  -webkit-transition: -webkit-transform .05s;
+}
+.chart .popup circle {
+  fill: yellow;
+}
+.chart .popup text {
+  fill: black;
+}
+.chart line.x, .chart line.y {
+  stroke: #ccc;
+}
+.chart line.axis {
+  stroke: #000;
+}
+.chart .pane {
+  fill: transparent;
+}
+*/
+
+body {
+  /*background: #000;*/
+}
+
+p {
+  width: 960px;
+  text-align: center;
+}
+
+.duration_number {
+  width: 2em;
+}
+.start_date {
+  width: 12em;
+}
+.start_time {
+  width: 6em;
+}
+
+svg {
+  font: 10px 'Helvetica Neue', sans-serif;
+}
+
+path {
+  /*fill: steelblue;*/
+  fill: #2d548e;
+  stroke: #3fa9f5;
+  stroke-width: 2px;
+}
+
+text {
+  fill: white;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  stroke: red;
+  fill: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
+.loading {
+  position: fixed;
+  top: 37px; right: 0; bottom: 0; left: 0;
+  background: rgba(0, 0, 0, .5);
+  font-size: 48px;
+  text-align: center;
+  line-height: 120px;
+  display: none;
+}
+.loading.visible {
+  display: block;
+}

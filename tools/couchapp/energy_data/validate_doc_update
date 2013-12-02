@@ -1,0 +1,5 @@
+function (newDoc, oldDoc, userCtx, secObj) {
+  if (userCtx.roles.indexOf('writer') == -1) {
+    throw({ forbidden: 'The "writer" role is required to make changes.' });
+  }
+}

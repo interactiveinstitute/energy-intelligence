@@ -1,0 +1,190 @@
+var util = {};
+util.json = function(url, callback) {
+  // We’re using this instead of d3.json because the latter doesn’t seem to work well in IE10?
+  var req = new XMLHttpRequest();
+  req.withCredentials = true;
+  req.open('GET', url, true);
+  req.onreadystatechange = function() {
+    if (req.readyState == 4 && req.status == 200)
+      callback(JSON.parse(req.responseText));
+  };
+  req.send();
+};
+util.url = function(couch, base, args) {
+  var url = couch + base;
+  if (args) {
+    var arr = [];
+    for (var key in args)
+      arr.push(key + '=' + encodeURIComponent(args[key]));
+    url += '?' + arr.join('&');
+  }
+  return url;
+};
+
+var chart = {};
+chart.dim = {
+  cwidth: window.innerWidth,
+  cheight: 500,
+  margin: { top: 10, right: 10, bottom: 20, left: 40 }
+};
+chart.dim.width = chart.dim.cwidth - chart.dim.margin.left - chart.dim.margin.right;
+chart.dim.height = chart.dim.cheight - chart.dim.margin.top - chart.dim.margin.bottom;
+chart.scale = {
+  x: d3.time.scale().range([0, chart.dim.width]),
+  y: d3.scale.linear().range([chart.dim.height, 0])
+};
+chart.axis = {
+  x: d3.svg.axis().scale(chart.scale.x).orient('bottom'),
+  y: d3.svg.axis().scale(chart.scale.y).orient('left')
+};
+chart.zoom = {
+  apply: function() {
+    chart.svg.select('.x.axis').call(chart.axis.x);
+  }
+};
+chart.zoom.behavior = d3.behavior.zoom().x(chart.scale.x).scaleExtent([1, 1]).on('zoom', chart.zoom.apply);
+chart.area = d3.svg.area()
+  .interpolate('step-after')
+  .x(function(d) { return x(d.resampledAt); })
+  .y0(chart.dim.height)
+  .y1(function(d) { return y(d.value); });
+
+var data = {};
+data.fetch = function(url, params) {
+  util.json(url, function(ndata) {
+    data.points = ndata.datapoints;
+
+    data.points.forEach(function(d, i) {
+      d.at = new Date(d.at) || 0;
+      d.resampledAt = new Date(+new Date(params.start) + (i - 1) * params.interval * 1000);
+      if (d.value === true) d.value = 1;
+      else if (d.value === false) d.value = 0;
+      else if (!isNaN(parseFloat(d.value))) d.value = parseFloat(d.value);
+      else d.value = 0;
+    });
+    
+    //x.domain(d3.extent(data.map(function(d) { return d.time })));
+    chart.scale.y.domain([0, d3.max(data.points.map(function(d) { return d.value }))]);
+    
+    chart.graph.select('path').datum(data);
+    chart.graph.select('.y.axis').call(chart.axis.y);
+    
+    chart.graph.select('path').attr('d', chart.area);
+    chart.graph.select('.x.axis').call(chart.axis.x);
+    
+    d3.select('.loading').classed('visible', false);
+  });
+}
+
+var app = {};
+app.start = function() {
+  util.json('config.json', function(nconfig) {
+    app.config = nconfig;
+    util.json(app.config.couch + '/_design/energy_data/_rewrite/feeds_and_datastreams', function(info) {
+      util.json(app.config.couch + '/_design/energy_data/_view/domains?group=true', function(domains) {
+        app.init(info, domains);
+      });
+    });
+  });
+};
+app.init = function(feeds_and_datastreams, domains) {
+  app.domains = {};
+  domains.rows.forEach(function(row) {
+    app.domains[row.key] = row.value;
+  });
+
+  chart.svg = d3.select('body').append('svg')
+    .attr('class', 'chart')
+    .attr('width', chart.dim.cwidth)
+    .attr('height', chart.dim.cheight)
+    .call(chart.zoom.behavior);
+    
+  chart.svg.append('defs').append('clipPath')
+    .attr('id', 'clip')
+    .append('rect')
+      .attr('width', chart.dim.width)
+      .attr('height', chart.dim.height);
+  
+  chart.graph = chart.svg.append('g')
+    .attr('transform', 'translate(' + chart.dim.margin.left + ',' + chart.dim.margin.top + ')');
+  
+  chart.graph.append('path')
+    .datum({ time: new Date(), value: 0 })
+    .attr('clip-path', 'url(#clip)')
+    .attr('d', chart.area);
+
+  chart.graph.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', 'translate(0,' + chart.dim.height + ')')
+    .call(chart.axis.x);
+      
+  chart.graph.append('g')
+    .attr('class', 'y axis')
+    .call(chart.axis.y);
+
+  feeds_and_datastreams.feeds.forEach(function(feed) {
+    var option = d3.select('.feed').append('option').text(feed);
+    if (feed == 'room261') option.attr('selected', true);
+  });
+  feeds_and_datastreams.datastreams.forEach(function(stream) {
+    var option = d3.select('.datastream').append('option').text(stream);
+    if (stream == 'ElectricPower') option.attr('selected', true);
+  });
+
+  app.settings();
+
+  d3.select('.feed').on('change', app.settings);
+  d3.select('.datastream').on('change', app.settings);
+  d3.select('.duration_number').on('change', app.settings);
+  d3.select('.duration_unit').on('change', app.settings);
+  d3.select('.start_date').on('change', app.settings);
+  d3.select('.start_time').on('change', app.settings);
+  d3.select('.interval').on('change', app.settings);
+  d3.select('.resample').on('change', app.settings);
+}
+app.settings = function() {
+  var feed = d3.select('.feed').node().value;
+  var datastream = d3.select('.datastream').node().value;
+  var duration_number = d3.select('.duration_number').node().value;
+  var duration_unit = d3.select('.duration_unit').node().value;
+  var duration = duration_number + duration_unit;
+  var start_date = d3.select('.start_date').node().value;
+  var start_time = d3.select('.start_time').node().value;
+  var start_datetime = start_date + 'T' + start_time + ':00+02:00';
+  var interval = d3.select('.interval').node().value;
+  resampled = !!d3.select('.resample').node().checked;
+  
+  d3.select('.o_feed').text(feed);
+  d3.select('.o_number').text(app.domains[feed].count);
+  d3.select('.o_first').text(new Date(app.domains[feed].min));
+  d3.select('.o_last').text(new Date(app.domains[feed].max));
+  
+  var start = new Date(start_datetime);
+  
+  var params = {
+    feed: feed,
+    datastream: datastream,
+    interval: interval,
+    duration: duration,
+    start: start_datetime
+  };
+  var units = {
+    second: 1, seconds: 1,
+    minute: 60, minutes: 60,
+    hour: 60 * 60, hours: 60 * 60,
+    day: 60 * 60 * 24, days: 60 * 60 * 24,
+    week: 60 * 60 * 24 * 7, weeks: 60 * 60 * 24 * 7,
+    month: 60 * 60 * 24 * 31, months: 60 * 60 * 24 * 31,
+    year: 60 * 60 * 24 * 366, years: 60 * 60 * 24 * 366
+  };
+  var parsed = /(\d+)([a-z]+)/.exec(duration);
+  var ms = parseInt(parsed[1]) * units[parsed[2]] * 1000;
+  
+  var end = new Date(+start + ms);
+  
+  chart.scale.x.domain([start, end]);
+  
+  d3.select('.loading').classed('visible', true);
+  
+  data.fetch(util.url(app.config.couch, '/_design/energy_data/_show/historical', params), params);
+};

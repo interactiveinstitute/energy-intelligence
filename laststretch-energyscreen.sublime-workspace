@@ -8,18 +8,13 @@
 	"buffers":
 	[
 		{
-			"file": "showfunction.js",
+			"contents": "class RoseMenuItem\n	constructor: (@label, @imageURL, @parent = @) ->\n		@children = []\n\n	getParent: ()->\n		return @parent\n\n",
+			"file": "/C/Users/Thijs/Desktop/Programming/Experiments/rosemenu.coffee",
+			"file_size": 0,
+			"file_write_time": 130303204446747254,
 			"settings":
 			{
-				"buffer_size": 1740,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "listfunction.js",
-			"settings":
-			{
-				"buffer_size": 2696,
+				"buffer_size": 122,
 				"line_ending": "Windows"
 			}
 		}
@@ -27,16 +22,40 @@
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
 	{
-		"height": 173.0,
+		"height": 109.0,
 		"selected_items":
 		[
+			[
+				"ss coffee",
+				"Set Syntax: CoffeeScript"
+			],
+			[
+				"ss php",
+				"Set Syntax: PHP"
+			],
 			[
 				"ss javas",
 				"Set Syntax: JavaScript"
 			],
 			[
+				"indent tabs",
+				"Indentation: Convert to Tabs"
+			],
+			[
 				"rein",
 				"Indentation: Reindent Lines"
+			],
+			[
+				"indent spaces",
+				"Indentation: Convert to Spaces"
+			],
+			[
+				"indent",
+				"Indentation: Convert to Spaces"
+			],
+			[
+				"ss json",
+				"Set Syntax: JSON"
 			],
 			[
 				"package install",
@@ -47,16 +66,8 @@
 				"Package Control: Remove Package"
 			],
 			[
-				"ss coffee",
-				"Set Syntax: CoffeeScript"
-			],
-			[
 				"packge list",
 				"Package Control: List Packages"
-			],
-			[
-				"indent tabs",
-				"Indentation: Convert to Tabs"
 			],
 			[
 				"indent tab",
@@ -97,10 +108,6 @@
 			[
 				"package",
 				"Package Control: Remove Package"
-			],
-			[
-				"ss json",
-				"Set Syntax: JSON"
 			],
 			[
 				"ss python",
@@ -148,8 +155,19 @@
 	},
 	"file_history":
 	[
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
+		"/C/Users/Thijs/Downloads/cmder/Readme.md",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/listfunctions.js",
+		"/C/ca/energy_data/lists/interpolate_datastream.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/showfunction.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
+		"/C/Users/Thijs/Desktop/index.php",
+		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
+		"/C/ca/energy_data/views/by_source_and_time/reduce.js",
+		"/C/ca/energy_data/lists/feeds_and_datastreams.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/listfunction.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/showfunction.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/bubblebath.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubblebath.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/cardboard.coffee",
@@ -181,7 +199,6 @@
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/coffee/chart.coffee.md",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/CoffeeCompile/CoffeeCompile.sublime-settings",
 		"/C/Users/Thijs/Desktop/Internship/Week 6/SP meeting.txt",
-		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/C/Users/Thijs/Desktop/Programming/Python/astar.py",
 		"/C/Users/Thijs/Desktop/Programming/Python/mergeSort.py",
 		"/C/Users/Thijs/Downloads/Luxology Modo v7.0.1 SP1 XFORCE/x-force.nfo"
@@ -195,6 +212,8 @@
 		"height": 120.0,
 		"where_history":
 		[
+			"<open files>,<open folders>",
+			"<open files>",
 			"",
 			"C:\\Users\\Thijs\\Documents\\GitHub\\energy-screen\\",
 			"C:\\Users\\Thijs\\Documents\\GitHub\\energy-screen\\html\\coffee",
@@ -207,6 +226,27 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"allRooms",
+			"THIJS",
+			"getDataFrom",
+			"loadData",
+			"feed",
+			"source",
+			"ElectricPower",
+			"absence_idx",
+			"THIJS",
+			"\\\\n",
+			"\\n",
+			"\\\\n",
+			"[ ]{4}",
+			"[\\s]{4}",
+			"\\s",
+			"\\n",
+			"[\\s]+(?=\\n)",
+			"\\n",
+			");  ",
+			"\\n",
+			"');\\",
 			"\\n",
 			"historical",
 			"url",
@@ -242,11 +282,13 @@
 		"regex": false,
 		"replace_history":
 		[
+			"   ",
+			"",
 			"\\n",
 			","
 		],
 		"reverse": false,
-		"show_context": true,
+		"show_context": false,
 		"use_buffer2": true,
 		"whole_word": false,
 		"wrap": true
@@ -254,58 +296,31 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "showfunction.js",
+					"file": "/C/Users/Thijs/Desktop/Programming/Experiments/rosemenu.coffee",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1740,
+						"buffer_size": 122,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1141,
-								1141
+								122,
+								122
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 450.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "listfunction.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2696,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2696,
-								2696
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
-						},
-						"translation.x": 30033.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
@@ -352,6 +367,10 @@
 	"output.exec":
 	{
 		"height": 112.0
+	},
+	"output.find_results":
+	{
+		"height": 163.0
 	},
 	"project": "laststretch-energyscreen.sublime-project",
 	"replace":

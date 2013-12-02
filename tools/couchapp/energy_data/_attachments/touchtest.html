@@ -1,0 +1,25 @@
+<!doctype html>
+
+<title>touch test</title>
+
+<meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<style>
+body {
+  -ms-touch-action: none;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+}
+</style>
+<script src="d3.v3.js"></script>
+
+<body>
+
+<script>
+d3.select('body').on('MSPointerMove', function() {
+  console.log('move');
+  console.log(d3.touches().length);
+});
+</script>

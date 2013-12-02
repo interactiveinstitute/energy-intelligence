@@ -1,0 +1,12 @@
+function (doc, req) {
+  doc = JSON.parse(req.body);
+  for (var field in doc) {
+    if (field != 'timestamp' && typeof doc[field] == 'number')
+      doc[field] = '' + doc[field];
+  }
+  doc._id = req.uuid;
+  doc.type = 'measurement';
+  if (!doc.timestamp) doc.timestamp = new Date().getTime();
+  doc.user = req.userCtx.name;
+  return [doc, 'Thanks\n'];
+}

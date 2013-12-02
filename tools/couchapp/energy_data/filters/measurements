@@ -1,0 +1,7 @@
+function (doc, req) {
+  if (doc.type != 'measurement') return false;
+  if (req.query.source && req.query.source != doc.source)
+    return false;
+  if (req.query.datastream && Object.keys(doc).indexOf(req.query.datastream) == -1) return false;
+  return true;
+}

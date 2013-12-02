@@ -26,14 +26,14 @@ this.EfficiencyPlot = (function() {
     this.wasteLine = d3.svg.line().x(function(d) {
       return _this.chart.x(d.resampledAt);
     }).y(function(d) {
-      return _this.chart.y(d.value);
+      return _this.chart.y(d.absence);
     });
     this.wasteArea = d3.svg.area().x(function(d) {
       return _this.chart.x(d.resampledAt);
     }).y0(function(d) {
       return _this.chart.height - _this.chart.config.padding_bottom;
     }).y1(function(d) {
-      return _this.chart.y(d.value);
+      return _this.chart.y(d.absence);
     });
   }
 

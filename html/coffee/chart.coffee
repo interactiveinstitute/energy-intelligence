@@ -255,8 +255,6 @@ class @Chart
 			setTimeout (=> @quickUpdate()), untilQuick
 	
 	quickUpdate: ->
-		# THIJSTODO: Figure out when this is called and what happens with the @data.push call below!
-		# Can this be tweaked to include wasted energy as well?
 		@lastQuickUpdate = +new Date
 		@scheduleUpdate()
 		unless @touching
@@ -376,7 +374,7 @@ class @Chart
 		Q.spread [
 			utils.json url
 			@bubbleBath.load [@display[0].feed], @x.domain()...
-		], (result, @bubbles) =>
+		], (result, wasteResult @bubbles) =>
 			@data = @display[0].getDataFromRequest params, result
 			@updateWithData true
 			deferred.resolve()

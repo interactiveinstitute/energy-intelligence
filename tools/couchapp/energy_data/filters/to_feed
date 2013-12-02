@@ -1,0 +1,3 @@
+function (doc, req) {
+  return doc._id.indexOf('_design/') == 0 || doc.source == req.query.feed;
+}
