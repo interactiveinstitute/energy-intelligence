@@ -50,7 +50,7 @@ this.EfficiencyPlot = (function() {
   EfficiencyPlot.prototype.getDataFromRequest = function(params, result) {
     var cache, resample;
     resample = +new Date(params.start);
-    cache = results.datapoints.slice(0);
+    cache = result.datapoints.slice(0);
     return result.datapoints.map(function(d, i) {
       var _ref;
       return {

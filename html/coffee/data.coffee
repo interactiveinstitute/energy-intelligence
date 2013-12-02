@@ -53,7 +53,7 @@ class @EfficiencyPlot
 	getDataFromRequest: (params, result) ->
 		resample = +new Date params.start
 		# This is some next-level shit yo
-		cache = results.datapoints.slice(0)
+		cache = result.datapoints.slice(0)
 		return result.datapoints.map (d, i) ->
 			at: new Date(d.at)
 			resampledAt: new Date(resample + i * params.interval * 1000)
