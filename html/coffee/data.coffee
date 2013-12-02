@@ -53,10 +53,11 @@ class @EfficiencyPlot
 	getDataFromRequest: (params, result) ->
 		resample = +new Date params.start
 		return result.datapoints.map (d, i) ->
-			at: new Date d.at
-			resampledAt: new Date resample + i * params.interval * 1000
-			value: parseFloat d.value ? 0
-			measuredAt: new Date d.debug[2]
+			at: new Date(d.at)
+			resampledAt: new Date(resample + i * params.interval * 1000)
+			value: parseFloat(d.value) ? 0
+			absence: parseFloat(d.absence) ? 0
+			measuredAt: new Date(d.debug[2])
 
 	transformExtras: () ->
 		if !@chart.doc?

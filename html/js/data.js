@@ -51,11 +51,12 @@ this.EfficiencyPlot = (function() {
     var resample;
     resample = +new Date(params.start);
     return result.datapoints.map(function(d, i) {
-      var _ref;
+      var _ref, _ref1;
       return {
         at: new Date(d.at),
         resampledAt: new Date(resample + i * params.interval * 1000),
-        value: parseFloat((_ref = d.value) != null ? _ref : 0),
+        value: (_ref = parseFloat(d.value)) != null ? _ref : 0,
+        absence: (_ref1 = parseFloat(d.absence)) != null ? _ref1 : 0,
         measuredAt: new Date(d.debug[2])
       };
     });
