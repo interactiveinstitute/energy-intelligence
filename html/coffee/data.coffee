@@ -64,7 +64,10 @@ class @EfficiencyPlot
 					if i == 0
 						return 0.0
 					else
-						return (parseFloat(d.absence) - parseFloat(result.datapoints[i-1].absence))
+						dA = parseFloat(d.absence) - parseFloat(result.datapoints[i-1].absence)
+						if dA < 0.0
+							console.log("Negative absence energy detected!", {current: d, previous: result.datapoints[i-1]})
+						return dA
 				measuredAt: new Date(d.debug[2])
 			if point.absence < 0.0 
 				console.log(point)
