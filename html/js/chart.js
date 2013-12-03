@@ -353,14 +353,7 @@ this.Chart = (function() {
           value = Math.round(energy);
           return _this.meter.select('text').text("" + value + " Wh");
         });
-        if ((this.data != null) && (this.doc != null)) {
-          this.data.push({
-            at: new Date(this.doc.timestamp),
-            resampledAt: new Date,
-            value: parseFloat(this.doc.ElectricPower)
-          });
-          this.updateWithData();
-        }
+        'if @data? and @doc?\n	@data.push\n		at: new Date @doc.timestamp\n		resampledAt: new Date\n		value: parseFloat @doc.ElectricPower\n		absence: parseFloat(0.0) #THIJS\n	@updateWithData()';
         return typeof (_base = this.display[0]).transformExtras === "function" ? _base.transformExtras() : void 0;
       }
     }
@@ -522,7 +515,7 @@ this.Chart = (function() {
       }
       return _results;
     })()).join('&');
-    Q.spread([utils.json(url), (_ref = this.bubbleBath).load.apply(_ref, [[this.display[0].feed]].concat(__slice.call(this.x.domain())))], function(result, bubbles) {
+    Q.spread([utils.json(url), (_ref = this.bubbleBath).load.apply(_ref, [[this.display[0].feed]].concat(__slice.call(this.x.domain())))], function(result, wasteResult, bubbles) {
       _this.bubbles = bubbles;
       _this.data = _this.display[0].getDataFromRequest(params, result);
       _this.updateWithData(true);

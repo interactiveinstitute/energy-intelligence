@@ -265,13 +265,15 @@ class @Chart
 					@meter.select('text').text("#{value} Wh")
 				# Add an extrapolated data point. TODO: do this in TotalPower or
 				# TotalEnergy, since the kind of datapoint we want depends on that.
+				'''
 				if @data? and @doc?
 					@data.push
 						at: new Date @doc.timestamp
 						resampledAt: new Date
 						value: parseFloat @doc.ElectricPower
-						absence: 0.0 #THIJS
+						absence: parseFloat(0.0) #THIJS
 					@updateWithData()
+				'''
 				@display[0].transformExtras?()
 	
 	fullUpdate: ->
@@ -375,7 +377,7 @@ class @Chart
 		Q.spread [
 			utils.json url
 			@bubbleBath.load [@display[0].feed], @x.domain()...
-		], (result, wasteResult @bubbles) =>
+		], (result, wasteResult, @bubbles) =>
 			@data = @display[0].getDataFromRequest params, result
 			@updateWithData true
 			deferred.resolve()
