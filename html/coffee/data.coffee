@@ -2,7 +2,8 @@ class @EfficiencyPlot
 	type: 'EfficiencyPlot'
 	unit: 'Wh'
 	feed: 'allRooms',             #TODO
-	datastream: 'ElectricPower'  #TODO
+	#datastream: 'ElectricPower'  #TODO
+	datastream: 'ElectricEnergyOccupied'
 
 
 	constructor: (@chart)->
