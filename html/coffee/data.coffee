@@ -55,19 +55,19 @@ class @EfficiencyPlot
 	getDataFromRequest: (params, result) ->
 		resample = +new Date params.start
 		# This is some next-level shit yo
-		return result.datapoints.map (d, i) ->
-			data = 
-				at: new Date(d.at)
-				resampledAt: new Date(resample + i * params.interval * 1000)
-				value: parseFloat(d.value) ? 0
-				absence: do ->
-					if i == 0
-						return 0.0
-					else
-						return (parseFloat(d.absence) - parseFloat(result.datapoints[i-1].absence))
-				measuredAt: new Date(d.debug[2])
-			console.log(data)
-			return data
+		data = result.datapoints.map (d, i) ->
+			at: new Date(d.at)
+			resampledAt: new Date(resample + i * params.interval * 1000)
+			value: parseFloat(d.value) ? 0
+			absence: do ->
+				if i == 0
+					return 0.0
+				else
+					return (parseFloat(d.absence) - parseFloat(result.datapoints[i-1].absence))
+			measuredAt: new Date(d.debug[2])
+		console.log(data)
+		return data
+
 
 	transformExtras: () ->
 		if !@chart.doc?
