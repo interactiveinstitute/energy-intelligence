@@ -51,8 +51,8 @@ this.EfficiencyPlot = (function() {
     var resample;
     resample = +new Date(params.start);
     return result.datapoints.map(function(d, i) {
-      var _ref;
-      return {
+      var data, _ref;
+      data = {
         at: new Date(d.at),
         resampledAt: new Date(resample + i * params.interval * 1000),
         value: (_ref = parseFloat(d.value)) != null ? _ref : 0,
@@ -65,6 +65,8 @@ this.EfficiencyPlot = (function() {
         })(),
         measuredAt: new Date(d.debug[2])
       };
+      console.log(data);
+      return data;
     });
   };
 
