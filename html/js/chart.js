@@ -227,13 +227,14 @@ this.Chart = (function() {
       endkey = JSON.stringify([_this.feed, {}]);
       url = ("" + _this.db + "/_design/energy_data/_view/by_source_and_time") + ("?group_level=1&startkey=" + startkey + "&endkey=" + endkey);
       return utils.json(url).then(function(result) {
-        var source, value;
+        var doc, source, value;
         value = result.rows[0].value;
-        process({
+        doc = {
           timestamp: +new Date(value[_this.config.at_idx]),
-          ElectricPower: value[_this.config.datastream_idx.ElectricPower],
+          ElectricPower: value[_this.config.datastream_id.ElectricPower],
           ElectricEnergy: value[_this.config.datastream_idx.ElectricEnergy]
-        });
+        };
+        process(doc);
         url = ("" + _this.db + "/_changes?filter=energy_data/") + ("measurements&include_docs=true&source=" + _this.feed);
         url = "" + url + "&feed=eventsource&since=now";
         source = new EventSource(url, {
@@ -286,7 +287,7 @@ this.Chart = (function() {
     if (index !== -1) {
       deferred.resolve(this.energyBufferValue[index]);
     } else {
-      process = function(timestamp, power, energy) {
+      process = function(timestamp, power, energy, absence) {
         var h, kW;
         kW = power / 1000;
         h = (+date - timestamp) / 1000 / 60 / 60;
@@ -313,12 +314,12 @@ this.Chart = (function() {
           return utils.json(url).then(function(result) {
             var value;
             value = result.rows[0].value;
-            return process(+new Date(value[_this.config.at_idx]), value[_this.config.datastream_idx.ElectricPower], value[_this.config.datastream_idx.ElectricEnergy]);
+            return process(+new Date(value[_this.config.at_idx]), value[_this.config.datastream_idx.ElectricPower], value[_this.config.datastream_idx.ElectricEnergy], value[_this.config.datastream_idx.ElectricEnergyUnoccupied]);
           });
         });
       } else {
         date = +(new Date);
-        process(this.doc.timestamp, this.doc.ElectricPower, this.doc.ElectricEnergy);
+        process(this.doc.timestamp, this.doc.ElectricPower, this.doc.ElectricEnergy, this.doc.ElectricEnergyUnoccupied);
       }
     }
     return deferred.promise;
@@ -353,7 +354,7 @@ this.Chart = (function() {
           value = Math.round(energy);
           return _this.meter.select('text').text("" + value + " Wh");
         });
-        'if @data? and @doc?\n	@data.push\n		at: new Date @doc.timestamp\n		resampledAt: new Date\n		value: parseFloat @doc.ElectricPower\n		absence: parseFloat(0.0) #THIJS\n	@updateWithData()';
+        'if @data? and @doc?\n	@data.push\n		at: new Date @doc.timestamp\n		resampledAt: new Date\n		value: parseFloat @doc.ElectricPower\n		absence: parseFloat(@doc.ElectricEnergyUnoccupied) #THIJS\n	@updateWithData()';
         return typeof (_base = this.display[0]).transformExtras === "function" ? _base.transformExtras() : void 0;
       }
     }

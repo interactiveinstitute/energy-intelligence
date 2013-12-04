@@ -179,10 +179,12 @@ class @Chart
 				"?group_level=1&startkey=#{startkey}&endkey=#{endkey}"
 			utils.json(url).then (result) =>
 				value = result.rows[0].value
-				process
-					timestamp: +new Date(value[@config.at_idx])
-					ElectricPower: value[@config.datastream_idx.ElectricPower]
-					ElectricEnergy: value[@config.datastream_idx.ElectricEnergy]
+				doc = {
+					timestamp: +new Date(value[@config.at_idx]),
+					ElectricPower: value[@config.datastream_id.ElectricPower],
+					ElectricEnergy: value[@config.datastream_idx.ElectricEnergy],
+					}
+				process(doc)
 				url = "#{@db}/_changes?filter=energy_data/" +
 						"measurements&include_docs=true&source=#{@feed}"
 				url = "#{url}&feed=eventsource&since=now"
@@ -218,7 +220,7 @@ class @Chart
 		date = null if +date > +new Date # Handle future as now
 		if index isnt -1 then deferred.resolve @energyBufferValue[index]
 		else
-			process = (timestamp, power, energy) =>
+			process = (timestamp, power, energy, absence) =>
 				kW = power / 1000
 				h = (+date - timestamp) / 1000 / 60 / 60
 				energy += kW * h if h > 0
@@ -240,10 +242,11 @@ class @Chart
 						process(
 							+new Date(value[@config.at_idx])
 							value[@config.datastream_idx.ElectricPower]
-							value[@config.datastream_idx.ElectricEnergy])
+							value[@config.datastream_idx.ElectricEnergy]
+							value[@config.datastream_idx.ElectricEnergyUnoccupied])	#THIJS
 			else
 				date = +new Date
-				process @doc.timestamp, @doc.ElectricPower, @doc.ElectricEnergy
+				process @doc.timestamp, @doc.ElectricPower, @doc.ElectricEnergy, @doc.ElectricEnergyUnoccupied
 		deferred.promise
 	
 	scheduleUpdate: ->
@@ -271,7 +274,7 @@ class @Chart
 						at: new Date @doc.timestamp
 						resampledAt: new Date
 						value: parseFloat @doc.ElectricPower
-						absence: parseFloat(0.0) #THIJS
+						absence: parseFloat(@doc.ElectricEnergyUnoccupied) #THIJS
 					@updateWithData()
 				'''
 				@display[0].transformExtras?()
