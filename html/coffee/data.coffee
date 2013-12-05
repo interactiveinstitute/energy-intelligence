@@ -1,9 +1,10 @@
+DEBUG = true
+
 class @EfficiencyPlot
 	type: 'EfficiencyPlot'
 	unit: 'Wh'
-	feed: 'allRooms',             #TODO
-	#datastream: 'ElectricPower'  #TODO
-	datastream: 'ElectricEnergyOccupied'
+	feed: 'allRooms',
+	datastream: 'ElectricPower'
 
 
 	constructor: (@chart)->
@@ -61,14 +62,20 @@ class @EfficiencyPlot
 				at: new Date(d.at)
 				resampledAt: new Date(resample + i * params.interval * 1000)
 				value: parseFloat(d.value) ? 0
+				# Absence is energy counter, not power value so needs some extra computation!
 				absence: do ->
 					if i == 0
 						return 0.0
 					else
-						dA = parseFloat(d.absence) - parseFloat(result.datapoints[i-1].absence)
-						if dA < 0.0
-							console.log("Negative absence energy detected!", {current: d, previous: result.datapoints[i-1]})
-						return dA
+						previous = result.datapoints[i-1]
+						# First get the difference between current and last datapoint (WattHours used during tick)
+						deltaAbsenceEnergy = parseFloat(d.absence) - parseFloat(previous.absence)
+						if DEBUG and deltaAbsenceEnergy < 0.0
+							console.log("Negative absence energy detected!", {current: d, previous: previous})
+						# Now, divide diference by deltaTime (in hours) to get average power in Watts
+						deltaHours = ((new Date(d.at)).getTime() - (new Date(previous.at)).getTime()) / (1000 * 3600)
+						absencePower =  deltaAbsenceEnergy / deltaHours
+						return absencePower
 				measuredAt: new Date(d.debug[2])
 			return point
 
