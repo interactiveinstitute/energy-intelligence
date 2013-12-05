@@ -183,6 +183,7 @@ class @Chart
 					timestamp: +new Date(value[@config.at_idx]),
 					ElectricPower: value[@config.datastream_id.ElectricPower],
 					ElectricEnergy: value[@config.datastream_idx.ElectricEnergy],
+					ElectricEnergyUnoccupied: value[@config.datastream_idx.ElectricEnergyUnoccupied],
 					}
 				process(doc)
 				url = "#{@db}/_changes?filter=energy_data/" +

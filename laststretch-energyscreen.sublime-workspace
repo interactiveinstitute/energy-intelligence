@@ -3,6 +3,10 @@
 	{
 		"selected_items":
 		[
+			[
+				"ElectricEnergy",
+				"ElectricEnergyUnoccupied"
+			]
 		]
 	},
 	"buffers":
@@ -156,10 +160,11 @@
 	},
 	"file_history":
 	[
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/data.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/views/by_source_and_time/map.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/lists/interpolate_datastream.js",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
 		"/C/Users/Thijs/Desktop/improvement notes.mdown",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/css/main.css",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/lists/.interpolate_datastream.js.swp",
@@ -183,7 +188,6 @@
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/utils.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/Viewport.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubble.coffee",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/data.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/utils.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/utils.js",
@@ -212,7 +216,7 @@
 	],
 	"find":
 	{
-		"height": 46.0
+		"height": 38.0
 	},
 	"find_in_files":
 	{
@@ -233,6 +237,8 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"@doc",
+			"doc",
 			"Energy",
 			"Power",
 			"value",
@@ -384,16 +390,24 @@
 		"selected_items":
 		[
 			[
+				"data.cof",
+				"html\\coffee\\data.coffee"
+			],
+			[
+				"data.js",
+				"html\\js\\data.js"
+			],
+			[
+				"data",
+				"html\\coffee\\data.coffee"
+			],
+			[
 				"map",
 				"tools\\couchapp\\energy_data\\views\\by_source_and_time\\map.js"
 			],
 			[
 				"interp",
 				"tools\\couchapp\\energy_data\\lists\\interpolate_datastream.js"
-			],
-			[
-				"data",
-				"html\\coffee\\data.coffee"
 			],
 			[
 				"chart",
@@ -428,7 +442,7 @@
 	"show_minimap": true,
 	"show_open_files": false,
 	"show_tabs": true,
-	"side_bar_visible": false,
+	"side_bar_visible": true,
 	"side_bar_width": 225.0,
 	"status_bar_visible": true,
 	"template_settings":

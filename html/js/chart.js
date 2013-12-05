@@ -232,7 +232,8 @@ this.Chart = (function() {
         doc = {
           timestamp: +new Date(value[_this.config.at_idx]),
           ElectricPower: value[_this.config.datastream_id.ElectricPower],
-          ElectricEnergy: value[_this.config.datastream_idx.ElectricEnergy]
+          ElectricEnergy: value[_this.config.datastream_idx.ElectricEnergy],
+          ElectricEnergyUnoccupied: value[_this.config.datastream_idx.ElectricEnergyUnoccupied]
         };
         process(doc);
         url = ("" + _this.db + "/_changes?filter=energy_data/") + ("measurements&include_docs=true&source=" + _this.feed);

@@ -73,9 +73,6 @@ this.EfficiencyPlot = (function() {
         })(),
         measuredAt: new Date(d.debug[2])
       };
-      if (point.absence < 0.0) {
-        console.log(point);
-      }
       return point;
     });
   };
