@@ -51,7 +51,6 @@ function (head, req) {
     log('keys ' + key + ' ??? ' + realFirstKey);
 
     // Interpolate all streams up until now.
-    /*
     if (key >= realFirstKey) {
       for (var between = lastKey + step; between < key; between += step) {
         sendValue(['interpolate', new Date(between), meta.at],
@@ -59,7 +58,6 @@ function (head, req) {
       }
       lastKey = key;
     }
-    */
     
     // Update the datastream with new values.
     if (row.value.length > stream_idx && row.value[stream_idx] !== null) {
