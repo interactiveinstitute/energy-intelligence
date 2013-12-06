@@ -109,7 +109,11 @@ svg.time .line.waste {
 }
 
 svg.time .area.waste {
-  fill: rgba(255,0,0,0.5);
+  fill: url(#crosshatch_red);
+}
+
+svg.time .area.energy {
+  fill: url(#crosshatch_blue);
 }
 /*end testing */
 
