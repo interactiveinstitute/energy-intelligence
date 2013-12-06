@@ -105,10 +105,10 @@ svg.time .line {
 }
 /* testing double graph */
 svg.time .line.waste {
-  stroke: rgba(200, 0, 80, 0.8);
+  stroke: rgba(255, 0, 80, 0.8);
 }
 svg.time .line.energy {
-  stroke: rgba(0, 200, 200, 0.8);
+  stroke: rgba(0, 255, 200, 0.8);
 }
 
 svg.time .area.waste {
@@ -116,7 +116,7 @@ svg.time .area.waste {
 }
 
 svg.time .area.energy {
-  fill: rgba(0, 200, 200, 0.4);
+  fill: rgba(0, 255, 255, 0.4);
 }
 /*end testing */
 
