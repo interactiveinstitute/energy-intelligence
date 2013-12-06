@@ -161,10 +161,10 @@
 	"file_history":
 	[
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/data.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/views/by_source_and_time/map.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/lists/interpolate_datastream.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/data.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/views/by_source_and_time/map.js",
 		"/C/Users/Thijs/Desktop/improvement notes.mdown",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/css/main.css",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/lists/.interpolate_datastream.js.swp",
@@ -234,9 +234,12 @@
 	},
 	"find_state":
 	{
-		"case_sensitive": false,
+		"case_sensitive": true,
 		"find_history":
 		[
+			"d",
+			"dA",
+			"process",
 			"@doc",
 			"doc",
 			"Energy",
@@ -390,16 +393,16 @@
 		"selected_items":
 		[
 			[
+				"data",
+				"html\\coffee\\data.coffee"
+			],
+			[
 				"data.cof",
 				"html\\coffee\\data.coffee"
 			],
 			[
 				"data.js",
 				"html\\js\\data.js"
-			],
-			[
-				"data",
-				"html\\coffee\\data.coffee"
 			],
 			[
 				"map",

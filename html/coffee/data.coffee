@@ -11,19 +11,21 @@ class @EfficiencyPlot
 		@energyLine = d3.svg.line()
 			.x((d) => @chart.x(d.resampledAt))
 			.y((d) => @chart.y(d.value))
+			.interpolate('monotone')
 		@energyArea = d3.svg.area()
 			.x((d) => @chart.x(d.resampledAt))
 			.y0((d) => @chart.height - @chart.config.padding_bottom)
 			.y1((d) => @chart.y(d.value))
+			.interpolate('monotone')
 		@wasteLine = d3.svg.line()
 			.x((d) => @chart.x(d.resampledAt))
 			.y((d) => @chart.y(d.value - d.absence))
-			#.y((d) => @chart.y(d.value - Math.max(d.absence, 0.0)))
+			.interpolate('monotone')
 		@wasteArea = d3.svg.area()
 			.x((d) => @chart.x(d.resampledAt))
 			.y0((d) => @chart.y(d.value - d.absence))
-			#.y0((d) => @chart.y(d.value - Math.max(d.absence, 0.0)))
 			.y1((d) => @chart.y(d.value))
+			.interpolate('monotone')
 
 	init: ()->
 		container = @chart.time.select('.container')
@@ -74,7 +76,7 @@ class @EfficiencyPlot
 							console.log("Negative absence energy detected!", {current: d, previous: previous})
 						# Now, divide diference by deltaTime (in hours) to get average power in Watts
 						deltaHours = ((new Date(d.at)).getTime() - (new Date(previous.at)).getTime()) / (1000 * 3600)
-						absencePower =  deltaAbsenceEnergy / deltaHours
+						absencePower = (deltaAbsenceEnergy * 1000) / deltaHours
 						return absencePower
 				measuredAt: new Date(d.debug[2])
 			return point

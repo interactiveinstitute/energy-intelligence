@@ -19,26 +19,26 @@ this.EfficiencyPlot = (function() {
       return _this.chart.x(d.resampledAt);
     }).y(function(d) {
       return _this.chart.y(d.value);
-    });
+    }).interpolate('monotone');
     this.energyArea = d3.svg.area().x(function(d) {
       return _this.chart.x(d.resampledAt);
     }).y0(function(d) {
       return _this.chart.height - _this.chart.config.padding_bottom;
     }).y1(function(d) {
       return _this.chart.y(d.value);
-    });
+    }).interpolate('monotone');
     this.wasteLine = d3.svg.line().x(function(d) {
       return _this.chart.x(d.resampledAt);
     }).y(function(d) {
       return _this.chart.y(d.value - d.absence);
-    });
+    }).interpolate('monotone');
     this.wasteArea = d3.svg.area().x(function(d) {
       return _this.chart.x(d.resampledAt);
     }).y0(function(d) {
       return _this.chart.y(d.value - d.absence);
     }).y1(function(d) {
       return _this.chart.y(d.value);
-    });
+    }).interpolate('monotone');
   }
 
   EfficiencyPlot.prototype.init = function() {
@@ -74,7 +74,7 @@ this.EfficiencyPlot = (function() {
               });
             }
             deltaHours = ((new Date(d.at)).getTime() - (new Date(previous.at)).getTime()) / (1000 * 3600);
-            absencePower = deltaAbsenceEnergy / deltaHours;
+            absencePower = (deltaAbsenceEnergy * 1000) / deltaHours;
             return absencePower;
           }
         })(),
