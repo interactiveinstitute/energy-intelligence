@@ -58,23 +58,10 @@ class @EfficiencyPlot
 		# This is some next-level shit yo
 		return result.datapoints.map (d, i) ->
 			point = 
-				at: new Date(d.at)
-				resampledAt: new Date(resample + i * params.interval * 1000)
-				value: parseFloat(d.value) ? 0
-				# Absence is energy counter, not power value so needs some extra computation!
-				absence: do ->
-					if i == 0
-						return 0.0
-					else
-						previous = result.datapoints[i-1]
-						# First get the difference between current and last datapoint (WattHours used during tick)
-						deltaAbsenceEnergy = parseFloat(d.absence) - parseFloat(previous.absence)
-						if DEBUG and deltaAbsenceEnergy < 0.0
-							console.log("Negative absence energy detected!", {current: d, previous: previous})
-						# Now, divide diference by deltaTime (in hours) to get average power in Watts
-						deltaHours = ((new Date(d.at)).getTime() - (new Date(previous.at)).getTime()) / (1000 * 3600)
-						absencePower = (deltaAbsenceEnergy * 1000) / deltaHours
-						return absencePower
+				at: new Date(d.at),
+				resampledAt: new Date(resample + i * params.interval * 1000),
+				value: parseFloat(d.value) ? 0,
+				absence: parseFloat(d.absence) ? 0,
 				measuredAt: new Date(d.debug[2])
 			return point
 

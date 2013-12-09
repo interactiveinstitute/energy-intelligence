@@ -110,11 +110,11 @@ svg.time .line.optimal {
 }
 svg.time .line.actual {
   stroke: rgba(255, 150, 25, 1.0);  /* orange */
-  filter: url(#dropshadow);
 }
 
 svg.time .area.waste {
   fill: url(#crosshatch_orange);
+  /* filter: url(#dropshadow); */
 }
 
 svg.time .area.energy {

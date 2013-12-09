@@ -55,29 +55,12 @@ this.EfficiencyPlot = (function() {
     var resample;
     resample = +new Date(params.start);
     return result.datapoints.map(function(d, i) {
-      var point, _ref;
+      var point, _ref, _ref1;
       point = {
         at: new Date(d.at),
         resampledAt: new Date(resample + i * params.interval * 1000),
         value: (_ref = parseFloat(d.value)) != null ? _ref : 0,
-        absence: (function() {
-          var absencePower, deltaAbsenceEnergy, deltaHours, previous;
-          if (i === 0) {
-            return 0.0;
-          } else {
-            previous = result.datapoints[i - 1];
-            deltaAbsenceEnergy = parseFloat(d.absence) - parseFloat(previous.absence);
-            if (DEBUG && deltaAbsenceEnergy < 0.0) {
-              console.log("Negative absence energy detected!", {
-                current: d,
-                previous: previous
-              });
-            }
-            deltaHours = ((new Date(d.at)).getTime() - (new Date(previous.at)).getTime()) / (1000 * 3600);
-            absencePower = (deltaAbsenceEnergy * 1000) / deltaHours;
-            return absencePower;
-          }
-        })(),
+        absence: (_ref1 = parseFloat(d.absence)) != null ? _ref1 : 0,
         measuredAt: new Date(d.debug[2])
       };
       return point;
