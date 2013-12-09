@@ -67,6 +67,14 @@
       <pattern id="crosshatch_orange" patternUnits="userSpaceOnUse" width="25" height="25">
         <image xlink:href="./img/crosshatch_orange.png" x="0" y="0" width="25" height="25" />
       </pattern>
+      <filter xmlns="http://www.w3.org/2000/svg" id="dropshadow" height="130%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> 
+        <feOffset dx="2" dy="2" result="offsetblur"/> 
+        <feMerge> 
+          <feMergeNode/>
+          <feMergeNode in="SourceGraphic"/> 
+        </feMerge>
+      </filter>
     </defs>
     <g class="x axis"/>
     <g class="xText axis"/>

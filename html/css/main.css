@@ -105,10 +105,12 @@ svg.time .line {
 }
 /* testing double graph */
 svg.time .line.optimal {
-  stroke: rgba(0, 100, 255, 0.8); /* blue */
+  stroke: rgba(0, 150, 255, 1.0); /* blue */
+
 }
 svg.time .line.actual {
-  stroke: rgba(255, 150, 25, 0.8);  /* orange */
+  stroke: rgba(255, 150, 25, 1.0);  /* orange */
+  filter: url(#dropshadow);
 }
 
 svg.time .area.waste {
