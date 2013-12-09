@@ -8,7 +8,7 @@ class @EfficiencyPlot
 
 
 	constructor: (@chart)->
-		@energyLine = d3.svg.line()
+		@actualLine = d3.svg.line()
 			.x((d) => @chart.x(d.resampledAt))
 			.y((d) => @chart.y(d.value))
 			.interpolate('monotone')
@@ -17,7 +17,7 @@ class @EfficiencyPlot
 			.y0((d) => @chart.height - @chart.config.padding_bottom)
 			.y1((d) => @chart.y(d.value))
 			.interpolate('monotone')
-		@wasteLine = d3.svg.line()
+		@optimalLine = d3.svg.line()
 			.x((d) => @chart.x(d.resampledAt))
 			.y((d) => @chart.y(d.value - d.absence))
 			.interpolate('monotone')
@@ -33,28 +33,25 @@ class @EfficiencyPlot
 		container.selectAll('*').remove()
 		# Energy Area
 		container.append('path')
-			.classed('area', true)
-			.classed('energy', true)
+			.classed('area energy', true)
 			.datum([])
 			.attr('d', @energyArea)
 		# Waste Area
 		container.append('path')
-			.classed('area', true)
-			.classed('waste', true)
+			.classed('area waste', true)
 			.datum([])
 			.attr('d', @wasteArea)
-		# Waste line
+		# Actual Line (Energy consumed)
 		container.append('path')
-			.classed('line', true)
-			.classed('waste', true)
+			.classed('line actual', true)
 			.datum([])
-			.attr('d', @wasteLine)
-		# Energy Line
+			.attr('d', @actualLine)
+		# Optimal line (Consumption - waste)
 		container.append('path')
-			.classed('line', true)
-			.classed('energy', true)
+			.classed('line optimal', true)
 			.datum([])
-			.attr('d', @energyLine)
+			.attr('d', @optimalLine)
+		
 	
 	getDataFromRequest: (params, result) ->
 		resample = +new Date params.start
@@ -118,9 +115,9 @@ class @EfficiencyPlot
 		@chart.time.select('.area.waste')
 			.attr('d', @wasteArea)
 		@chart.time.select('.line.energy')
-			.attr('d', @energyLine)
+			.attr('d', @actualLine)
 		@chart.time.select('.line.waste')
-			.attr('d', @wasteLine)
+			.attr('d', @optimalLine)
 
 	getParameters: (domain) ->
 		start = domain[0]

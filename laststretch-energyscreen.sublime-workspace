@@ -11,38 +11,6 @@
 	},
 	"buffers":
 	[
-		{
-			"file": "tools/couchapp/energy_data/lists/interpolate_datastream.js",
-			"settings":
-			{
-				"buffer_size": 3049,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "html/coffee/data.coffee",
-			"settings":
-			{
-				"buffer_size": 9525,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "html/index.html",
-			"settings":
-			{
-				"buffer_size": 3992,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "html/css/main.css",
-			"settings":
-			{
-				"buffer_size": 8881,
-				"line_ending": "Windows"
-			}
-		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
@@ -192,13 +160,14 @@
 	},
 	"file_history":
 	[
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/index.html",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/data.coffee",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/css/main.css",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/lists/interpolate_datastream.js",
+		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/chart.coffee",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/data.js",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/views/by_source_and_time/map.js",
 		"/C/Users/Thijs/Desktop/improvement notes.mdown",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/css/main.css",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/tools/couchapp/energy_data/lists/.interpolate_datastream.js.swp",
 		"/C/Users/Thijs/Desktop/Programming/Experiments/rosemenu.coffee",
 		"/C/Users/Thijs/Downloads/cmder/Readme.md",
@@ -233,7 +202,6 @@
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/coffee/bubble.coffee.md",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/js/chart.js",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/User/CoffeeScript.sublime-settings",
-		"/C/Users/Thijs/Documents/GitHub/energy-screen/html/index.html",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/laststretch-energyscreen.sublime-project",
 		"/C/Users/Thijs/Documents/GitHub/energy-screen/project.sublime-project",
 		"/C/Users/Thijs/AppData/Roaming/Sublime Text 3/Packages/Better CoffeeScript/CoffeeScript.sublime-settings",
@@ -366,124 +334,8 @@
 	"groups":
 	[
 		{
-			"selected": 3,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "tools/couchapp/energy_data/lists/interpolate_datastream.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3049,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1248,
-								1248
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 660.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "html/coffee/data.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 9525,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								631,
-								631
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "html/index.html",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3992,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1940,
-								1940
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/HTML/HTML.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 540.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "html/css/main.css",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 8881,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2289,
-								2289
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/CSS/CSS.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1555.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				}
 			]
 		}
 	],

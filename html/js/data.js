@@ -15,7 +15,7 @@ this.EfficiencyPlot = (function() {
   function EfficiencyPlot(chart) {
     var _this = this;
     this.chart = chart;
-    this.energyLine = d3.svg.line().x(function(d) {
+    this.actualLine = d3.svg.line().x(function(d) {
       return _this.chart.x(d.resampledAt);
     }).y(function(d) {
       return _this.chart.y(d.value);
@@ -27,7 +27,7 @@ this.EfficiencyPlot = (function() {
     }).y1(function(d) {
       return _this.chart.y(d.value);
     }).interpolate('monotone');
-    this.wasteLine = d3.svg.line().x(function(d) {
+    this.optimalLine = d3.svg.line().x(function(d) {
       return _this.chart.x(d.resampledAt);
     }).y(function(d) {
       return _this.chart.y(d.value - d.absence);
@@ -45,10 +45,10 @@ this.EfficiencyPlot = (function() {
     var container;
     container = this.chart.time.select('.container').attr('transform', '');
     container.selectAll('*').remove();
-    container.append('path').classed('area', true).classed('energy', true).datum([]).attr('d', this.energyArea);
-    container.append('path').classed('area', true).classed('waste', true).datum([]).attr('d', this.wasteArea);
-    container.append('path').classed('line', true).classed('waste', true).datum([]).attr('d', this.wasteLine);
-    return container.append('path').classed('line', true).classed('energy', true).datum([]).attr('d', this.energyLine);
+    container.append('path').classed('area energy', true).datum([]).attr('d', this.energyArea);
+    container.append('path').classed('area waste', true).datum([]).attr('d', this.wasteArea);
+    container.append('path').classed('line actual', true).datum([]).attr('d', this.actualLine);
+    return container.append('path').classed('line optimal', true).datum([]).attr('d', this.optimalLine);
   };
 
   EfficiencyPlot.prototype.getDataFromRequest = function(params, result) {
@@ -108,8 +108,8 @@ this.EfficiencyPlot = (function() {
   EfficiencyPlot.prototype.transform = function() {
     this.chart.time.select('.area.energy').attr('d', this.energyArea);
     this.chart.time.select('.area.waste').attr('d', this.wasteArea);
-    this.chart.time.select('.line.energy').attr('d', this.energyLine);
-    return this.chart.time.select('.line.waste').attr('d', this.wasteLine);
+    this.chart.time.select('.line.energy').attr('d', this.actualLine);
+    return this.chart.time.select('.line.waste').attr('d', this.optimalLine);
   };
 
   EfficiencyPlot.prototype.getParameters = function(domain) {
