@@ -108,8 +108,8 @@ this.EfficiencyPlot = (function() {
   EfficiencyPlot.prototype.transform = function() {
     this.chart.time.select('.area.energy').attr('d', this.energyArea);
     this.chart.time.select('.area.waste').attr('d', this.wasteArea);
-    this.chart.time.select('.line.energy').attr('d', this.actualLine);
-    return this.chart.time.select('.line.waste').attr('d', this.optimalLine);
+    this.chart.time.select('.line.actual').attr('d', this.actualLine);
+    return this.chart.time.select('.line.optimal').attr('d', this.optimalLine);
   };
 
   EfficiencyPlot.prototype.getParameters = function(domain) {

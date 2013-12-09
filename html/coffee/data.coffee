@@ -114,9 +114,9 @@ class @EfficiencyPlot
 			.attr('d', @energyArea)
 		@chart.time.select('.area.waste')
 			.attr('d', @wasteArea)
-		@chart.time.select('.line.energy')
+		@chart.time.select('.line.actual')
 			.attr('d', @actualLine)
-		@chart.time.select('.line.waste')
+		@chart.time.select('.line.optimal')
 			.attr('d', @optimalLine)
 
 	getParameters: (domain) ->
