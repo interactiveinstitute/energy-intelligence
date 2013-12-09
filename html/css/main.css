@@ -104,10 +104,10 @@ svg.time .line {
   stroke-width: 3px;
 }
 /* testing double graph */
-svg.time .line.waste {
+svg.time .line.optimal {
   stroke: rgba(0, 100, 255, 0.8); /* blue */
 }
-svg.time .line.energy {
+svg.time .line.actual {
   stroke: rgba(255, 150, 25, 0.8);  /* red */
 }
 
