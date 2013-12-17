@@ -11,6 +11,30 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "html/css/main.css",
+			"settings":
+			{
+				"buffer_size": 9027,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "html/coffee/data.coffee",
+			"settings":
+			{
+				"buffer_size": 8773,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "html/index.html",
+			"settings":
+			{
+				"buffer_size": 4515,
+				"line_ending": "Windows"
+			}
+		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
@@ -237,6 +261,9 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"optimalLine",
+			"energyLine",
+			"wasteLine",
 			"realFirst",
 			"d",
 			"dA",
@@ -334,8 +361,95 @@
 	"groups":
 	[
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "html/css/main.css",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 9027,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2303,
+								2303
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/CSS/CSS.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1750.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "html/coffee/data.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 8773,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1164,
+								1164
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 540.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "html/index.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4515,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1596,
+								1596
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 660.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
 			]
 		}
 	],
@@ -394,16 +508,20 @@
 		"selected_items":
 		[
 			[
+				"index",
+				"html\\index.html"
+			],
+			[
+				"data",
+				"html\\coffee\\data.coffee"
+			],
+			[
 				"main.css",
 				"html\\css\\main.css"
 			],
 			[
 				"index.html",
 				"html\\index.html"
-			],
-			[
-				"data",
-				"html\\coffee\\data.coffee"
 			],
 			[
 				"data.cof",

@@ -10,7 +10,7 @@ function (head, req) {
   var stream = req.query.datastream;
   var at_idx = map.field('at');
   var stream_idx = map.field(stream);
-  var absence_idx = map.field("ElectricEnergyUnoccupied");	// THIJS
+  var absence_idx = map.field("ElectricPowerUnoccupied");	// THIJS
   
   send('{\n  "id": ' + JSON.stringify(stream) + ',\n  "datapoints": [\n');
   

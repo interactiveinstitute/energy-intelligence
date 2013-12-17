@@ -3,6 +3,7 @@ function (doc) {
     shared.fields = [
       'at',
       'ElectricPower',
+      'ElectricPowerUnoccupied'
       'OfficeOccupied',
       'OfficeTemperature',
       'ElectricEnergy',
