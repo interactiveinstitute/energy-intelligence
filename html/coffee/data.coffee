@@ -2,7 +2,7 @@ DEBUG = true
 
 class @EfficiencyPlot
 	type: 'EfficiencyPlot'
-	unit: 'Wh'
+	unit: 'W'
 	feed: 'allRooms',
 	datastream: 'ElectricPower'
 

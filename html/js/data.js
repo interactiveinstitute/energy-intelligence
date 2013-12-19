@@ -6,7 +6,7 @@ DEBUG = true;
 this.EfficiencyPlot = (function() {
   EfficiencyPlot.prototype.type = 'EfficiencyPlot';
 
-  EfficiencyPlot.prototype.unit = 'Wh';
+  EfficiencyPlot.prototype.unit = 'W';
 
   EfficiencyPlot.prototype.feed = 'allRooms';
 
